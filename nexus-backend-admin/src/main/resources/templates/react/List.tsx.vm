@@ -1,0 +1,231 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Table,
+  Button,
+  Space,
+  Input,
+  Form,
+  Card,
+  message,
+  Modal,
+  Popconfirm,
+} from 'antd';
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { ${businessNameUpper}Api } from '../../../services/${businessName}';
+import ${businessNameUpper}Form from './components/${businessNameUpper}Form';
+import type { ${businessNameUpper}, PageResult } from '../../../types/${businessName}';
+
+const ${businessNameUpper}List: React.FC = () => {
+  const [form] = Form.useForm();
+  const [data, setData] = useState<${businessNameUpper}[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [current, setCurrent] = useState(1);
+  const [size, setSize] = useState(10);
+  const [formVisible, setFormVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<${businessNameUpper} | null>(null);
+
+  // 表格列配置
+  const columns: ColumnsType<${businessNameUpper}> = [
+#foreach($column in $listResultColumns)
+    {
+      title: '${column.columnComment}',
+      dataIndex: '${column.javaField}',
+      key: '${column.javaField}',
+#if($column.javaField == "createTime" || $column.javaField == "updateTime")
+      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
+#end
+    },
+#end
+    {
+      title: '操作',
+      key: 'action',
+      width: 200,
+      render: (_, record) => (
+        <Space size="middle">
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          >
+            编辑
+          </Button>
+          <Popconfirm
+            title="确定要删除这条记录吗？"
+            onConfirm={() => handleDelete(record.id!)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="link" danger icon={<DeleteOutlined />}>
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  // 加载数据
+  const loadData = async (params?: any) => {
+    setLoading(true);
+    try {
+      const searchParams = {
+        current,
+        size,
+        ...form.getFieldsValue(),
+        ...params,
+      };
+      
+      const result: PageResult<${businessNameUpper}> = await ${businessNameUpper}Api.getList(searchParams);
+      setData(result.list);
+      setTotal(result.total);
+      setCurrent(result.current);
+    } catch (error) {
+      message.error('加载数据失败');
+      console.error('加载数据失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初始化加载
+  useEffect(() => {
+    loadData();
+  }, [current, size]);
+
+  // 搜索
+  const handleSearch = () => {
+    setCurrent(1);
+    loadData({ current: 1 });
+  };
+
+  // 重置
+  const handleReset = () => {
+    form.resetFields();
+    setCurrent(1);
+    loadData({ current: 1 });
+  };
+
+  // 新增
+  const handleAdd = () => {
+    setEditingRecord(null);
+    setFormVisible(true);
+  };
+
+  // 编辑
+  const handleEdit = (record: ${businessNameUpper}) => {
+    setEditingRecord(record);
+    setFormVisible(true);
+  };
+
+  // 删除
+  const handleDelete = async (id: number) => {
+    try {
+      await ${businessNameUpper}Api.delete(id);
+      message.success('删除成功');
+      loadData();
+    } catch (error) {
+      message.error('删除失败');
+      console.error('删除失败:', error);
+    }
+  };
+
+  // 表单保存成功
+  const handleFormSuccess = () => {
+    setFormVisible(false);
+    setEditingRecord(null);
+    loadData();
+  };
+
+  return (
+    <div>
+      <Card>
+        <Form
+          form={form}
+          layout="inline"
+          onFinish={handleSearch}
+          style={{ marginBottom: 16 }}
+        >
+#foreach($column in $listColumns)
+          <Form.Item
+            label="${column.columnComment}"
+            name="${column.javaField}"
+          >
+#if($column.htmlType == "select")
+            <Select placeholder="请选择${column.columnComment}" allowClear style={{ width: 200 }}>
+              {/* TODO: 添加选项 */}
+            </Select>
+#else
+            <Input placeholder="请输入${column.columnComment}" style={{ width: 200 }} />
+#end
+          </Form.Item>
+#end
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                搜索
+              </Button>
+              <Button onClick={handleReset} icon={<ReloadOutlined />}>
+                重置
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+
+        <div style={{ marginBottom: 16 }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            新增${classComment}
+          </Button>
+        </div>
+
+        <Table
+          columns={columns}
+          dataSource={data}
+          loading={loading}
+          rowKey="id"
+          pagination={{
+            current,
+            pageSize: size,
+            total,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条记录`,
+            onChange: (page, pageSize) => {
+              setCurrent(page);
+              setSize(pageSize || 10);
+            },
+          }}
+        />
+      </Card>
+
+      <Modal
+        title={editingRecord ? '编辑${classComment}' : '新增${classComment}'}
+        open={formVisible}
+        onCancel={() => {
+          setFormVisible(false);
+          setEditingRecord(null);
+        }}
+        footer={null}
+        width={800}
+      >
+        <${businessNameUpper}Form
+          initialValues={editingRecord}
+          onSuccess={handleFormSuccess}
+          onCancel={() => {
+            setFormVisible(false);
+            setEditingRecord(null);
+          }}
+        />
+      </Modal>
+    </div>
+  );
+};
+
+export default ${businessNameUpper}List;

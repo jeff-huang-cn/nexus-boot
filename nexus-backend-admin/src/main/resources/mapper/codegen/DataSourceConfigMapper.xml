@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nexus.backend.admin.mapper.codegen.DataSourceConfigMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.nexus.backend.admin.entity.codegen.DataSourceConfig">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="url" property="url" />
+        <result column="username" property="username" />
+        <result column="password" property="password" />
+        <result column="creator" property="creator" />
+        <result column="create_time" property="createTime" />
+        <result column="updater" property="updater" />
+        <result column="update_time" property="updateTime" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, url, username, password, creator, create_time, updater, update_time, deleted
+    </sql>
+
+    <!-- 查询所有可用的数据源配置 -->
+    <select id="selectActiveList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM datasource_config
+        WHERE deleted = 0
+        ORDER BY create_time ASC
+    </select>
+
+    <!-- 根据名称查询数据源配置 -->
+    <select id="selectByName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM datasource_config
+        WHERE name = #{name}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+</mapper>

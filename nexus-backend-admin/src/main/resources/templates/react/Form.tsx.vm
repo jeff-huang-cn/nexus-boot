@@ -1,0 +1,128 @@
+import React, { useEffect } from 'react';
+import {
+  Form,
+  Input,
+  Button,
+  Space,
+  message,
+#if($listColumns.size() > 0)
+  Select,
+  DatePicker,
+  InputNumber,
+  Radio,
+#end
+} from 'antd';
+import { ${businessNameUpper}Api } from '../../../../services/${businessName}';
+import type { ${businessNameUpper} } from '../../../../types/${businessName}';
+
+interface ${businessNameUpper}FormProps {
+  initialValues?: ${businessNameUpper} | null;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+const ${businessNameUpper}Form: React.FC<${businessNameUpper}FormProps> = ({
+  initialValues,
+  onSuccess,
+  onCancel,
+}) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = React.useState(false);
+
+  useEffect(() => {
+    if (initialValues) {
+      form.setFieldsValue(initialValues);
+    } else {
+      form.resetFields();
+    }
+  }, [initialValues, form]);
+
+  const handleSubmit = async (values: any) => {
+    setLoading(true);
+    try {
+      if (initialValues?.id) {
+        // 编辑
+        await ${businessNameUpper}Api.update(initialValues.id, values);
+        message.success('修改成功');
+      } else {
+        // 新增
+        await ${businessNameUpper}Api.create(values);
+        message.success('创建成功');
+      }
+      onSuccess?.();
+    } catch (error) {
+      message.error(initialValues?.id ? '修改失败' : '创建失败');
+      console.error('保存失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={handleSubmit}
+      initialValues={initialValues || {}}
+    >
+#foreach($column in $createColumns)
+#if(!$column.primaryKey)
+      <Form.Item
+        label="${column.columnComment}"
+        name="${column.javaField}"
+#if(!$column.nullable)
+        rules={[{ required: true, message: '请输入${column.columnComment}' }]}
+#end
+      >
+#if($column.htmlType == "textarea")
+        <Input.TextArea
+          placeholder="请输入${column.columnComment}"
+          rows={4}
+        />
+#elseif($column.htmlType == "select")
+        <Select placeholder="请选择${column.columnComment}">
+          {/* TODO: 添加选项 */}
+        </Select>
+#elseif($column.htmlType == "radio")
+        <Radio.Group>
+          <Radio value={1}>启用</Radio>
+          <Radio value={0}>禁用</Radio>
+        </Radio.Group>
+#elseif($column.htmlType == "datetime")
+        <DatePicker
+          style={{ width: '100%' }}
+          placeholder="请选择${column.columnComment}"
+          showTime
+        />
+#elseif($column.javaType == "Integer" || $column.javaType == "Long" || $column.javaType == "BigDecimal")
+        <InputNumber
+          style={{ width: '100%' }}
+          placeholder="请输入${column.columnComment}"
+#if($column.javaType == "BigDecimal")
+          precision={2}
+#end
+        />
+#elseif($column.htmlType == "password")
+        <Input.Password placeholder="请输入${column.columnComment}" />
+#else
+        <Input placeholder="请输入${column.columnComment}" />
+#end
+      </Form.Item>
+#end
+#end
+
+      <Form.Item>
+        <Space>
+          <Button type="primary" htmlType="submit" loading={loading}>
+            {initialValues?.id ? '更新' : '创建'}
+          </Button>
+          <Button onClick={onCancel}>
+            取消
+          </Button>
+        </Space>
+      </Form.Item>
+    </Form>
+  );
+};
+
+export default ${businessNameUpper}Form;

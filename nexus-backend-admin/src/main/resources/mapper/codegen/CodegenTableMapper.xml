@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nexus.backend.admin.mapper.codegen.CodegenTableMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.nexus.backend.admin.entity.codegen.CodegenTable">
+        <id column="id" property="id" />
+        <result column="table_name" property="tableName" />
+        <result column="table_comment" property="tableComment" />
+        <result column="remark" property="remark" />
+        <result column="module_name" property="moduleName" />
+        <result column="business_name" property="businessName" />
+        <result column="class_name" property="className" />
+        <result column="class_comment" property="classComment" />
+        <result column="author" property="author" />
+        <result column="template_type" property="templateType" />
+        <result column="front_type" property="frontType" />
+        <result column="scene" property="scene" />
+        <result column="package_name" property="packageName" />
+        <result column="module_package_name" property="modulePackageName" />
+        <result column="business_package_name" property="businessPackageName" />
+        <result column="class_prefix" property="classPrefix" />
+        <result column="master_table_id" property="masterTableId" />
+        <result column="sub_join_column_name" property="subJoinColumnName" />
+        <result column="sub_join_many" property="subJoinMany" />
+        <result column="tree_parent_column_name" property="treeParentColumnName" />
+        <result column="tree_name_column_name" property="treeNameColumnName" />
+        <result column="datasource_config_id" property="datasourceConfigId" />
+        <result column="creator" property="creator" />
+        <result column="create_time" property="createTime" />
+        <result column="updater" property="updater" />
+        <result column="update_time" property="updateTime" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, table_name, table_comment, remark, module_name, business_name, class_name, class_comment, author,
+        template_type, front_type, scene, package_name, module_package_name, business_package_name, class_prefix,
+        master_table_id, sub_join_column_name, sub_join_many, tree_parent_column_name, tree_name_column_name,
+        datasource_config_id, creator, create_time, updater, update_time, deleted
+    </sql>
+
+    <!-- 根据数据源ID查询表列表 -->
+    <select id="selectByDatasourceConfigId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM codegen_table
+        WHERE datasource_config_id = #{datasourceConfigId}
+        AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据表名查询表信息 -->
+    <select id="selectByTableName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM codegen_table
+        WHERE table_name = #{tableName}
+        AND datasource_config_id = #{datasourceConfigId}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据模块名查询表列表 -->
+    <select id="selectByModuleName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM codegen_table
+        WHERE module_name = #{moduleName}
+        AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>
