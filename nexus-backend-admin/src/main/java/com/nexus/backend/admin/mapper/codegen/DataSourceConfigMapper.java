@@ -1,9 +1,9 @@
 package com.nexus.backend.admin.mapper.codegen;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.nexus.backend.admin.entity.codegen.DataSourceConfig;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -21,7 +21,10 @@ public interface DataSourceConfigMapper extends BaseMapper<DataSourceConfig> {
      *
      * @return 数据源配置列表
      */
-    List<DataSourceConfig> selectActiveList();
+    default List<DataSourceConfig> selectActiveList() {
+        return selectList(new LambdaQueryWrapper<DataSourceConfig>()
+                .orderByAsc(DataSourceConfig::getDateCreated));
+    }
 
     /**
      * 根据名称查询数据源配置
@@ -29,6 +32,10 @@ public interface DataSourceConfigMapper extends BaseMapper<DataSourceConfig> {
      * @param name 数据源名称
      * @return 数据源配置
      */
-    DataSourceConfig selectByName(@Param("name") String name);
+    default DataSourceConfig selectByName(String name) {
+        return selectOne(new LambdaQueryWrapper<DataSourceConfig>()
+                .eq(DataSourceConfig::getName, name)
+                .last("LIMIT 1"));
+    }
 
 }

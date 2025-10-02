@@ -1,5 +1,6 @@
 package com.nexus.backend.admin.service.codegen.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DSTransactional;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -60,7 +61,7 @@ public class CodegenServiceImpl implements CodegenService {
         if (StringUtils.hasText(tableComment)) {
             wrapper.like(CodegenTable::getTableComment, tableComment);
         }
-        wrapper.orderByDesc(CodegenTable::getCreateTime);
+        wrapper.orderByDesc(CodegenTable::getDateCreated);
 
         // 分页查询
         IPage<CodegenTable> page = new Page<>(current, size);
@@ -88,7 +89,7 @@ public class CodegenServiceImpl implements CodegenService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @DSTransactional(rollbackFor = Exception.class)
     public List<Long> importTables(Long datasourceConfigId, List<String> tableNames) {
         if (CollectionUtils.isEmpty(tableNames)) {
             throw new BusinessException("请选择要导入的表");
@@ -140,17 +141,17 @@ public class CodegenServiceImpl implements CodegenService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @DSTransactional(rollbackFor = Exception.class)
     public void updateTableConfig(CodegenTable table, List<CodegenColumn> columns) {
         // 更新表配置
-        table.setUpdateTime(LocalDateTime.now());
+        table.setLastUpdated(LocalDateTime.now());
         table.setUpdater("admin"); // TODO: 从上下文获取当前用户
         codegenTableMapper.updateById(table);
 
         // 更新字段配置
         if (!CollectionUtils.isEmpty(columns)) {
             for (CodegenColumn column : columns) {
-                column.setUpdateTime(LocalDateTime.now());
+                column.setLastUpdated(LocalDateTime.now());
                 column.setUpdater("admin"); // TODO: 从上下文获取当前用户
                 codegenColumnMapper.updateById(column);
             }
@@ -160,7 +161,7 @@ public class CodegenServiceImpl implements CodegenService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @DSTransactional(rollbackFor = Exception.class)
     public void deleteTable(Long id) {
         CodegenTable table = getTableById(id);
 

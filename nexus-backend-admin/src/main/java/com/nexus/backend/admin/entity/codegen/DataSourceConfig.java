@@ -1,6 +1,8 @@
 package com.nexus.backend.admin.entity.codegen;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.nexus.framework.mybatis.entity.BaseEntity;
+import com.nexus.framework.mybatis.entity.BaseUpdateEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("datasource_config")
-public class DataSourceConfig {
+public class DataSourceConfig extends BaseUpdateEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -43,36 +45,4 @@ public class DataSourceConfig {
      */
     @TableField("password")
     private String password;
-
-    /**
-     * 创建者
-     */
-    @TableField("creator")
-    private String creator;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新者
-     */
-    @TableField("updater")
-    private String updater;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 是否删除
-     */
-    @TableLogic
-    @TableField("deleted")
-    private Boolean deleted;
-
 }

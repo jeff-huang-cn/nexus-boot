@@ -1,6 +1,8 @@
 package com.nexus.backend.admin.entity.codegen;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.nexus.framework.mybatis.entity.BaseEntity;
+import com.nexus.framework.mybatis.entity.BaseUpdateEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("codegen_column")
-public class CodegenColumn {
+public class CodegenColumn extends BaseUpdateEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -127,36 +129,4 @@ public class CodegenColumn {
      */
     @TableField("html_type")
     private String htmlType;
-
-    /**
-     * 创建者
-     */
-    @TableField("creator")
-    private String creator;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新者
-     */
-    @TableField("updater")
-    private String updater;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
-     * 是否删除
-     */
-    @TableLogic
-    @TableField("deleted")
-    private Boolean deleted;
-
 }

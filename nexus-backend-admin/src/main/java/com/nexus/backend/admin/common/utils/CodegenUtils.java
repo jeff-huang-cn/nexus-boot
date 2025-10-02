@@ -308,10 +308,9 @@ public class CodegenUtils {
 
         // 审计字段
         codegenTable.setCreator("system");
-        codegenTable.setCreateTime(LocalDateTime.now());
+        codegenTable.setDateCreated(LocalDateTime.now());
         codegenTable.setUpdater("system");
-        codegenTable.setUpdateTime(LocalDateTime.now());
-        codegenTable.setDeleted(false);
+        codegenTable.setLastUpdated(LocalDateTime.now());
 
         return codegenTable;
     }
@@ -379,10 +378,9 @@ public class CodegenUtils {
 
         // 审计字段
         codegenColumn.setCreator("system");
-        codegenColumn.setCreateTime(LocalDateTime.now());
+        codegenColumn.setDateCreated(LocalDateTime.now());
         codegenColumn.setUpdater("system");
-        codegenColumn.setUpdateTime(LocalDateTime.now());
-        codegenColumn.setDeleted(false);
+        codegenColumn.setLastUpdated(LocalDateTime.now());
 
         return codegenColumn;
     }

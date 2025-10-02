@@ -8,6 +8,7 @@ import {
   Form,
   message,
   Alert,
+  Select,
 } from 'antd';
 import {
   SearchOutlined,
@@ -52,23 +53,16 @@ const ImportTable: React.FC = () => {
       render: (text: string) => text || '-',
     },
     {
-      title: '字段数量',
-      dataIndex: 'columnCount',
-      key: 'columnCount',
-      width: 100,
-      align: 'center',
-    },
-    {
       title: '创建时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
+      dataIndex: 'dateCreated',
+      key: 'dateCreated',
       width: 180,
       render: (text: string) => text ? new Date(text).toLocaleString() : '-',
     },
     {
       title: '更新时间',
-      dataIndex: 'updateTime',
-      key: 'updateTime',
+      dataIndex: 'lastUpdated',
+      key: 'lastUpdated',
       width: 180,
       render: (text: string) => text ? new Date(text).toLocaleString() : '-',
     },
@@ -93,55 +87,58 @@ const ImportTable: React.FC = () => {
     },
   };
 
-  // 加载数据源列表
-  const loadDataSources = useCallback(async () => {
-    try {
-      const result = await databaseApi.getDataSourceList();
-      setDataSources(result);
-      if (result.length > 0) {
-        setCurrentDataSourceId(result[0].id);
-      }
-    } catch (error) {
-      message.error('加载数据源配置失败');
-      console.error('Failed to load data sources:', error);
-    }
-  }, []);
-
   // 加载数据库表列表
-  const loadData = useCallback(async (params?: any) => {
+  const loadData = useCallback(async () => {
     if (!currentDataSourceId) {
+      // 如果没有选择数据源，清空数据并返回
+      setData([]);
       return;
     }
-    
+
     setLoading(true);
     try {
-      const searchParams = {
+      const formValues = await form.validateFields();
+      const params = {
         datasourceConfigId: currentDataSourceId,
-        ...form.getFieldsValue(),
-        ...params,
+        tableName: formValues.tableName || '',
+        tableComment: formValues.tableComment || '',
       };
-      
-      const result = await databaseApi.getTableList(searchParams);
-      setData(result);
+
+      const response = await databaseApi.getTableList(params);
+      setData(response || []);
     } catch (error) {
-      message.error('加载数据库表失败');
-      console.error('加载数据库表失败:', error);
+      console.error('加载表数据失败:', error);
+      message.error('加载表数据失败');
+      setData([]);
     } finally {
       setLoading(false);
     }
-  }, [form, currentDataSourceId]);
+  }, [currentDataSourceId, form]);
 
-  // 初始化加载数据源
+  // 初始化数据源列表
   useEffect(() => {
-    loadDataSources();
-  }, [loadDataSources]);
+    const initDataSources = async () => {
+      try {
+        const response = await databaseApi.getDataSourceList();
+        setDataSources(response || []);
+        
+        // 不自动设置默认数据源，让用户手动选择
+        // if (response && response.length > 0) {
+        //   setCurrentDataSourceId(response[0].id);
+        // }
+      } catch (error) {
+        console.error('加载数据源失败:', error);
+        message.error('加载数据源失败');
+      }
+    };
 
-  // 数据源变化时加载表数据
+    initDataSources();
+  }, []);
+
+  // 当数据源改变时，重新加载数据
   useEffect(() => {
-    if (currentDataSourceId) {
-      loadData();
-    }
-  }, [currentDataSourceId, loadData]);
+    loadData();
+  }, [loadData]);
 
   // 搜索
   const handleSearch = () => {
@@ -221,6 +218,18 @@ const ImportTable: React.FC = () => {
           onFinish={handleSearch}
           style={{ marginBottom: 16 }}
         >
+          <Form.Item label="数据源" name="dataSourceId">
+            <Select
+              placeholder="请选择数据源"
+              style={{ width: 200 }}
+              value={currentDataSourceId}
+              onChange={(value) => setCurrentDataSourceId(value)}
+              options={dataSources.map(ds => ({
+                label: ds.name,
+                value: ds.id,
+              }))}
+            />
+          </Form.Item>
           <Form.Item label="表名" name="tableName">
             <Input placeholder="请输入表名" style={{ width: 200 }} />
           </Form.Item>

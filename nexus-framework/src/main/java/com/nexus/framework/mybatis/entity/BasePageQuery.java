@@ -5,6 +5,8 @@ import lombok.Data;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -16,7 +18,8 @@ import java.io.Serializable;
 @Data
 public class BasePageQuery implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = -229795724510992449L;
 
     @Min(value = 1, message = "页码必须大于0")
     private Long current = 1L;

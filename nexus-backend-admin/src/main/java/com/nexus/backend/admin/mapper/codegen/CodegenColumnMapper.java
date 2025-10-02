@@ -1,9 +1,9 @@
 package com.nexus.backend.admin.mapper.codegen;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.nexus.backend.admin.entity.codegen.CodegenColumn;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -22,7 +22,11 @@ public interface CodegenColumnMapper extends BaseMapper<CodegenColumn> {
      * @param tableId 表ID
      * @return 字段列表
      */
-    List<CodegenColumn> selectByTableId(@Param("tableId") Long tableId);
+    default List<CodegenColumn> selectByTableId(Long tableId) {
+        return selectList(new LambdaQueryWrapper<CodegenColumn>()
+                .eq(CodegenColumn::getTableId, tableId)
+                .orderByAsc(CodegenColumn::getOrdinalPosition));
+    }
 
     /**
      * 根据表ID查询主键字段
@@ -30,7 +34,12 @@ public interface CodegenColumnMapper extends BaseMapper<CodegenColumn> {
      * @param tableId 表ID
      * @return 主键字段
      */
-    CodegenColumn selectPrimaryKeyByTableId(@Param("tableId") Long tableId);
+    default CodegenColumn selectPrimaryKeyByTableId(Long tableId) {
+        return selectOne(new LambdaQueryWrapper<CodegenColumn>()
+                .eq(CodegenColumn::getTableId, tableId)
+                .eq(CodegenColumn::getPrimaryKey, 1)
+                .last("LIMIT 1"));
+    }
 
     /**
      * 根据表ID和字段名查询字段信息
@@ -39,7 +48,12 @@ public interface CodegenColumnMapper extends BaseMapper<CodegenColumn> {
      * @param columnName 字段名
      * @return 字段信息
      */
-    CodegenColumn selectByTableIdAndColumnName(@Param("tableId") Long tableId, @Param("columnName") String columnName);
+    default CodegenColumn selectByTableIdAndColumnName(Long tableId, String columnName) {
+        return selectOne(new LambdaQueryWrapper<CodegenColumn>()
+                .eq(CodegenColumn::getTableId, tableId)
+                .eq(CodegenColumn::getColumnName, columnName)
+                .last("LIMIT 1"));
+    }
 
     /**
      * 根据表ID查询用于列表显示的字段
@@ -47,7 +61,12 @@ public interface CodegenColumnMapper extends BaseMapper<CodegenColumn> {
      * @param tableId 表ID
      * @return 字段列表
      */
-    List<CodegenColumn> selectListResultColumnsByTableId(@Param("tableId") Long tableId);
+    default List<CodegenColumn> selectListResultColumnsByTableId(Long tableId) {
+        return selectList(new LambdaQueryWrapper<CodegenColumn>()
+                .eq(CodegenColumn::getTableId, tableId)
+                .eq(CodegenColumn::getListOperationResult, 1)
+                .orderByAsc(CodegenColumn::getOrdinalPosition));
+    }
 
     /**
      * 根据表ID查询用于查询条件的字段
@@ -55,6 +74,11 @@ public interface CodegenColumnMapper extends BaseMapper<CodegenColumn> {
      * @param tableId 表ID
      * @return 字段列表
      */
-    List<CodegenColumn> selectListOperationColumnsByTableId(@Param("tableId") Long tableId);
+    default List<CodegenColumn> selectListOperationColumnsByTableId(Long tableId) {
+        return selectList(new LambdaQueryWrapper<CodegenColumn>()
+                .eq(CodegenColumn::getTableId, tableId)
+                .eq(CodegenColumn::getListOperation, 1)
+                .orderByAsc(CodegenColumn::getOrdinalPosition));
+    }
 
 }

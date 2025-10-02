@@ -32,8 +32,8 @@ export interface CodegenTable {
   businessPackageName: string;
   classPrefix: string;
   datasourceConfigId: number;
-  createTime?: string;
-  updateTime?: string;
+  dateCreated?: string;
+  lastUpdated?: string;
 }
 
 /**
@@ -59,8 +59,8 @@ export interface CodegenColumn {
   listOperationCondition: string;
   listOperationResult: boolean;
   htmlType: string;
-  createTime?: string;
-  updateTime?: string;
+  dateCreated?: string;
+  lastUpdated?: string;
 }
 
 /**
@@ -76,8 +76,8 @@ export interface CodegenTableVO extends CodegenTable {
 export interface DatabaseTable {
   tableName: string;
   tableComment: string;
-  createTime?: string;
-  updateTime?: string;
+  dateCreated?: string;
+  lastUpdated?: string;
   engine?: string;
   tableCollation?: string;
   dataLength?: number;
@@ -110,8 +110,8 @@ export interface DataSourceConfig {
   url: string;
   username: string;
   password?: string;
-  createTime?: string;
-  updateTime?: string;
+  dateCreated?: string;
+  lastUpdated?: string;
 }
 
 /**

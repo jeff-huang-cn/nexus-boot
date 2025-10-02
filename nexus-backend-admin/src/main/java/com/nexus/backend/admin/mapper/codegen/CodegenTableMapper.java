@@ -1,9 +1,9 @@
 package com.nexus.backend.admin.mapper.codegen;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.nexus.backend.admin.entity.codegen.CodegenTable;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -22,7 +22,11 @@ public interface CodegenTableMapper extends BaseMapper<CodegenTable> {
      * @param datasourceConfigId 数据源配置ID
      * @return 表列表
      */
-    List<CodegenTable> selectByDatasourceConfigId(@Param("datasourceConfigId") Long datasourceConfigId);
+    default List<CodegenTable> selectByDatasourceConfigId(Long datasourceConfigId) {
+        return selectList(new LambdaQueryWrapper<CodegenTable>()
+                .eq(CodegenTable::getDatasourceConfigId, datasourceConfigId)
+                .orderByDesc(CodegenTable::getDateCreated));
+    }
 
     /**
      * 根据表名查询表信息
@@ -31,7 +35,12 @@ public interface CodegenTableMapper extends BaseMapper<CodegenTable> {
      * @param datasourceConfigId 数据源配置ID
      * @return 表信息
      */
-    CodegenTable selectByTableName(@Param("tableName") String tableName, @Param("datasourceConfigId") Long datasourceConfigId);
+    default CodegenTable selectByTableName(String tableName, Long datasourceConfigId) {
+        return selectOne(new LambdaQueryWrapper<CodegenTable>()
+                .eq(CodegenTable::getTableName, tableName)
+                .eq(CodegenTable::getDatasourceConfigId, datasourceConfigId)
+                .last("LIMIT 1"));
+    }
 
     /**
      * 根据模块名查询表列表
@@ -39,6 +48,10 @@ public interface CodegenTableMapper extends BaseMapper<CodegenTable> {
      * @param moduleName 模块名
      * @return 表列表
      */
-    List<CodegenTable> selectByModuleName(@Param("moduleName") String moduleName);
+    default List<CodegenTable> selectByModuleName(String moduleName) {
+        return selectList(new LambdaQueryWrapper<CodegenTable>()
+                .eq(CodegenTable::getModuleName, moduleName)
+                .orderByDesc(CodegenTable::getDateCreated));
+    }
 
 }

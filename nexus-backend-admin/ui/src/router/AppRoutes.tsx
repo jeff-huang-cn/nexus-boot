@@ -15,7 +15,7 @@ const AppRoutes: React.FC = () => {
       {/* 仪表盘 */}
       <Route path="/dashboard" element={<Dashboard />} />
       
-      {/* 代码生成相关路由 */}
+      {/* 代码生成模块 */}
       <Route path="/codegen/table" element={<CodegenTableList />} />
       <Route path="/codegen/import" element={<ImportTable />} />
       <Route path="/codegen/edit/:id" element={<EditTable />} />

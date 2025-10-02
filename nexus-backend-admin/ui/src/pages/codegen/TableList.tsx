@@ -104,8 +104,8 @@ const CodegenTableList: React.FC = () => {
     },
     {
       title: '创建时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
+      dataIndex: 'dateCreated',
+      key: 'dateCreated',
       width: 180,
       render: (text: string) => text ? new Date(text).toLocaleString() : '-',
     },

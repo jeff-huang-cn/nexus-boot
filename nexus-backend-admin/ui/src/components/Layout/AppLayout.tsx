@@ -9,7 +9,6 @@ import {
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  DatabaseOutlined,
   ToolOutlined,
   HomeOutlined,
 } from '@ant-design/icons';
@@ -45,11 +44,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         {
           key: '/codegen/table',
           label: '表管理',
-        },
-        {
-          key: '/codegen/import',
-          label: '导入表',
-        },
+        }
       ],
     },
   ];
@@ -59,22 +54,20 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     navigate(key);
   };
 
+  // 路由前缀映射配置
+  const routePrefixMap = {
+    '/codegen/': '/codegen/table', // 所有 /codegen/ 开头的路径都映射到表管理页面
+    '/dashboard': '/dashboard',
+  };
+
   // 获取当前选中的菜单key
   const getSelectedKeys = () => {
-    const path = location.pathname;
+    const currentPath = location.pathname;
     
-    // 精确匹配
-    if (menuItems?.some(item => item?.key === path)) {
-      return [path];
-    }
-    
-    // 查找子菜单匹配
-    for (const item of menuItems || []) {
-      if (item && 'children' in item && item.children) {
-        const childMatch = item.children.find(child => child?.key === path);
-        if (childMatch) {
-          return [path];
-        }
+    // 使用路由前缀映射进行匹配
+    for (const [prefix, menuKey] of Object.entries(routePrefixMap)) {
+      if (currentPath.startsWith(prefix)) {
+        return [menuKey];
       }
     }
     
@@ -83,15 +76,22 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   // 获取展开的菜单key
   const getOpenKeys = () => {
-    const path = location.pathname;
+    const currentPath = location.pathname;
     const openKeys: string[] = [];
     
-    for (const item of menuItems || []) {
-      if (item && 'children' in item && item.children) {
-        const hasChild = item.children.some(child => child?.key === path);
-        if (hasChild && item.key) {
-          openKeys.push(item.key as string);
+    // 使用路由前缀映射确定需要展开的菜单
+    for (const [prefix, menuKey] of Object.entries(routePrefixMap)) {
+      if (currentPath.startsWith(prefix)) {
+        // 查找对应的父菜单
+        for (const item of menuItems || []) {
+          if (item && 'children' in item && item.children) {
+            const hasChild = item.children.some(child => child?.key === menuKey);
+            if (hasChild && item.key) {
+              openKeys.push(item.key as string);
+            }
+          }
         }
+        break;
       }
     }
     

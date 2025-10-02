@@ -38,6 +38,7 @@
         <velocity.version>2.3</velocity.version>
         <commons-io.version>2.14.0</commons-io.version>
         <commons-lang3.version>3.18.0</commons-lang3.version>
+        <transmittable-thread-local.version>2.14.5</transmittable-thread-local.version>
     </properties>
 
     <dependencyManagement>
@@ -156,6 +157,12 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons-lang3.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>transmittable-thread-local</artifactId> <!-- 解决 ThreadLocal 父子线程的传值问题 -->
+                <version>${transmittable-thread-local.version}</version>
             </dependency>
 
             <dependency>
