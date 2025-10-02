@@ -6,7 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan(basePackages = "com.nexus.backend.admin.mapper", annotationClass = Mapper.class)
+@MapperScan(basePackages = "com.nexus.**.dal.mapper", annotationClass = Mapper.class)
 public class BackendAdminApplication {
 
     public static void main(String[] args) {

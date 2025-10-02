@@ -5,23 +5,26 @@ import {
   Button,
   Space,
   message,
-#if($listColumns.size() > 0)
-  Select,
-  DatePicker,
   InputNumber,
+  Select,
   Radio,
-#end
+  DatePicker,
 } from 'antd';
-import { ${businessNameUpper}Api } from '../../../../services/${businessName}';
-import type { ${businessNameUpper} } from '../../../../types/${businessName}';
+import { ${classNameFirstLower}Api } from '../../services/${businessName}';
 
-interface ${businessNameUpper}FormProps {
-  initialValues?: ${businessNameUpper} | null;
+interface ${className} {
+#foreach($column in $columns)
+  ${column.javaField}?: ${column.javaType};
+#end
+}
+
+interface ${className}FormProps {
+  initialValues?: ${className} | null;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-const ${businessNameUpper}Form: React.FC<${businessNameUpper}FormProps> = ({
+const ${className}Form: React.FC<${className}FormProps> = ({
   initialValues,
   onSuccess,
   onCancel,
@@ -42,11 +45,11 @@ const ${businessNameUpper}Form: React.FC<${businessNameUpper}FormProps> = ({
     try {
       if (initialValues?.id) {
         // 编辑
-        await ${businessNameUpper}Api.update(initialValues.id, values);
+        await ${classNameFirstLower}Api.update(initialValues.id, values);
         message.success('修改成功');
       } else {
         // 新增
-        await ${businessNameUpper}Api.create(values);
+        await ${classNameFirstLower}Api.create(values);
         message.success('创建成功');
       }
       onSuccess?.();
@@ -65,44 +68,44 @@ const ${businessNameUpper}Form: React.FC<${businessNameUpper}FormProps> = ({
       onFinish={handleSubmit}
       initialValues={initialValues || {}}
     >
-#foreach($column in $createColumns)
-#if(!$column.primaryKey)
+#foreach($column in $columns)
+#if(${column.createOperation} && !${column.primaryKey})
       <Form.Item
         label="${column.columnComment}"
         name="${column.javaField}"
-#if(!$column.nullable)
+#if(!${column.nullable})
         rules={[{ required: true, message: '请输入${column.columnComment}' }]}
 #end
       >
-#if($column.htmlType == "textarea")
+#if(${column.htmlType} == "textarea")
         <Input.TextArea
           placeholder="请输入${column.columnComment}"
           rows={4}
         />
-#elseif($column.htmlType == "select")
+#elseif(${column.htmlType} == "select")
         <Select placeholder="请选择${column.columnComment}">
           {/* TODO: 添加选项 */}
         </Select>
-#elseif($column.htmlType == "radio")
+#elseif(${column.htmlType} == "radio")
         <Radio.Group>
           <Radio value={1}>启用</Radio>
           <Radio value={0}>禁用</Radio>
         </Radio.Group>
-#elseif($column.htmlType == "datetime")
+#elseif(${column.htmlType} == "datetime")
         <DatePicker
           style={{ width: '100%' }}
           placeholder="请选择${column.columnComment}"
           showTime
         />
-#elseif($column.javaType == "Integer" || $column.javaType == "Long" || $column.javaType == "BigDecimal")
+#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")
         <InputNumber
           style={{ width: '100%' }}
           placeholder="请输入${column.columnComment}"
-#if($column.javaType == "BigDecimal")
+#if(${column.javaType} == "BigDecimal")
           precision={2}
 #end
         />
-#elseif($column.htmlType == "password")
+#elseif(${column.htmlType} == "password")
         <Input.Password placeholder="请输入${column.columnComment}" />
 #else
         <Input placeholder="请输入${column.columnComment}" />
@@ -125,4 +128,4 @@ const ${businessNameUpper}Form: React.FC<${businessNameUpper}FormProps> = ({
   );
 };
 
-export default ${businessNameUpper}Form;
+export default ${className}Form;

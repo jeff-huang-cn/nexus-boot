@@ -1,12 +1,9 @@
-package com.nexus.backend.admin.entity.codegen;
+package com.nexus.backend.admin.dal.entity.codegen;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.nexus.framework.mybatis.entity.BaseEntity;
 import com.nexus.framework.mybatis.entity.BaseUpdateEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
 
 /**
  * 代码生成表定义
@@ -17,7 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("codegen_table")
-public class CodegenTable extends BaseUpdateEntity {
+public class CodegenTableDO extends BaseUpdateEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

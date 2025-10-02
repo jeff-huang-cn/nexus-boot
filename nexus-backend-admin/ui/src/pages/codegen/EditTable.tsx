@@ -152,6 +152,28 @@ const EditTable: React.FC = () => {
       ),
     },
     {
+      title: '查询方式',
+      dataIndex: 'listOperationCondition',
+      key: 'listOperationCondition',
+      width: 100,
+      render: (value: string, record: CodegenColumn, index: number) => (
+        <Select
+          value={value || 'EQ'}
+          size="small"
+          style={{ width: '90px' }}
+          onChange={(val) => updateColumn(index, 'listOperationCondition', val)}
+          disabled={!record.listOperation}
+        >
+          <Option value="EQ">等于</Option>
+          <Option value="LIKE">模糊</Option>
+          <Option value="BETWEEN">范围</Option>
+          <Option value="GT">大于</Option>
+          <Option value="LT">小于</Option>
+          <Option value="IN">包含</Option>
+        </Select>
+      ),
+    },
+    {
       title: '列表',
       dataIndex: 'listOperationResult',
       key: 'listOperationResult',

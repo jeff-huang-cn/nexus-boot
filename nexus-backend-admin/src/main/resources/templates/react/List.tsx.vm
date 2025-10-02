@@ -10,39 +10,44 @@ import {
   Modal,
   Popconfirm,
 } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { ${businessNameUpper}Api } from '../../../services/${businessName}';
-import ${businessNameUpper}Form from './components/${businessNameUpper}Form';
-import type { ${businessNameUpper}, PageResult } from '../../../types/${businessName}';
+import { ${classNameFirstLower}Api } from '../../services/${businessName}';
+import ${className}Form from './${className}Form';
 
-const ${businessNameUpper}List: React.FC = () => {
+interface ${className} {
+#foreach($column in $columns)
+  ${column.javaField}?: ${column.javaType};
+#end
+}
+
+interface PageResult<T> {
+  list: T[];
+  total: number;
+}
+
+const ${className}List: React.FC = () => {
   const [form] = Form.useForm();
-  const [data, setData] = useState<${businessNameUpper}[]>([]);
+  const [data, setData] = useState<${className}[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
   const [formVisible, setFormVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<${businessNameUpper} | null>(null);
+  const [editingRecord, setEditingRecord] = useState<${className} | null>(null);
 
-  // 表格列配置
-  const columns: ColumnsType<${businessNameUpper}> = [
-#foreach($column in $listResultColumns)
+  const columns: ColumnsType<${className}> = [
+#foreach($column in $columns)
+#if(${column.listOperationResult})
     {
       title: '${column.columnComment}',
       dataIndex: '${column.javaField}',
       key: '${column.javaField}',
-#if($column.javaField == "createTime" || $column.javaField == "updateTime")
+#if(${column.javaField} == "dateCreated" || ${column.javaField} == "lastUpdated")
       render: (text: string) => text ? new Date(text).toLocaleString() : '-',
 #end
     },
+#end
 #end
     {
       title: '操作',
@@ -77,25 +82,24 @@ const ${businessNameUpper}List: React.FC = () => {
     setLoading(true);
     try {
       const searchParams = {
-        current,
-        size,
+        pageNo: current,
+        pageSize: size,
         ...form.getFieldsValue(),
         ...params,
       };
       
-      const result: PageResult<${businessNameUpper}> = await ${businessNameUpper}Api.getList(searchParams);
+      const result = await ${classNameFirstLower}Api.getPage(searchParams);
       setData(result.list);
       setTotal(result.total);
-      setCurrent(result.current);
+      setCurrent(searchParams.pageNo);
+      setSize(searchParams.pageSize);
     } catch (error) {
       message.error('加载数据失败');
-      console.error('加载数据失败:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 初始化加载
   useEffect(() => {
     loadData();
   }, [current, size]);
@@ -103,14 +107,14 @@ const ${businessNameUpper}List: React.FC = () => {
   // 搜索
   const handleSearch = () => {
     setCurrent(1);
-    loadData({ current: 1 });
+    loadData({ pageNo: 1 });
   };
 
   // 重置
   const handleReset = () => {
     form.resetFields();
     setCurrent(1);
-    loadData({ current: 1 });
+    loadData({ pageNo: 1 });
   };
 
   // 新增
@@ -120,7 +124,7 @@ const ${businessNameUpper}List: React.FC = () => {
   };
 
   // 编辑
-  const handleEdit = (record: ${businessNameUpper}) => {
+  const handleEdit = (record: ${className}) => {
     setEditingRecord(record);
     setFormVisible(true);
   };
@@ -128,12 +132,11 @@ const ${businessNameUpper}List: React.FC = () => {
   // 删除
   const handleDelete = async (id: number) => {
     try {
-      await ${businessNameUpper}Api.delete(id);
+      await ${classNameFirstLower}Api.delete(id);
       message.success('删除成功');
       loadData();
     } catch (error) {
       message.error('删除失败');
-      console.error('删除失败:', error);
     }
   };
 
@@ -153,26 +156,22 @@ const ${businessNameUpper}List: React.FC = () => {
           onFinish={handleSearch}
           style={{ marginBottom: 16 }}
         >
-#foreach($column in $listColumns)
+#foreach($column in $columns)
+#if(${column.listOperation})
           <Form.Item
             label="${column.columnComment}"
             name="${column.javaField}"
           >
-#if($column.htmlType == "select")
-            <Select placeholder="请选择${column.columnComment}" allowClear style={{ width: 200 }}>
-              {/* TODO: 添加选项 */}
-            </Select>
-#else
             <Input placeholder="请输入${column.columnComment}" style={{ width: 200 }} />
-#end
           </Form.Item>
+#end
 #end
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                搜索
+                查询
               </Button>
-              <Button onClick={handleReset} icon={<ReloadOutlined />}>
+              <Button onClick={handleReset}>
                 重置
               </Button>
             </Space>
@@ -196,7 +195,7 @@ const ${businessNameUpper}List: React.FC = () => {
             total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: (total) => `共 $${'{'}total${'}'} 条记录`,
             onChange: (page, pageSize) => {
               setCurrent(page);
               setSize(pageSize || 10);
@@ -215,7 +214,7 @@ const ${businessNameUpper}List: React.FC = () => {
         footer={null}
         width={800}
       >
-        <${businessNameUpper}Form
+        <${className}Form
           initialValues={editingRecord}
           onSuccess={handleFormSuccess}
           onCancel={() => {
@@ -228,4 +227,4 @@ const ${businessNameUpper}List: React.FC = () => {
   );
 };
 
-export default ${businessNameUpper}List;
+export default ${className}List;

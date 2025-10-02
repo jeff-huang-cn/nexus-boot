@@ -1,8 +1,8 @@
 package com.nexus.backend.admin.service.codegen;
 
 import com.nexus.backend.admin.common.result.PageResult;
-import com.nexus.backend.admin.entity.codegen.CodegenColumn;
-import com.nexus.backend.admin.entity.codegen.CodegenTable;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ public interface CodegenService {
      * @param tableComment 表注释
      * @return 分页结果
      */
-    PageResult<CodegenTable> getTableList(Long current, Long size, String tableName, String tableComment);
+    PageResult<CodegenTableDO> getTableList(Long current, Long size, String tableName, String tableComment);
 
     /**
      * 根据ID查询代码生成表信息
@@ -32,7 +32,7 @@ public interface CodegenService {
      * @param id 表ID
      * @return 表信息
      */
-    CodegenTable getTableById(Long id);
+    CodegenTableDO getTableById(Long id);
 
     /**
      * 根据表ID查询字段列表
@@ -40,7 +40,7 @@ public interface CodegenService {
      * @param tableId 表ID
      * @return 字段列表
      */
-    List<CodegenColumn> getColumnsByTableId(Long tableId);
+    List<CodegenColumnDO> getColumnsByTableId(Long tableId);
 
     /**
      * 导入数据库表
@@ -57,7 +57,7 @@ public interface CodegenService {
      * @param table 表配置
      * @param columns 字段配置列表
      */
-    void updateTableConfig(CodegenTable table, List<CodegenColumn> columns);
+    void updateTableConfig(CodegenTableDO table, List<CodegenColumnDO> columns);
 
     /**
      * 删除代码生成表

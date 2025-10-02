@@ -1,0 +1,151 @@
+package ${packageName}.service.${businessName}.impl;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import ${packageName}.controller.${businessName}.vo.*;
+import ${packageName}.dal.dataobject.${businessName}.${className}DO;
+import ${packageName}.mapper.${businessName}.${className}Mapper;
+import ${packageName}.service.${businessName}.${className}Service;
+import com.nexus.framework.common.result.PageResult;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * ${classComment} Service 实现类
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ${className}ServiceImpl implements ${className}Service {
+
+    private final ${className}Mapper ${classNameFirstLower}Mapper;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long create${className}(${className}SaveReqVO createReqVO) {
+        // 转换为 DO 并插入
+        ${className}DO ${classNameFirstLower} = BeanUtil.copyProperties(createReqVO, ${className}DO.class);
+        ${classNameFirstLower}Mapper.insert(${classNameFirstLower});
+        return ${classNameFirstLower}.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void update${className}(${className}SaveReqVO updateReqVO) {
+        // 校验存在
+        validate${className}Exists(updateReqVO.getId());
+        // 更新
+        ${className}DO update${className} = BeanUtil.copyProperties(updateReqVO, ${className}DO.class);
+        ${classNameFirstLower}Mapper.updateById(update${className});
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete${className}(Long id) {
+        // 校验存在
+        validate${className}Exists(id);
+        // 删除
+        ${classNameFirstLower}Mapper.deleteById(id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete${className}Batch(List<Long> ids) {
+        // 批量删除
+        ${classNameFirstLower}Mapper.deleteBatchIds(ids);
+    }
+
+    @Override
+    public ${className}RespVO get${className}(Long id) {
+        ${className}DO ${classNameFirstLower} = ${classNameFirstLower}Mapper.selectById(id);
+        return BeanUtil.copyProperties(${classNameFirstLower}, ${className}RespVO.class);
+    }
+
+    @Override
+    public PageResult<${className}RespVO> get${className}Page(${className}PageReqVO pageReqVO) {
+        // 构建查询条件
+        LambdaQueryWrapper<${className}DO> wrapper = buildQueryWrapper(pageReqVO);
+        
+        // 分页查询
+        IPage<${className}DO> page = new Page<>(pageReqVO.getPageNo(), pageReqVO.getPageSize());
+        IPage<${className}DO> result = ${classNameFirstLower}Mapper.selectPage(page, wrapper);
+        
+        // 转换为 VO
+        List<${className}RespVO> list = result.getRecords().stream()
+                .map(item -> BeanUtil.copyProperties(item, ${className}RespVO.class))
+                .collect(Collectors.toList());
+        
+        return new PageResult<>(list, result.getTotal());
+    }
+
+    @Override
+    public List<${className}RespVO> get${className}List(${className}PageReqVO pageReqVO) {
+        // 构建查询条件
+        LambdaQueryWrapper<${className}DO> wrapper = buildQueryWrapper(pageReqVO);
+        
+        // 查询列表
+        List<${className}DO> list = ${classNameFirstLower}Mapper.selectList(wrapper);
+        
+        // 转换为 VO
+        return list.stream()
+                .map(item -> BeanUtil.copyProperties(item, ${className}RespVO.class))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 构建查询条件
+     */
+    private LambdaQueryWrapper<${className}DO> buildQueryWrapper(${className}PageReqVO pageReqVO) {
+        LambdaQueryWrapper<${className}DO> wrapper = new LambdaQueryWrapper<>();
+        
+#foreach($column in $columns)
+#if(${column.listOperation})
+#if(${column.listOperationCondition} == "LIKE")
+        // ${column.columnComment} - 模糊查询
+        if (StringUtils.hasText(pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}())) {
+            wrapper.like(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}());
+        }
+#elseif(${column.listOperationCondition} == "BETWEEN")
+        // ${column.columnComment} - 范围查询
+        if (pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}Start() != null) {
+            wrapper.ge(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}Start());
+        }
+        if (pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}End() != null) {
+            wrapper.le(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}End());
+        }
+#elseif(${column.listOperationCondition} == "EQ")
+        // ${column.columnComment} - 精确匹配
+        if (pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}() != null) {
+            wrapper.eq(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, pageReqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}());
+        }
+#end
+#end
+#end
+        
+        // 默认按创建时间倒序
+        wrapper.orderByDesc(${className}DO::getDateCreated);
+        
+        return wrapper;
+    }
+
+    /**
+     * 校验${classComment}是否存在
+     */
+    private void validate${className}Exists(Long id) {
+        if (${classNameFirstLower}Mapper.selectById(id) == null) {
+            throw new RuntimeException("${classComment}不存在");
+        }
+    }
+}
+

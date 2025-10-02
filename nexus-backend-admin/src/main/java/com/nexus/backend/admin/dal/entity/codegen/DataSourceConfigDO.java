@@ -1,12 +1,9 @@
-package com.nexus.backend.admin.entity.codegen;
+package com.nexus.backend.admin.dal.entity.codegen;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.nexus.framework.mybatis.entity.BaseEntity;
 import com.nexus.framework.mybatis.entity.BaseUpdateEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
 
 /**
  * 数据源配置
@@ -17,7 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("datasource_config")
-public class DataSourceConfig extends BaseUpdateEntity {
+public class DataSourceConfigDO extends BaseUpdateEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

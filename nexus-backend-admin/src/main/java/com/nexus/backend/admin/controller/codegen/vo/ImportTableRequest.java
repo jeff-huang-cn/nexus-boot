@@ -1,4 +1,4 @@
-package com.nexus.backend.admin.controller.codegen.dto;
+package com.nexus.backend.admin.controller.codegen.vo;
 
 import lombok.Data;
 

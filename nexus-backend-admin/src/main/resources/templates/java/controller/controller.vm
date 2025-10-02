@@ -1,0 +1,94 @@
+package ${packageName}.controller.${businessName};
+
+import com.nexus.framework.common.result.Result;
+import com.nexus.framework.common.result.PageResult;
+import ${packageName}.controller.${businessName}.vo.*;
+import ${packageName}.dal.dataobject.${businessName}.${className}DO;
+import ${packageName}.service.${businessName}.${className}Service;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.Valid;
+import java.util.List;
+
+/**
+ * ${classComment} 控制器
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/${moduleName}/${businessName}")
+@RequiredArgsConstructor
+@Validated
+public class ${className}Controller {
+
+    private final ${className}Service ${classNameFirstLower}Service;
+
+    /**
+     * 创建${classComment}
+     */
+    @PostMapping("/create")
+    public Result<Long> create(@Valid @RequestBody ${className}SaveReqVO createReqVO) {
+        Long id = ${classNameFirstLower}Service.create${className}(createReqVO);
+        return Result.success(id);
+    }
+
+    /**
+     * 更新${classComment}
+     */
+    @PutMapping("/update")
+    public Result<Boolean> update(@Valid @RequestBody ${className}SaveReqVO updateReqVO) {
+        ${classNameFirstLower}Service.update${className}(updateReqVO);
+        return Result.success(true);
+    }
+
+    /**
+     * 删除${classComment}
+     */
+    @DeleteMapping("/delete/{id}")
+    public Result<Boolean> delete(@PathVariable("id") Long id) {
+        ${classNameFirstLower}Service.delete${className}(id);
+        return Result.success(true);
+    }
+
+    /**
+     * 批量删除${classComment}
+     */
+    @DeleteMapping("/delete-batch")
+    public Result<Boolean> deleteBatch(@RequestBody List<Long> ids) {
+        ${classNameFirstLower}Service.delete${className}Batch(ids);
+        return Result.success(true);
+    }
+
+    /**
+     * 获得${classComment}详情
+     */
+    @GetMapping("/get/{id}")
+    public Result<${className}RespVO> get(@PathVariable("id") Long id) {
+        ${className}RespVO respVO = ${classNameFirstLower}Service.get${className}(id);
+        return Result.success(respVO);
+    }
+
+    /**
+     * 获得${classComment}分页列表
+     */
+    @GetMapping("/page")
+    public Result<PageResult<${className}RespVO>> getPage(@Valid ${className}PageReqVO pageReqVO) {
+        PageResult<${className}RespVO> pageResult = ${classNameFirstLower}Service.get${className}Page(pageReqVO);
+        return Result.success(pageResult);
+    }
+
+    /**
+     * 导出${classComment} Excel
+     */
+    @GetMapping("/export")
+    public void export${className}(@Valid ${className}PageReqVO pageReqVO) {
+        List<${className}RespVO> list = ${classNameFirstLower}Service.get${className}List(pageReqVO);
+        // TODO: 实现 Excel 导出逻辑
+    }
+}
+

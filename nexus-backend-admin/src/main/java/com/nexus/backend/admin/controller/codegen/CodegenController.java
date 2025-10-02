@@ -2,14 +2,13 @@ package com.nexus.backend.admin.controller.codegen;
 
 import com.nexus.backend.admin.common.result.PageResult;
 import com.nexus.backend.admin.common.result.Result;
-import com.nexus.backend.admin.controller.codegen.dto.ImportTableDTO;
-import com.nexus.backend.admin.controller.codegen.dto.UpdateTableConfigDTO;
+import com.nexus.backend.admin.controller.codegen.vo.ImportTableVO;
 import com.nexus.backend.admin.controller.codegen.vo.CodegenTableVO;
-import com.nexus.backend.admin.entity.codegen.CodegenColumn;
-import com.nexus.backend.admin.entity.codegen.CodegenTable;
+import com.nexus.backend.admin.controller.codegen.vo.UpdateTableConfigVo;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
 import com.nexus.backend.admin.service.codegen.CodegenService;
 import jakarta.annotation.Resource;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpHeaders;
@@ -51,13 +50,13 @@ public class CodegenController {
      * @return 分页结果
      */
     @GetMapping("/tables")
-    public Result<PageResult<CodegenTable>> getTableList(
+    public Result<PageResult<CodegenTableDO>> getTableList(
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") Long size,
             @RequestParam(required = false) String tableName,
             @RequestParam(required = false) String tableComment) {
 
-        PageResult<CodegenTable> result = codegenService.getTableList(current, size, tableName, tableComment);
+        PageResult<CodegenTableDO> result = codegenService.getTableList(current, size, tableName, tableComment);
         return Result.success(result);
     }
 
@@ -69,8 +68,8 @@ public class CodegenController {
      */
     @GetMapping("/tables/{id}")
     public Result<CodegenTableVO> getTableConfig(@PathVariable @NotNull Long id) {
-        CodegenTable table = codegenService.getTableById(id);
-        List<CodegenColumn> columns = codegenService.getColumnsByTableId(id);
+        CodegenTableDO table = codegenService.getTableById(id);
+        List<CodegenColumnDO> columns = codegenService.getColumnsByTableId(id);
 
         CodegenTableVO vo = new CodegenTableVO();
         BeanUtils.copyProperties(table, vo);
@@ -86,7 +85,7 @@ public class CodegenController {
      * @return 导入的表ID列表
      */
     @PostMapping("/import")
-    public Result<List<Long>> importTables(@Valid @RequestBody ImportTableDTO dto) {
+    public Result<List<Long>> importTables(@Valid @RequestBody ImportTableVO dto) {
         List<Long> tableIds = codegenService.importTables(dto.getDatasourceConfigId(), dto.getTableNames());
         return Result.success(tableIds);
     }
@@ -100,7 +99,7 @@ public class CodegenController {
      */
     @PutMapping("/tables/{id}")
     public Result<Void> updateTableConfig(@PathVariable @NotNull Long id,
-            @Valid @RequestBody UpdateTableConfigDTO dto) {
+            @Valid @RequestBody UpdateTableConfigVo dto) {
         // 确保ID一致
         dto.getTable().setId(id);
 
@@ -154,7 +153,7 @@ public class CodegenController {
      */
     @PostMapping("/generate/{id}")
     public ResponseEntity<byte[]> generateCode(@PathVariable @NotNull Long id) {
-        CodegenTable table = codegenService.getTableById(id);
+        CodegenTableDO table = codegenService.getTableById(id);
         byte[] data = codegenService.generateCode(id);
 
         String fileName = table.getClassName() + "_code.zip";

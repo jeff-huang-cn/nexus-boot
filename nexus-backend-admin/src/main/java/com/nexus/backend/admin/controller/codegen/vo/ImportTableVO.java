@@ -1,4 +1,4 @@
-package com.nexus.backend.admin.controller.codegen.dto;
+package com.nexus.backend.admin.controller.codegen.vo;
 
 import lombok.Data;
 
@@ -13,7 +13,7 @@ import java.util.List;
  * @since 2024-01-01
  */
 @Data
-public class ImportTableDTO {
+public class ImportTableVO {
 
     /**
      * 数据源配置ID

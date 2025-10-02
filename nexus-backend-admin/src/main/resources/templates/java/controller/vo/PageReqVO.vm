@@ -1,0 +1,46 @@
+package ${packageName}.controller.${businessName}.vo;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import com.nexus.framework.common.base.BasePageQuery;
+#if($hasLocalDateTime)
+import java.time.LocalDateTime;
+#end
+#if($hasBigDecimal)
+import java.math.BigDecimal;
+#end
+
+/**
+ * ${classComment}分页查询 Request VO
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class ${className}PageReqVO extends BasePageQuery {
+
+#foreach ($column in $columns)
+#if(${column.listOperation})## 用于查询的字段
+#if(${column.listOperationCondition} == "BETWEEN")## BETWEEN 查询（如时间范围）
+    /**
+     * ${column.columnComment}（开始）
+     */
+    private ${column.javaType} ${column.javaField}Start;
+
+    /**
+     * ${column.columnComment}（结束）
+     */
+    private ${column.javaType} ${column.javaField}End;
+
+#else## 普通查询条件
+    /**
+     * ${column.columnComment}
+     */
+    private ${column.javaType} ${column.javaField};
+
+#end
+#end
+#end
+}
+

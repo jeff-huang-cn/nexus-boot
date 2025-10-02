@@ -1,13 +1,12 @@
 package com.nexus.backend.admin.controller.codegen;
 
 import com.nexus.backend.admin.common.result.Result;
-import com.nexus.backend.admin.controller.codegen.dto.DatabaseColumnDTO;
-import com.nexus.backend.admin.controller.codegen.dto.DatabaseTableDTO;
-import com.nexus.backend.admin.entity.codegen.DataSourceConfig;
-import com.nexus.backend.admin.mapper.codegen.DataSourceConfigMapper;
+import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
+import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
+import com.nexus.backend.admin.dal.entity.codegen.DataSourceConfigDO;
+import com.nexus.backend.admin.dal.mapper.codegen.DataSourceConfigMapper;
 import com.nexus.backend.admin.service.codegen.DatabaseTableService;
 import jakarta.annotation.Resource;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -40,8 +39,8 @@ public class DatabaseController {
      * @return 数据源配置列表
      */
     @GetMapping("/datasources")
-    public Result<List<DataSourceConfig>> getDataSourceList() {
-        List<DataSourceConfig> list = dataSourceConfigMapper.selectActiveList();
+    public Result<List<DataSourceConfigDO>> getDataSourceList() {
+        List<DataSourceConfigDO> list = dataSourceConfigMapper.selectActiveList();
         return Result.success(list);
     }
 
@@ -53,11 +52,11 @@ public class DatabaseController {
      * @return 表列表
      */
     @GetMapping("/tables")
-    public Result<List<DatabaseTableDTO>> getTableList(
+    public Result<List<DatabaseTableDVO>> getTableList(
             @RequestParam @NotNull Long datasourceConfigId,
             @RequestParam(required = false) String tableName) {
 
-        List<DatabaseTableDTO> list = databaseTableService.selectTableList(datasourceConfigId, tableName);
+        List<DatabaseTableDVO> list = databaseTableService.selectTableList(datasourceConfigId, tableName);
         return Result.success(list);
     }
 
@@ -69,11 +68,11 @@ public class DatabaseController {
      * @return 字段列表
      */
     @GetMapping("/tables/{tableName}/columns")
-    public Result<List<DatabaseColumnDTO>> getColumnList(
+    public Result<List<DatabaseColumnVO>> getColumnList(
             @RequestParam @NotNull Long datasourceConfigId,
             @PathVariable @NotBlank String tableName) {
 
-        List<DatabaseColumnDTO> list = databaseTableService.selectColumnList(datasourceConfigId, tableName);
+        List<DatabaseColumnVO> list = databaseTableService.selectColumnList(datasourceConfigId, tableName);
         return Result.success(list);
     }
 
@@ -85,11 +84,11 @@ public class DatabaseController {
      * @return 表信息
      */
     @GetMapping("/tables/{tableName}")
-    public Result<DatabaseTableDTO> getTableInfo(
+    public Result<DatabaseTableDVO> getTableInfo(
             @RequestParam @NotNull Long datasourceConfigId,
             @PathVariable @NotBlank String tableName) {
 
-        DatabaseTableDTO table = databaseTableService.selectTableByName(datasourceConfigId, tableName);
+        DatabaseTableDVO table = databaseTableService.selectTableByName(datasourceConfigId, tableName);
         return Result.success(table);
     }
 

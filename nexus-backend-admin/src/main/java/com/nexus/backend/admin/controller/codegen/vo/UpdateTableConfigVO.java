@@ -1,7 +1,7 @@
-package com.nexus.backend.admin.controller.codegen.dto;
+package com.nexus.backend.admin.controller.codegen.vo;
 
-import com.nexus.backend.admin.entity.codegen.CodegenColumn;
-import com.nexus.backend.admin.entity.codegen.CodegenTable;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
 import lombok.Data;
 
 import jakarta.validation.Valid;
@@ -15,20 +15,20 @@ import java.util.List;
  * @since 2024-01-01
  */
 @Data
-public class UpdateTableConfigRequest {
+public class UpdateTableConfigVo {
 
     /**
      * 表配置
      */
     @NotNull(message = "表配置不能为空")
     @Valid
-    private CodegenTable table;
+    private CodegenTableDO table;
 
     /**
      * 字段配置列表
      */
     @NotNull(message = "字段配置列表不能为空")
     @Valid
-    private List<CodegenColumn> columns;
+    private List<CodegenColumnDO> columns;
 
 }

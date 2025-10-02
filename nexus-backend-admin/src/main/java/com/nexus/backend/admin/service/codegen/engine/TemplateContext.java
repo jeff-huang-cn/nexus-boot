@@ -1,7 +1,7 @@
 package com.nexus.backend.admin.service.codegen.engine;
 
-import com.nexus.backend.admin.entity.codegen.CodegenColumn;
-import com.nexus.backend.admin.entity.codegen.CodegenTable;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -27,7 +27,7 @@ public class TemplateContext {
      * @param columns 字段配置
      * @return 模板变量Map
      */
-    public static Map<String, Object> build(CodegenTable table, List<CodegenColumn> columns) {
+    public static Map<String, Object> build(CodegenTableDO table, List<CodegenColumnDO> columns) {
         Map<String, Object> context = new HashMap<>();
 
         // 基本信息
@@ -67,15 +67,25 @@ public class TemplateContext {
         context.put("frontType", table.getFrontType());
         context.put("isReact", table.getFrontType() == 30);
 
+        // BaseDO 字段列表（用于DO模板排除这些字段）
+        context.put("baseDOFields", getBaseDOFields());
+
         return context;
+    }
+
+    /**
+     * 获取 BaseDO 包含的字段名列表
+     */
+    private static List<String> getBaseDOFields() {
+        return List.of("dateCreated", "lastUpdated", "creator", "updater", "deleted", "tenantId");
     }
 
     /**
      * 获取主键字段
      */
-    private static CodegenColumn getPrimaryKeyColumn(List<CodegenColumn> columns) {
+    private static CodegenColumnDO getPrimaryKeyColumn(List<CodegenColumnDO> columns) {
         return columns.stream()
-                .filter(CodegenColumn::getPrimaryKey)
+                .filter(CodegenColumnDO::getPrimaryKey)
                 .findFirst()
                 .orElse(null);
     }
@@ -83,36 +93,36 @@ public class TemplateContext {
     /**
      * 获取新增操作字段
      */
-    private static List<CodegenColumn> getCreateColumns(List<CodegenColumn> columns) {
+    private static List<CodegenColumnDO> getCreateColumns(List<CodegenColumnDO> columns) {
         return columns.stream()
-                .filter(CodegenColumn::getCreateOperation)
+                .filter(CodegenColumnDO::getCreateOperation)
                 .collect(Collectors.toList());
     }
 
     /**
      * 获取编辑操作字段
      */
-    private static List<CodegenColumn> getUpdateColumns(List<CodegenColumn> columns) {
+    private static List<CodegenColumnDO> getUpdateColumns(List<CodegenColumnDO> columns) {
         return columns.stream()
-                .filter(CodegenColumn::getUpdateOperation)
+                .filter(CodegenColumnDO::getUpdateOperation)
                 .collect(Collectors.toList());
     }
 
     /**
      * 获取查询操作字段
      */
-    private static List<CodegenColumn> getListColumns(List<CodegenColumn> columns) {
+    private static List<CodegenColumnDO> getListColumns(List<CodegenColumnDO> columns) {
         return columns.stream()
-                .filter(CodegenColumn::getListOperation)
+                .filter(CodegenColumnDO::getListOperation)
                 .collect(Collectors.toList());
     }
 
     /**
      * 获取列表显示字段
      */
-    private static List<CodegenColumn> getListResultColumns(List<CodegenColumn> columns) {
+    private static List<CodegenColumnDO> getListResultColumns(List<CodegenColumnDO> columns) {
         return columns.stream()
-                .filter(CodegenColumn::getListOperationResult)
+                .filter(CodegenColumnDO::getListOperationResult)
                 .collect(Collectors.toList());
     }
 
@@ -139,7 +149,7 @@ public class TemplateContext {
     /**
      * 是否包含日期字段
      */
-    private static boolean hasDateColumn(List<CodegenColumn> columns) {
+    private static boolean hasDateColumn(List<CodegenColumnDO> columns) {
         return columns.stream()
                 .anyMatch(column -> "Date".equals(column.getJavaType()) ||
                         "LocalDate".equals(column.getJavaType()) ||
@@ -149,7 +159,7 @@ public class TemplateContext {
     /**
      * 是否包含BigDecimal字段
      */
-    private static boolean hasBigDecimalColumn(List<CodegenColumn> columns) {
+    private static boolean hasBigDecimalColumn(List<CodegenColumnDO> columns) {
         return columns.stream()
                 .anyMatch(column -> "BigDecimal".equals(column.getJavaType()));
     }
@@ -157,7 +167,7 @@ public class TemplateContext {
     /**
      * 是否包含LocalDateTime字段
      */
-    private static boolean hasLocalDateTimeColumn(List<CodegenColumn> columns) {
+    private static boolean hasLocalDateTimeColumn(List<CodegenColumnDO> columns) {
         return columns.stream()
                 .anyMatch(column -> "LocalDateTime".equals(column.getJavaType()));
     }

@@ -1,0 +1,70 @@
+package ${packageName}.service.${businessName};
+
+import ${packageName}.controller.${businessName}.vo.*;
+import ${packageName}.dal.dataobject.${businessName}.${className}DO;
+import com.nexus.framework.common.result.PageResult;
+import jakarta.validation.Valid;
+import java.util.List;
+
+/**
+ * ${classComment} Service 接口
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+public interface ${className}Service {
+
+    /**
+     * 创建${classComment}
+     *
+     * @param createReqVO 创建信息
+     * @return 编号
+     */
+    Long create${className}(@Valid ${className}SaveReqVO createReqVO);
+
+    /**
+     * 更新${classComment}
+     *
+     * @param updateReqVO 更新信息
+     */
+    void update${className}(@Valid ${className}SaveReqVO updateReqVO);
+
+    /**
+     * 删除${classComment}
+     *
+     * @param id 编号
+     */
+    void delete${className}(Long id);
+
+    /**
+     * 批量删除${classComment}
+     *
+     * @param ids 编号列表
+     */
+    void delete${className}Batch(List<Long> ids);
+
+    /**
+     * 获得${classComment}详情
+     *
+     * @param id 编号
+     * @return ${classComment}详情
+     */
+    ${className}RespVO get${className}(Long id);
+
+    /**
+     * 获得${classComment}分页
+     *
+     * @param pageReqVO 分页查询
+     * @return ${classComment}分页
+     */
+    PageResult<${className}RespVO> get${className}Page(${className}PageReqVO pageReqVO);
+
+    /**
+     * 获得${classComment}列表（用于导出）
+     *
+     * @param pageReqVO 查询条件
+     * @return ${classComment}列表
+     */
+    List<${className}RespVO> get${className}List(${className}PageReqVO pageReqVO);
+}
+

@@ -1,13 +1,12 @@
 package com.nexus.backend.admin.service.codegen.impl;
 
 import com.nexus.backend.admin.common.exception.BusinessException;
-import com.nexus.backend.admin.controller.codegen.dto.DatabaseColumnDTO;
-import com.nexus.backend.admin.controller.codegen.dto.DatabaseTableDTO;
-import com.nexus.backend.admin.entity.codegen.DataSourceConfig;
-import com.nexus.backend.admin.mapper.codegen.DataSourceConfigMapper;
+import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
+import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
+import com.nexus.backend.admin.dal.entity.codegen.DataSourceConfigDO;
+import com.nexus.backend.admin.dal.mapper.codegen.DataSourceConfigMapper;
 import com.nexus.backend.admin.service.codegen.DatabaseTableService;
 import jakarta.annotation.Resource;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -30,8 +29,8 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
     private DataSourceConfigMapper dataSourceConfigMapper;
 
     @Override
-    public List<DatabaseTableDTO> selectTableList(Long datasourceConfigId, String tableName) {
-        DataSourceConfig config = getDataSourceConfig(datasourceConfigId);
+    public List<DatabaseTableDVO> selectTableList(Long datasourceConfigId, String tableName) {
+        DataSourceConfigDO config = getDataSourceConfig(datasourceConfigId);
 
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ");
@@ -53,7 +52,7 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
 
         sql.append("ORDER BY table_name");
 
-        List<DatabaseTableDTO> list = new ArrayList<>();
+        List<DatabaseTableDVO> list = new ArrayList<>();
         try (Connection conn = createConnection(config);
                 PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
 
@@ -64,7 +63,7 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    DatabaseTableDTO dto = new DatabaseTableDTO();
+                    DatabaseTableDVO dto = new DatabaseTableDVO();
                     dto.setTableName(rs.getString("table_name"));
                     dto.setTableComment(rs.getString("table_comment"));
                     dto.setCreateTime(rs.getString("create_time"));
@@ -85,8 +84,8 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
     }
 
     @Override
-    public List<DatabaseColumnDTO> selectColumnList(Long datasourceConfigId, String tableName) {
-        DataSourceConfig config = getDataSourceConfig(datasourceConfigId);
+    public List<DatabaseColumnVO> selectColumnList(Long datasourceConfigId, String tableName) {
+        DataSourceConfigDO config = getDataSourceConfig(datasourceConfigId);
 
         String sql = "SELECT " +
                 "  column_name, " +
@@ -105,7 +104,7 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
                 "  AND table_name = ? " +
                 "ORDER BY ordinal_position";
 
-        List<DatabaseColumnDTO> list = new ArrayList<>();
+        List<DatabaseColumnVO> list = new ArrayList<>();
         try (Connection conn = createConnection(config);
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -113,7 +112,7 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    DatabaseColumnDTO dto = new DatabaseColumnDTO();
+                    DatabaseColumnVO dto = new DatabaseColumnVO();
                     dto.setColumnName(rs.getString("column_name"));
                     dto.setDataType(rs.getString("data_type"));
                     dto.setColumnComment(rs.getString("column_comment"));
@@ -137,8 +136,8 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
     }
 
     @Override
-    public DatabaseTableDTO selectTableByName(Long datasourceConfigId, String tableName) {
-        List<DatabaseTableDTO> list = selectTableList(datasourceConfigId, tableName);
+    public DatabaseTableDVO selectTableByName(Long datasourceConfigId, String tableName) {
+        List<DatabaseTableDVO> list = selectTableList(datasourceConfigId, tableName);
         return list.stream()
                 .filter(table -> tableName.equals(table.getTableName()))
                 .findFirst()
@@ -148,8 +147,8 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
     /**
      * 获取数据源配置
      */
-    private DataSourceConfig getDataSourceConfig(Long datasourceConfigId) {
-        DataSourceConfig config = dataSourceConfigMapper.selectById(datasourceConfigId);
+    private DataSourceConfigDO getDataSourceConfig(Long datasourceConfigId) {
+        DataSourceConfigDO config = dataSourceConfigMapper.selectById(datasourceConfigId);
         if (config == null) {
             throw new BusinessException("数据源配置不存在");
         }
@@ -159,7 +158,7 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
     /**
      * 创建数据库连接
      */
-    private Connection createConnection(DataSourceConfig config) throws SQLException {
+    private Connection createConnection(DataSourceConfigDO config) throws SQLException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             return DriverManager.getConnection(config.getUrl(), config.getUsername(), config.getPassword());

@@ -1,0 +1,38 @@
+package ${packageName}.controller.${businessName}.vo;
+
+import lombok.Data;
+import jakarta.validation.constraints.*;
+#if($hasLocalDateTime)
+import java.time.LocalDateTime;
+#end
+#if($hasBigDecimal)
+import java.math.BigDecimal;
+#end
+
+/**
+ * ${classComment}保存 Request VO（新增/修改）
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Data
+public class ${className}SaveReqVO {
+
+#foreach ($column in $columns)
+#if(${column.createOperation} || ${column.updateOperation})## 用于新增或修改的字段
+    /**
+     * ${column.columnComment}
+     */
+#if(!${column.nullable} && !${column.primaryKey})## 非空校验
+#if(${column.javaType} == 'String')
+    @NotBlank(message = "${column.columnComment}不能为空")
+#else
+    @NotNull(message = "${column.columnComment}不能为空")
+#end
+#end
+    private ${column.javaType} ${column.javaField};
+
+#end
+#end
+}
+

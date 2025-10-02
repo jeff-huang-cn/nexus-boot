@@ -1,4 +1,4 @@
-package com.nexus.backend.admin.controller.codegen.dto;
+package com.nexus.backend.admin.controller.codegen.vo;
 
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import lombok.Data;
  * @since 2024-01-01
  */
 @Data
-public class DatabaseTableDTO {
+public class DatabaseTableDVO {
 
     /**
      * 表名

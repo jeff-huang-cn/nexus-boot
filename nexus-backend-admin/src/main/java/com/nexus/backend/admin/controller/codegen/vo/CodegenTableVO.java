@@ -1,6 +1,6 @@
 package com.nexus.backend.admin.controller.codegen.vo;
 
-import com.nexus.backend.admin.entity.codegen.CodegenColumn;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -113,6 +113,6 @@ public class CodegenTableVO {
     /**
      * 字段列表
      */
-    private List<CodegenColumn> columns;
+    private List<CodegenColumnDO> columns;
 
 }

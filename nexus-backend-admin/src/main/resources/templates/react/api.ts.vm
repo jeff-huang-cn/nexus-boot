@@ -1,55 +1,49 @@
 import request from '../utils/request';
-import type { ${businessNameUpper}, PageResult } from '../types/${businessName}';
+import type { ${className}, ${className}Query, ${className}Form, PageResult } from '../types/${businessName}';
 
 /**
  * ${classComment}相关API
  */
-export const ${businessNameUpper}Api = {
+export const ${classNameFirstLower}Api = {
   /**
    * 分页查询${classComment}列表
    */
-  getList: (params: {
-    current?: number;
-    size?: number;
-#foreach($column in $listColumns)
-    ${column.javaField}?: ${column.javaType};
-#end
-  }): Promise<PageResult<${businessNameUpper}>> => {
-    return request.get('/api/${businessName}', { params });
+  getPage: (params: ${className}Query): Promise<PageResult<${className}>> => {
+    return request.get('/${businessName}/page', { params });
   },
 
   /**
    * 根据ID查询${classComment}
    */
-  getById: (id: number): Promise<${businessNameUpper}> => {
-    return request.get(`/api/${businessName}/${id}`);
+  getById: (id: number): Promise<${className}> => {
+    return request.get(`/${businessName}/${id}`);
   },
 
   /**
    * 创建${classComment}
    */
-  create: (data: Partial<${businessNameUpper}>): Promise<void> => {
-    return request.post('/api/${businessName}', data);
+  create: (data: ${className}Form): Promise<number> => {
+    return request.post('/${businessName}', data);
   },
 
   /**
    * 更新${classComment}
    */
-  update: (id: number, data: Partial<${businessNameUpper}>): Promise<void> => {
-    return request.put(`/api/${businessName}/${id}`, data);
+  update: (id: number, data: ${className}Form): Promise<void> => {
+    return request.put(`/${businessName}/${id}`, data);
   },
 
   /**
    * 删除${classComment}
    */
   delete: (id: number): Promise<void> => {
-    return request.delete(`/api/${businessName}/${id}`);
+    return request.delete(`/${businessName}/${id}`);
   },
 
   /**
    * 批量删除${classComment}
    */
   deleteBatch: (ids: number[]): Promise<void> => {
-    return request.delete('/api/${businessName}', { data: ids });
+    return request.delete(`/${businessName}/batch`, { data: { ids } });
   },
 };

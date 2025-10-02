@@ -51,21 +51,7 @@ const ImportTable: React.FC = () => {
       key: 'tableComment',
       width: 200,
       render: (text: string) => text || '-',
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'dateCreated',
-      key: 'dateCreated',
-      width: 180,
-      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'lastUpdated',
-      key: 'lastUpdated',
-      width: 180,
-      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
-    },
+    }
   ];
 
   // 行选择配置

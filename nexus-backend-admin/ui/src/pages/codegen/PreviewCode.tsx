@@ -9,12 +9,15 @@ import {
   Alert,
   Spin,
   Progress,
+  Tree,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   DownloadOutlined,
   CopyOutlined,
   ReloadOutlined,
+  FileOutlined,
+  FolderOpenOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -188,26 +191,80 @@ const PreviewCode: React.FC = () => {
   const preloadQueueRef = useRef<string[]>([]);
   const preloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 构建树形数据结构
+  const buildTree = (files: string[]) => {
+    const tree: any[] = [];
+    const map = new Map();
+
+    files.forEach(filePath => {
+      const parts = filePath.split('/');
+      let currentLevel = tree;
+      let currentPath = '';
+
+      parts.forEach((part, index) => {
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+        const isFile = index === parts.length - 1;
+
+        if (!map.has(currentPath)) {
+          const node: any = {
+            title: part,
+            key: currentPath,
+            isLeaf: isFile,
+            icon: isFile ? <FileOutlined /> : undefined,
+          };
+
+          if (!isFile) {
+            node.children = [];
+          }
+
+          map.set(currentPath, node);
+          currentLevel.push(node);
+
+          if (!isFile) {
+            currentLevel = node.children;
+          }
+        } else {
+          if (!isFile) {
+            currentLevel = map.get(currentPath).children;
+          }
+        }
+      });
+    });
+
+    return tree;
+  };
+
   // 使用useMemo优化文件分组计算
   const fileGroups = useMemo(() => {
-    const groups: Record<string, { label: string; files: Array<{ key: string; name: string }> }> = {
-      backend: { label: '后端代码', files: [] },
-      frontend: { label: '前端代码', files: [] },
-      sql: { label: 'SQL脚本', files: [] },
-      config: { label: '配置文件', files: [] },
+    const groups: Record<string, { label: string; files: string[]; tree: any[] }> = {
+      backend: { label: '后端代码', files: [], tree: [] },
+      frontend: { label: '前端代码', files: [], tree: [] },
     };
 
     Object.keys(codeMap).forEach(fileName => {
-      if (fileName.endsWith('.java')) {
-        groups.backend.files.push({ key: fileName, name: fileName });
-      } else if (fileName.endsWith('.tsx') || fileName.endsWith('.ts') || fileName.endsWith('.vue')) {
-        groups.frontend.files.push({ key: fileName, name: fileName });
-      } else if (fileName.endsWith('.sql')) {
-        groups.sql.files.push({ key: fileName, name: fileName });
-      } else {
-        groups.config.files.push({ key: fileName, name: fileName });
+      if (fileName.startsWith('backend/')) {
+        groups.backend.files.push(fileName);
+      } else if (fileName.startsWith('frontend/')) {
+        groups.frontend.files.push(fileName);
       }
     });
+
+    // 对后端文件排序：resources 相关的文件排在最后
+    groups.backend.files.sort((a, b) => {
+      const aIsResource = a.includes('/resources/');
+      const bIsResource = b.includes('/resources/');
+      
+      if (aIsResource && !bIsResource) return 1;  // a 是 resources，排后面
+      if (!aIsResource && bIsResource) return -1; // b 是 resources，排后面
+      return a.localeCompare(b); // 其他情况按字母排序
+    });
+
+    // 对前端文件排序
+    groups.frontend.files.sort((a, b) => a.localeCompare(b));
+
+    // 构建树形结构
+    groups.backend.tree = buildTree(groups.backend.files);
+    groups.frontend.tree = buildTree(groups.frontend.files);
 
     return groups;
   }, [codeMap]);
@@ -361,16 +418,10 @@ const PreviewCode: React.FC = () => {
     // 优先选择后端代码
     if (fileGroups.backend.files.length > 0) {
       setActiveGroupTab('backend');
-      defaultFileKey = fileGroups.backend.files[0].key;
+      defaultFileKey = fileGroups.backend.files[0];
     } else if (fileGroups.frontend.files.length > 0) {
       setActiveGroupTab('frontend');
-      defaultFileKey = fileGroups.frontend.files[0].key;
-    } else if (fileGroups.sql.files.length > 0) {
-      setActiveGroupTab('sql');
-      defaultFileKey = fileGroups.sql.files[0].key;
-    } else if (fileGroups.config.files.length > 0) {
-      setActiveGroupTab('config');
-      defaultFileKey = fileGroups.config.files[0].key;
+      defaultFileKey = fileGroups.frontend.files[0];
     }
 
     if (defaultFileKey) {
@@ -440,13 +491,19 @@ const PreviewCode: React.FC = () => {
     // 切换分组时，自动选择该分组的第一个文件
     const group = fileGroups[key];
     if (group && group.files.length > 0) {
-      setActiveFileTab(group.files[0].key);
+      setActiveFileTab(group.files[0]);
     }
   }, [fileGroups]);
 
-  const handleFileTabChange = useCallback((key: string) => {
-    setActiveFileTab(key);
-  }, []);
+  const handleTreeSelect = useCallback((selectedKeys: React.Key[]) => {
+    if (selectedKeys.length > 0) {
+      const key = selectedKeys[0] as string;
+      // 只有选中文件才切换（非文件夹）
+      if (codeMap[key]) {
+        setActiveFileTab(key);
+      }
+    }
+  }, [codeMap]);
 
   // 渲染文件内容，使用缓存优化
   const renderFileContent = useCallback((fileName: string) => {
@@ -538,28 +595,46 @@ const PreviewCode: React.FC = () => {
               {Object.entries(fileGroups).map(([groupKey, group]) =>
                 group.files.length > 0 && (
                   <TabPane tab={group.label} key={groupKey}>
-                    <Tabs
-                      activeKey={activeFileTab}
-                      onChange={handleFileTabChange}
-                      tabPosition="left"
-                      style={{ minHeight: 400 }}
-                      destroyInactiveTabPane={false} // 保持Tab内容，避免重复渲染
-                    >
-                      {group.files.map(file => (
-                        <TabPane
-                          tab={
-                            <div style={{ textAlign: 'left', maxWidth: 200 }}>
-                              <Text ellipsis={{ tooltip: file.name }}>
-                                {file.name}
-                              </Text>
-                            </div>
-                          }
-                          key={file.key}
-                        >
-                          {renderFileContent(file.key)}
-                        </TabPane>
-                      ))}
-                    </Tabs>
+                    <div style={{ display: 'flex', gap: 16, minHeight: 500 }}>
+                      {/* 左侧树形文件列表 */}
+                      <div
+                        style={{
+                          width: 500,
+                          minWidth: 500,
+                          borderRight: '1px solid #f0f0f0',
+                          paddingRight: 16,
+                          overflowY: 'auto',
+                          overflowX: 'hidden',
+                          maxHeight: 'calc(100vh - 300px)',
+                        }}
+                      >
+                        <Tree
+                          showIcon
+                          defaultExpandAll
+                          selectedKeys={[activeFileTab]}
+                          onSelect={handleTreeSelect}
+                          treeData={group.tree}
+                          switcherIcon={<FolderOpenOutlined />}
+                          style={{ whiteSpace: 'nowrap' }}
+                        />
+                      </div>
+                      
+                      {/* 右侧代码显示区 */}
+                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                        {activeFileTab && codeMap[activeFileTab] ? (
+                          renderFileContent(activeFileTab)
+                        ) : (
+                          <div style={{ 
+                            textAlign: 'center', 
+                            padding: '100px 0',
+                            color: '#999'
+                          }}>
+                            <FileOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                            <div>请从左侧选择文件查看</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </TabPane>
                 )
               )}

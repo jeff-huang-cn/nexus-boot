@@ -1,9 +1,9 @@
 package com.nexus.backend.admin.common.utils;
 
-import com.nexus.backend.admin.controller.codegen.dto.DatabaseColumnDTO;
-import com.nexus.backend.admin.controller.codegen.dto.DatabaseTableDTO;
-import com.nexus.backend.admin.entity.codegen.CodegenColumn;
-import com.nexus.backend.admin.entity.codegen.CodegenTable;
+import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
+import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -266,53 +266,53 @@ public class CodegenUtils {
      * @param datasourceConfigId 数据源配置ID
      * @return 代码生成表
      */
-    public static CodegenTable initTable(DatabaseTableDTO table, Long datasourceConfigId) {
-        CodegenTable codegenTable = new CodegenTable();
+    public static CodegenTableDO initTable(DatabaseTableDVO table, Long datasourceConfigId) {
+        CodegenTableDO codegenTableDO = new CodegenTableDO();
 
         // 基本信息
-        codegenTable.setTableName(table.getTableName());
+        codegenTableDO.setTableName(table.getTableName());
 
         // 智能设置表描述：如果数据库没有注释，根据类名生成
         String tableName = table.getTableName();
         String businessName = getBusinessName(tableName);
         String className = getClassName(businessName);
-        codegenTable.setTableComment(
+        codegenTableDO.setTableComment(
                 StringUtils.hasText(table.getTableComment())
                         ? table.getTableComment()
                         : className + "信息表");
-        codegenTable.setDatasourceConfigId(datasourceConfigId);
+        codegenTableDO.setDatasourceConfigId(datasourceConfigId);
 
         // 智能推导模块名：从业务名提取主要部分
         String moduleName = getModuleName(businessName);
 
         // 设置生成信息
-        codegenTable.setClassName(className);
-        codegenTable.setBusinessName(businessName);
-        codegenTable.setModuleName(moduleName);
-        codegenTable.setClassComment(
+        codegenTableDO.setClassName(className);
+        codegenTableDO.setBusinessName(businessName);
+        codegenTableDO.setModuleName(moduleName);
+        codegenTableDO.setClassComment(
                 StringUtils.hasText(table.getTableComment())
                         ? table.getTableComment()
                         : className + "实体");
 
         // 设置包名信息（按yudao规范）
-        codegenTable.setPackageName("com.beckend.admin.modules." + moduleName);
-        codegenTable.setModulePackageName("com.beckend.admin.modules." + moduleName);
-        codegenTable.setBusinessPackageName("com.beckend.admin.modules." + moduleName + "." + businessName);
+        codegenTableDO.setPackageName("com.beckend.admin.modules." + moduleName);
+        codegenTableDO.setModulePackageName("com.beckend.admin.modules." + moduleName);
+        codegenTableDO.setBusinessPackageName("com.beckend.admin.modules." + moduleName + "." + businessName);
 
         // 默认配置
-        codegenTable.setAuthor("beckend");
-        codegenTable.setTemplateType(1); // CRUD
-        codegenTable.setFrontType(30); // React
-        codegenTable.setScene(1); // 管理后台
-        codegenTable.setClassPrefix("");
+        codegenTableDO.setAuthor("beckend");
+        codegenTableDO.setTemplateType(1); // CRUD
+        codegenTableDO.setFrontType(30); // React
+        codegenTableDO.setScene(1); // 管理后台
+        codegenTableDO.setClassPrefix("");
 
         // 审计字段
-        codegenTable.setCreator("system");
-        codegenTable.setDateCreated(LocalDateTime.now());
-        codegenTable.setUpdater("system");
-        codegenTable.setLastUpdated(LocalDateTime.now());
+        codegenTableDO.setCreator("system");
+        codegenTableDO.setDateCreated(LocalDateTime.now());
+        codegenTableDO.setUpdater("system");
+        codegenTableDO.setLastUpdated(LocalDateTime.now());
 
-        return codegenTable;
+        return codegenTableDO;
     }
 
     /**
@@ -322,67 +322,72 @@ public class CodegenUtils {
      * @param tableId 表ID
      * @return 代码生成字段
      */
-    public static CodegenColumn initColumn(DatabaseColumnDTO column, Long tableId) {
-        CodegenColumn codegenColumn = new CodegenColumn();
+    public static CodegenColumnDO initColumn(DatabaseColumnVO column, Long tableId) {
+        CodegenColumnDO codegenColumnDO = new CodegenColumnDO();
 
         // 基本信息
-        codegenColumn.setTableId(tableId);
-        codegenColumn.setColumnName(column.getColumnName());
-        codegenColumn.setDataType(column.getDataType());
-        codegenColumn.setColumnComment(
+        codegenColumnDO.setTableId(tableId);
+        codegenColumnDO.setColumnName(column.getColumnName());
+        codegenColumnDO.setDataType(column.getDataType());
+        codegenColumnDO.setColumnComment(
                 StringUtils.hasText(column.getColumnComment()) ? column.getColumnComment() : column.getColumnName());
 
         // 字段属性
-        codegenColumn.setNullable(!"NO".equals(column.getIsNullable()));
-        codegenColumn.setPrimaryKey("PRI".equals(column.getColumnKey()));
-        codegenColumn.setAutoIncrement("auto_increment".equals(column.getExtra()) ? "1" : "0");
-        codegenColumn.setOrdinalPosition(column.getOrdinalPosition());
+        codegenColumnDO.setNullable(!"NO".equals(column.getIsNullable()));
+        codegenColumnDO.setPrimaryKey("PRI".equals(column.getColumnKey()));
+        codegenColumnDO.setAutoIncrement("auto_increment".equals(column.getExtra()) ? "1" : "0");
+        codegenColumnDO.setOrdinalPosition(column.getOrdinalPosition());
 
         // Java属性
-        codegenColumn.setJavaType(convertDataType(column.getDataType()));
-        codegenColumn.setJavaField(columnToJavaName(column.getColumnName()));
+        codegenColumnDO.setJavaType(convertDataType(column.getDataType()));
+        codegenColumnDO.setJavaField(columnToJavaName(column.getColumnName()));
 
         // 表单属性
-        codegenColumn.setHtmlType(getHtmlType(codegenColumn.getJavaType(), column.getColumnName()));
+        codegenColumnDO.setHtmlType(getHtmlType(codegenColumnDO.getJavaType(), column.getColumnName()));
 
         // 操作属性
         String columnName = column.getColumnName().toLowerCase();
-        if (codegenColumn.getPrimaryKey() || "create_time".equals(columnName) ||
-                "update_time".equals(columnName) || "deleted".equals(columnName)) {
+        if (codegenColumnDO.getPrimaryKey() || "date_created".equals(columnName) ||
+                "last_updated".equals(columnName) || "deleted".equals(columnName) ||
+                "creator".equals(columnName) || "updater".equals(columnName) || "tenant_id".equals(columnName)) {
             // 主键和审计字段默认不参与新增和修改
-            codegenColumn.setCreateOperation(false);
-            codegenColumn.setUpdateOperation(false);
+            codegenColumnDO.setCreateOperation(false);
+            codegenColumnDO.setUpdateOperation(false);
         } else {
-            codegenColumn.setCreateOperation(true);
-            codegenColumn.setUpdateOperation(true);
+            codegenColumnDO.setCreateOperation(true);
+            codegenColumnDO.setUpdateOperation(true);
         }
 
         if ("password".equals(columnName) || "deleted".equals(columnName)) {
             // 密码和删除标志不显示在列表中
-            codegenColumn.setListOperation(false);
-            codegenColumn.setListOperationResult(false);
+            codegenColumnDO.setListOperation(false);
+            codegenColumnDO.setListOperationResult(false);
         } else {
-            codegenColumn.setListOperation(true);
-            codegenColumn.setListOperationResult(true);
+            codegenColumnDO.setListOperation(true);
+            codegenColumnDO.setListOperationResult(true);
         }
 
         // 查询条件
-        if ("String".equals(codegenColumn.getJavaType())) {
-            codegenColumn.setListOperationCondition("LIKE");
+        if ("String".equals(codegenColumnDO.getJavaType())) {
+            codegenColumnDO.setListOperationCondition("LIKE");
+        } else if ("LocalDateTime".equals(codegenColumnDO.getJavaType()) ||
+                "LocalDate".equals(codegenColumnDO.getJavaType()) ||
+                "Date".equals(codegenColumnDO.getJavaType())) {
+            codegenColumnDO.setListOperationCondition("BETWEEN");
         } else {
-            codegenColumn.setListOperationCondition("=");
+            codegenColumnDO.setListOperationCondition("EQ");
         }
 
         // 示例数据
-        codegenColumn.setExample(getExampleValue(codegenColumn.getJavaType(), column.getColumnName()));
+        codegenColumnDO.setExample(getExampleValue(codegenColumnDO.getJavaType(), column.getColumnName()));
 
         // 审计字段
-        codegenColumn.setCreator("system");
-        codegenColumn.setDateCreated(LocalDateTime.now());
-        codegenColumn.setUpdater("system");
-        codegenColumn.setLastUpdated(LocalDateTime.now());
+        codegenColumnDO.setCreator("system");
+        codegenColumnDO.setDateCreated(LocalDateTime.now());
+        codegenColumnDO.setUpdater("system");
+        codegenColumnDO.setLastUpdated(LocalDateTime.now());
 
-        return codegenColumn;
+        return codegenColumnDO;
     }
 
     /**

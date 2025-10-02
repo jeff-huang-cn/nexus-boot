@@ -8,45 +8,37 @@
 export interface PageResult<T> {
   list: T[];
   total: number;
-  current: number;
-  size: number;
-  pages: number;
 }
 
 /**
  * ${classComment}
  */
-export interface ${businessNameUpper} {
+export interface ${className} {
 #foreach($column in $columns)
-  ${column.javaField}#if($column.nullable)?#end: #if($column.javaType == "String")string#elseif($column.javaType == "Integer" || $column.javaType == "Long" || $column.javaType == "BigDecimal")number#elseif($column.javaType == "Boolean")boolean#elseif($column.javaType == "LocalDateTime")string#else string#end;
+  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
 #end
 }
 
 /**
  * ${classComment}查询参数
  */
-export interface ${businessNameUpper}Query {
-  current?: number;
-  size?: number;
-#foreach($column in $listColumns)
-  ${column.javaField}?: #if($column.javaType == "String")string#elseif($column.javaType == "Integer" || $column.javaType == "Long" || $column.javaType == "BigDecimal")number#elseif($column.javaType == "Boolean")boolean#elseif($column.javaType == "LocalDateTime")string#else string#end;
-#end
-}
-
-/**
- * ${classComment}创建参数
- */
-export interface ${businessNameUpper}Create {
-#foreach($column in $createColumns)
-#if(!$column.primaryKey)
-  ${column.javaField}#if($column.nullable)?#end: #if($column.javaType == "String")string#elseif($column.javaType == "Integer" || $column.javaType == "Long" || $column.javaType == "BigDecimal")number#elseif($column.javaType == "Boolean")boolean#elseif($column.javaType == "LocalDateTime")string#else string#end;
+export interface ${className}Query {
+  pageNo?: number;
+  pageSize?: number;
+#foreach($column in $columns)
+#if(${column.listOperation})
+  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
 #end
 #end
 }
 
 /**
- * ${classComment}更新参数
+ * ${classComment}创建/编辑参数
  */
-export interface ${businessNameUpper}Update extends Partial<${businessNameUpper}Create> {
-  id: number;
+export interface ${className}Form {
+#foreach($column in $columns)
+#if(${column.createOperation} && !${column.primaryKey})
+  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
+#end
+#end
 }
