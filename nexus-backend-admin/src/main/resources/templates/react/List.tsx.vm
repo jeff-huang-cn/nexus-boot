@@ -82,7 +82,7 @@ const ${className}List: React.FC = () => {
     setLoading(true);
     try {
       const searchParams = {
-        pageNo: current,
+        pageNum: current,
         pageSize: size,
         ...form.getFieldsValue(),
         ...params,
@@ -91,7 +91,7 @@ const ${className}List: React.FC = () => {
       const result = await ${classNameFirstLower}Api.getPage(searchParams);
       setData(result.list);
       setTotal(result.total);
-      setCurrent(searchParams.pageNo);
+      setCurrent(searchParams.pageNum);
       setSize(searchParams.pageSize);
     } catch (error) {
       message.error('加载数据失败');
@@ -107,14 +107,14 @@ const ${className}List: React.FC = () => {
   // 搜索
   const handleSearch = () => {
     setCurrent(1);
-    loadData({ pageNo: 1 });
+    loadData({ pageNum: 1 });
   };
 
   // 重置
   const handleReset = () => {
     form.resetFields();
     setCurrent(1);
-    loadData({ pageNo: 1 });
+    loadData({ pageNum: 1 });
   };
 
   // 新增

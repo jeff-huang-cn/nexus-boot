@@ -1,13 +1,13 @@
 package com.nexus.backend.admin.controller.codegen;
 
-import com.nexus.backend.admin.common.result.PageResult;
-import com.nexus.backend.admin.common.result.Result;
 import com.nexus.backend.admin.controller.codegen.vo.ImportTableVO;
 import com.nexus.backend.admin.controller.codegen.vo.CodegenTableVO;
 import com.nexus.backend.admin.controller.codegen.vo.UpdateTableConfigVo;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenTableDO;
 import com.nexus.backend.admin.service.codegen.CodegenService;
+import com.nexus.framework.web.result.PageResult;
+import com.nexus.framework.web.result.Result;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;

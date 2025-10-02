@@ -19,11 +19,17 @@ import java.math.BigDecimal;
 public class ${className}SaveReqVO {
 
 #foreach ($column in $columns)
-#if(${column.createOperation} || ${column.updateOperation})## 用于新增或修改的字段
+#if(${column.primaryKey})## 主键字段（用于更新，新增时可为空）
     /**
      * ${column.columnComment}
      */
-#if(!${column.nullable} && !${column.primaryKey})## 非空校验
+    private ${column.javaType} ${column.javaField};
+
+#elseif(${column.createOperation} || ${column.updateOperation})## 用于新增或修改的字段
+    /**
+     * ${column.columnComment}
+     */
+#if(!${column.nullable})## 非空校验
 #if(${column.javaType} == 'String')
     @NotBlank(message = "${column.columnComment}不能为空")
 #else

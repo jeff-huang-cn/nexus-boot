@@ -39,6 +39,8 @@
         <commons-io.version>2.14.0</commons-io.version>
         <commons-lang3.version>3.18.0</commons-lang3.version>
         <transmittable-thread-local.version>2.14.5</transmittable-thread-local.version>
+        <hutool-5.version>5.8.40</hutool-5.version>
+        <guava.version>33.4.8-jre</guava.version>
     </properties>
 
     <dependencyManagement>
@@ -163,6 +165,18 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>transmittable-thread-local</artifactId> <!-- 解决 ThreadLocal 父子线程的传值问题 -->
                 <version>${transmittable-thread-local.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool-5.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
             </dependency>
 
             <dependency>

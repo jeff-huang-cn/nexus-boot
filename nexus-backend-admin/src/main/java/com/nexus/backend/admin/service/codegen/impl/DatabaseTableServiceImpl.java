@@ -3,7 +3,7 @@ package com.nexus.backend.admin.service.codegen.impl;
 import com.nexus.backend.admin.common.exception.BusinessException;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
-import com.nexus.backend.admin.dal.entity.codegen.DataSourceConfigDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.DataSourceConfigDO;
 import com.nexus.backend.admin.dal.mapper.codegen.DataSourceConfigMapper;
 import com.nexus.backend.admin.service.codegen.DatabaseTableService;
 import jakarta.annotation.Resource;

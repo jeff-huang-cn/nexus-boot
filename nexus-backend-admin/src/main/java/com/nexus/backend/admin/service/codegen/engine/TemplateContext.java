@@ -1,7 +1,7 @@
 package com.nexus.backend.admin.service.codegen.engine;
 
-import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenTableDO;
 import lombok.Data;
 
 import java.time.LocalDateTime;

@@ -5,18 +5,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexus.backend.admin.common.exception.BusinessException;
-import com.nexus.backend.admin.common.result.PageResult;
 import com.nexus.backend.admin.common.utils.CodegenUtils;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenTableDO;
 import com.nexus.backend.admin.dal.mapper.codegen.CodegenColumnMapper;
 import com.nexus.backend.admin.dal.mapper.codegen.CodegenTableMapper;
 import com.nexus.backend.admin.service.codegen.CodegenService;
 import com.nexus.backend.admin.service.codegen.DatabaseTableService;
 import com.nexus.backend.admin.service.codegen.engine.VelocityTemplateEngine;
 import com.nexus.backend.admin.service.codegen.engine.TemplateContext;
+import com.nexus.framework.web.result.PageResult;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -65,11 +65,7 @@ public class CodegenServiceImpl implements CodegenService {
         IPage<CodegenTableDO> page = new Page<>(current, size);
         IPage<CodegenTableDO> result = codegenTableMapper.selectPage(page, wrapper);
 
-        return PageResult.of(
-                result.getRecords(),
-                result.getTotal(),
-                result.getCurrent(),
-                result.getSize());
+        return new PageResult<>(result.getRecords(), result.getTotal());
     }
 
     @Override

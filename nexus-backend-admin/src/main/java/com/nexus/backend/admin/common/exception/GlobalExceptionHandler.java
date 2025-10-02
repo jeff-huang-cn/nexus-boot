@@ -1,6 +1,6 @@
 package com.nexus.backend.admin.common.exception;
 
-import com.nexus.backend.admin.common.result.Result;
+import com.nexus.framework.web.result.Result;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

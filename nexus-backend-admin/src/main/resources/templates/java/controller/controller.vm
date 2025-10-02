@@ -33,7 +33,7 @@ public class ${className}Controller {
      */
     @PostMapping("/create")
     public Result<Long> create(@Valid @RequestBody ${className}SaveReqVO createReqVO) {
-        Long id = ${classNameFirstLower}Service.create${className}(createReqVO);
+        Long id = ${classNameFirstLower}Service.create(createReqVO);
         return Result.success(id);
     }
 
@@ -42,7 +42,7 @@ public class ${className}Controller {
      */
     @PutMapping("/update")
     public Result<Boolean> update(@Valid @RequestBody ${className}SaveReqVO updateReqVO) {
-        ${classNameFirstLower}Service.update${className}(updateReqVO);
+        ${classNameFirstLower}Service.update(updateReqVO);
         return Result.success(true);
     }
 
@@ -51,7 +51,7 @@ public class ${className}Controller {
      */
     @DeleteMapping("/delete/{id}")
     public Result<Boolean> delete(@PathVariable("id") Long id) {
-        ${classNameFirstLower}Service.delete${className}(id);
+        ${classNameFirstLower}Service.delete(id);
         return Result.success(true);
     }
 
@@ -60,7 +60,7 @@ public class ${className}Controller {
      */
     @DeleteMapping("/delete-batch")
     public Result<Boolean> deleteBatch(@RequestBody List<Long> ids) {
-        ${classNameFirstLower}Service.delete${className}Batch(ids);
+        ${classNameFirstLower}Service.deleteBatch(ids);
         return Result.success(true);
     }
 
@@ -68,8 +68,8 @@ public class ${className}Controller {
      * 获得${classComment}详情
      */
     @GetMapping("/get/{id}")
-    public Result<${className}RespVO> get(@PathVariable("id") Long id) {
-        ${className}RespVO respVO = ${classNameFirstLower}Service.get${className}(id);
+    public Result<${className}RespVO> getById(@PathVariable("id") Long id) {
+        ${className}RespVO respVO = ${classNameFirstLower}Service.getById(id);
         return Result.success(respVO);
     }
 
@@ -78,7 +78,7 @@ public class ${className}Controller {
      */
     @GetMapping("/page")
     public Result<PageResult<${className}RespVO>> getPage(@Valid ${className}PageReqVO pageReqVO) {
-        PageResult<${className}RespVO> pageResult = ${classNameFirstLower}Service.get${className}Page(pageReqVO);
+        PageResult<${className}RespVO> pageResult = ${classNameFirstLower}Service.getPage(pageReqVO);
         return Result.success(pageResult);
     }
 
@@ -86,8 +86,8 @@ public class ${className}Controller {
      * 导出${classComment} Excel
      */
     @GetMapping("/export")
-    public void export${className}(@Valid ${className}PageReqVO pageReqVO) {
-        List<${className}RespVO> list = ${classNameFirstLower}Service.get${className}List(pageReqVO);
+    public void export(@Valid ${className}PageReqVO pageReqVO) {
+        List<${className}RespVO> list = ${classNameFirstLower}Service.getList(pageReqVO);
         // TODO: 实现 Excel 导出逻辑
     }
 }

@@ -36,11 +36,11 @@ templates/
 #### Controller 层
 - **controller.vm**: RESTful API 控制器，使用 VO 对象进行数据传输
 - **PageReqVO.vm**: 分页查询请求对象，继承 `BasePageQuery`
-- **SaveReqVO.vm**: 新增/编辑请求对象，包含表单验证
+- **SaveReqVO.vm**: 新增/编辑请求对象，包含 ID 字段（用于更新）和表单验证
 - **RespVO.vm**: 响应对象，用于返回数据给前端
 
 #### Service 层
-- **service.vm**: 服务接口定义
+- **service.vm**: 服务接口定义，简洁的方法命名（create/update/delete/getById/getPage/getList）
 - **serviceImpl.vm**: 服务实现，包含完整的 CRUD 逻辑、VO 转换、动态查询条件
 
 #### DAL 数据访问层
@@ -100,22 +100,28 @@ backend/
 ├── controller/                   # 控制器层
 │   └── {businessName}/
 │       ├── {ClassName}Controller.java
+│       │   package: com.nexus.backend.admin.controller.{businessName}
 │       └── vo/
 │           ├── {ClassName}PageReqVO.java
-│           ├── {ClassName}SaveReqVO.java
+│           ├── {ClassName}SaveReqVO.java  # 包含ID字段用于更新
 │           └── {ClassName}RespVO.java
+│               package: com.nexus.backend.admin.controller.{businessName}.vo
 ├── service/                      # 服务层
 │   └── {businessName}/
 │       ├── {ClassName}Service.java
+│       │   package: com.nexus.backend.admin.service.{businessName}
 │       └── impl/
 │           └── {ClassName}ServiceImpl.java
+│               package: com.nexus.backend.admin.service.{businessName}.impl
 ├── dal/                         # 数据访问层
 │   ├── dataobject/
 │   │   └── {businessName}/
-│   │       └── {ClassName}DO.java
+│   │       └── {ClassName}DO.java  # 继承 BaseDO
+│   │           package: com.nexus.backend.admin.dal.dataobject.{businessName}
 │   └── mapper/
 │       └── {businessName}/
 │           └── {ClassName}Mapper.java
+│               package: com.nexus.backend.admin.dal.mapper.{businessName}
 └── resources/                   # 配置文件
     └── mapper/
         └── {businessName}/

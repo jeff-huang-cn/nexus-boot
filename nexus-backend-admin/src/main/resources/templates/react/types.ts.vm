@@ -23,7 +23,7 @@ export interface ${className} {
  * ${classComment}查询参数
  */
 export interface ${className}Query {
-  pageNo?: number;
+  pageNum?: number;
   pageSize?: number;
 #foreach($column in $columns)
 #if(${column.listOperation})

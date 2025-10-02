@@ -20,28 +20,28 @@ public interface ${className}Service {
      * @param createReqVO 创建信息
      * @return 编号
      */
-    Long create${className}(@Valid ${className}SaveReqVO createReqVO);
+    Long create(@Valid ${className}SaveReqVO createReqVO);
 
     /**
      * 更新${classComment}
      *
      * @param updateReqVO 更新信息
      */
-    void update${className}(@Valid ${className}SaveReqVO updateReqVO);
+    void update(@Valid ${className}SaveReqVO updateReqVO);
 
     /**
      * 删除${classComment}
      *
      * @param id 编号
      */
-    void delete${className}(Long id);
+    void delete(Long id);
 
     /**
      * 批量删除${classComment}
      *
      * @param ids 编号列表
      */
-    void delete${className}Batch(List<Long> ids);
+    void deleteBatch(List<Long> ids);
 
     /**
      * 获得${classComment}详情
@@ -49,7 +49,7 @@ public interface ${className}Service {
      * @param id 编号
      * @return ${classComment}详情
      */
-    ${className}RespVO get${className}(Long id);
+    ${className}RespVO getById(Long id);
 
     /**
      * 获得${classComment}分页
@@ -57,7 +57,7 @@ public interface ${className}Service {
      * @param pageReqVO 分页查询
      * @return ${classComment}分页
      */
-    PageResult<${className}RespVO> get${className}Page(${className}PageReqVO pageReqVO);
+    PageResult<${className}RespVO> getPage(${className}PageReqVO pageReqVO);
 
     /**
      * 获得${classComment}列表（用于导出）
@@ -65,6 +65,6 @@ public interface ${className}Service {
      * @param pageReqVO 查询条件
      * @return ${classComment}列表
      */
-    List<${className}RespVO> get${className}List(${className}PageReqVO pageReqVO);
+    List<${className}RespVO> getList(${className}PageReqVO pageReqVO);
 }
 

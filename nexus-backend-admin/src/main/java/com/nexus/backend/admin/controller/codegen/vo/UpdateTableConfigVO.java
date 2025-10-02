@@ -1,7 +1,7 @@
 package com.nexus.backend.admin.controller.codegen.vo;
 
-import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenTableDO;
 import lombok.Data;
 
 import jakarta.validation.Valid;

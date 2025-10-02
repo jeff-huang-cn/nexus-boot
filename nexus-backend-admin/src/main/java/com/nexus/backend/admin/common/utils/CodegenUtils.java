@@ -2,8 +2,8 @@ package com.nexus.backend.admin.common.utils;
 
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenColumnDO;
-import com.nexus.backend.admin.dal.entity.codegen.CodegenTableDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenColumnDO;
+import com.nexus.backend.admin.dal.dataobject.codegen.CodegenTableDO;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -294,10 +294,10 @@ public class CodegenUtils {
                         ? table.getTableComment()
                         : className + "实体");
 
-        // 设置包名信息（按yudao规范）
-        codegenTableDO.setPackageName("com.beckend.admin.modules." + moduleName);
-        codegenTableDO.setModulePackageName("com.beckend.admin.modules." + moduleName);
-        codegenTableDO.setBusinessPackageName("com.beckend.admin.modules." + moduleName + "." + businessName);
+        // 设置包名信息
+        codegenTableDO.setPackageName("com.nexus.backend.admin");
+        codegenTableDO.setModulePackageName("com.nexus.backend.admin." + moduleName);
+        codegenTableDO.setBusinessPackageName("com.nexus.backend.admin." + businessName);
 
         // 默认配置
         codegenTableDO.setAuthor("beckend");

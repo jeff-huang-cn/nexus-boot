@@ -1,4 +1,4 @@
-package com.nexus.backend.admin.dal.entity.codegen;
+package com.nexus.backend.admin.dal.dataobject.codegen;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.nexus.framework.mybatis.entity.BaseUpdateEntity;

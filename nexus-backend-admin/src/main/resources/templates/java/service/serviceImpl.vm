@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ${packageName}.controller.${businessName}.vo.*;
 import ${packageName}.dal.dataobject.${businessName}.${className}DO;
-import ${packageName}.mapper.${businessName}.${className}Mapper;
+import ${packageName}.dal.mapper.${businessName}.${className}Mapper;
 import ${packageName}.service.${businessName}.${className}Service;
 import com.nexus.framework.common.result.PageResult;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class ${className}ServiceImpl implements ${className}Service {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create${className}(${className}SaveReqVO createReqVO) {
+    public Long create(${className}SaveReqVO createReqVO) {
         // 转换为 DO 并插入
         ${className}DO ${classNameFirstLower} = BeanUtil.copyProperties(createReqVO, ${className}DO.class);
         ${classNameFirstLower}Mapper.insert(${classNameFirstLower});
@@ -42,9 +42,9 @@ public class ${className}ServiceImpl implements ${className}Service {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update${className}(${className}SaveReqVO updateReqVO) {
+    public void update(${className}SaveReqVO updateReqVO) {
         // 校验存在
-        validate${className}Exists(updateReqVO.getId());
+        validateExists(updateReqVO.getId());
         // 更新
         ${className}DO update${className} = BeanUtil.copyProperties(updateReqVO, ${className}DO.class);
         ${classNameFirstLower}Mapper.updateById(update${className});
@@ -52,33 +52,33 @@ public class ${className}ServiceImpl implements ${className}Service {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete${className}(Long id) {
+    public void delete(Long id) {
         // 校验存在
-        validate${className}Exists(id);
+        validateExists(id);
         // 删除
         ${classNameFirstLower}Mapper.deleteById(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete${className}Batch(List<Long> ids) {
+    public void deleteBatch(List<Long> ids) {
         // 批量删除
         ${classNameFirstLower}Mapper.deleteBatchIds(ids);
     }
 
     @Override
-    public ${className}RespVO get${className}(Long id) {
+    public ${className}RespVO getById(Long id) {
         ${className}DO ${classNameFirstLower} = ${classNameFirstLower}Mapper.selectById(id);
         return BeanUtil.copyProperties(${classNameFirstLower}, ${className}RespVO.class);
     }
 
     @Override
-    public PageResult<${className}RespVO> get${className}Page(${className}PageReqVO pageReqVO) {
+    public PageResult<${className}RespVO> getPage(${className}PageReqVO pageReqVO) {
         // 构建查询条件
         LambdaQueryWrapper<${className}DO> wrapper = buildQueryWrapper(pageReqVO);
         
         // 分页查询
-        IPage<${className}DO> page = new Page<>(pageReqVO.getPageNo(), pageReqVO.getPageSize());
+        IPage<${className}DO> page = new Page<>(pageReqVO.getPageNum(), pageReqVO.getPageSize());
         IPage<${className}DO> result = ${classNameFirstLower}Mapper.selectPage(page, wrapper);
         
         // 转换为 VO
@@ -90,7 +90,7 @@ public class ${className}ServiceImpl implements ${className}Service {
     }
 
     @Override
-    public List<${className}RespVO> get${className}List(${className}PageReqVO pageReqVO) {
+    public List<${className}RespVO> getList(${className}PageReqVO pageReqVO) {
         // 构建查询条件
         LambdaQueryWrapper<${className}DO> wrapper = buildQueryWrapper(pageReqVO);
         
@@ -142,7 +142,7 @@ public class ${className}ServiceImpl implements ${className}Service {
     /**
      * 校验${classComment}是否存在
      */
-    private void validate${className}Exists(Long id) {
+    private void validateExists(Long id) {
         if (${classNameFirstLower}Mapper.selectById(id) == null) {
             throw new RuntimeException("${classComment}不存在");
         }

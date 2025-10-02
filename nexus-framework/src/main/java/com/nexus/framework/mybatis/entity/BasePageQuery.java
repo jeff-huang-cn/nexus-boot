@@ -22,11 +22,11 @@ public class BasePageQuery implements Serializable {
     private static final long serialVersionUID = -229795724510992449L;
 
     @Min(value = 1, message = "页码必须大于0")
-    private Long current = 1L;
+    private Long pageNum = 1L;
 
     @Min(value = 1, message = "每页条数必须大于0")
     @Max(value = 999, message = "每页条数不能超过999")
-    private Long size = 10L;
+    private Long pageSize = 10L;
 
     private String orderBy;
 
@@ -34,7 +34,7 @@ public class BasePageQuery implements Serializable {
 
     @JsonIgnore
     public Long getOffset() {
-        return (current - 1) * size;
+        return (pageNum - 1) * pageSize;
     }
 
     @JsonIgnore
