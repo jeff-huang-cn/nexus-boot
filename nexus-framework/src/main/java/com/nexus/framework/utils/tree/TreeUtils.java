@@ -72,6 +72,24 @@ public class TreeUtils {
                 .filter(item -> getParentId.apply(item) != null)
                 .collect(Collectors.groupingBy(getParentId));
 
+        // 创建一个 Map 用于快速查找节点
+        Map<Long, T> nodeMap = list.stream()
+                .collect(Collectors.toMap(getId, item -> item));
+
+        // 递归设置子节点
+        BiConsumer<T, Map<Long, List<T>>> buildChildren = new BiConsumer<T, Map<Long, List<T>>>() {
+            @Override
+            public void accept(T node, Map<Long, List<T>> parentMap) {
+                Long nodeId = getId.apply(node);
+                List<T> children = parentMap.get(nodeId);
+                if (children != null && !children.isEmpty()) {
+                    // 为每个子节点递归构建其子树
+                    children.forEach(child -> this.accept(child, parentMap));
+                    setChildren.accept(node, children);
+                }
+            }
+        };
+
         // 遍历所有节点，构建树形结构
         for (T item : list) {
             // 处理 parentId 为 null 的情况，视为顶级节点
@@ -80,11 +98,8 @@ public class TreeUtils {
 
             // 如果是根节点
             if (actualParentId.equals(rootParentId)) {
-                // 获取该节点的所有子节点
-                List<T> children = parentMap.get(getId.apply(item));
-                if (children != null && !children.isEmpty()) {
-                    setChildren.accept(item, children);
-                }
+                // 递归构建整棵树
+                buildChildren.accept(item, parentMap);
                 result.add(item);
             }
         }

@@ -65,7 +65,7 @@ public class MenuController {
     }
 
     /**
-     * 获取菜单树列表
+     * 获取菜单树列表（用于前端导航，过滤掉按钮）
      */
     @GetMapping("/tree")
     public Result<List<MenuRespVO>> getMenuTree() {
@@ -76,6 +76,30 @@ public class MenuController {
         // 按钮权限用于权限控制，不显示在菜单树中
         List<MenuRespVO> menuVOList = menuList.stream()
                 .filter(menu -> menu.getType() != 3) // 过滤掉按钮
+                .map(menu -> BeanUtil.copyProperties(menu, MenuRespVO.class))
+                .collect(Collectors.toList());
+
+        // 3. 使用 TreeUtils 构建树形结构
+        List<MenuRespVO> menuTree = TreeUtils.buildTree(
+                menuVOList,
+                MenuRespVO::getId,
+                MenuRespVO::getParentId,
+                MenuRespVO::setChildren,
+                0L);
+
+        return Result.success(menuTree);
+    }
+
+    /**
+     * 获取完整菜单树（用于菜单管理页面，包含按钮）
+     */
+    @GetMapping("/tree/full")
+    public Result<List<MenuRespVO>> getFullMenuTree() {
+        // 1. Service 返回 DO 列表
+        List<MenuDO> menuList = menuService.getMenuList();
+
+        // 2. Controller 转换为 VO（包含所有类型：目录、菜单、按钮）
+        List<MenuRespVO> menuVOList = menuList.stream()
                 .map(menu -> BeanUtil.copyProperties(menu, MenuRespVO.class))
                 .collect(Collectors.toList());
 

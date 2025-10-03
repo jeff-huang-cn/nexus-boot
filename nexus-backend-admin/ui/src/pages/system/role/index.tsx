@@ -12,18 +12,20 @@ import {
   Popconfirm,
   Tag,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined, SearchOutlined } from '@ant-design/icons';
 import { roleApi } from '../../../services/role';
 import type { Role, RoleForm } from '../../../services/role/types';
 import AssignMenuModal from './AssignMenuModal';
 
 const RolePage: React.FC = () => {
   const [dataSource, setDataSource] = useState<Role[]>([]);
+  const [filteredData, setFilteredData] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
   const [assignMenuVisible, setAssignMenuVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Role | null>(null);
   const [currentRoleId, setCurrentRoleId] = useState<number | null>(null);
+  const [searchForm] = Form.useForm();
   const [form] = Form.useForm();
 
   // 状态选项
@@ -132,6 +134,7 @@ const RolePage: React.FC = () => {
     try {
       const result = await roleApi.getList() as Role[];
       setDataSource(result);
+        setFilteredData(result);
     } catch (error) {
       message.error('加载数据失败');
     } finally {
@@ -142,6 +145,30 @@ const RolePage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // 搜索
+  const handleSearch = () => {
+    const values = searchForm.getFieldsValue();
+    const { name, code } = values;
+
+    if (!name && !code) {
+      setFilteredData(dataSource);
+      return;
+    }
+
+    const filtered = dataSource.filter(role => {
+      const matchName = !name || role.name?.toLowerCase().includes(name.toLowerCase());
+      const matchCode = !code || role.code?.toLowerCase().includes(code.toLowerCase());
+      return matchName && matchCode;
+    });
+    setFilteredData(filtered);
+  };
+
+  // 重置
+  const handleReset = () => {
+    searchForm.resetFields();
+    setFilteredData(dataSource);
+  };
 
   // 新增
   const handleAdd = () => {
@@ -195,15 +222,42 @@ const RolePage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
+      {/* 搜索表单 */}
+      <Form
+        form={searchForm}
+        layout="inline"
+        onFinish={handleSearch}
+        style={{ marginBottom: 16 }}
+      >
+        <Form.Item label="角色名称" name="name">
+          <Input placeholder="请输入角色名称" style={{ width: 200 }} />
+        </Form.Item>
+        <Form.Item label="角色编码" name="code">
+          <Input placeholder="请输入角色编码" style={{ width: 200 }} />
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+              查询
+            </Button>
+            <Button onClick={handleReset}>
+              重置
+            </Button>
+          </Space>
+        </Form.Item>
+      </Form>
+
+      {/* 新增按钮 */}
       <div style={{ marginBottom: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           新增角色
         </Button>
       </div>
 
+      {/* 数据表格 */}
       <Table
         columns={columns}
-        dataSource={dataSource}
+        dataSource={filteredData}
         loading={loading}
         rowKey="id"
         pagination={{
@@ -221,6 +275,11 @@ const RolePage: React.FC = () => {
         onCancel={() => setFormVisible(false)}
         width={600}
         destroyOnClose
+        bodyStyle={{ 
+          maxHeight: 'calc(100vh - 300px)', 
+          overflowY: 'auto',
+          paddingRight: '8px' 
+        }}
       >
         <Form form={form} layout="vertical">
           <Form.Item

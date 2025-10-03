@@ -11,16 +11,19 @@ import {
   message,
   Popconfirm,
   Tag,
+  TreeSelect,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { menuApi } from '../../../services/menu';
 import type { Menu, MenuForm } from '../../../services/menu/types';
 
 const MenuPage: React.FC = () => {
   const [dataSource, setDataSource] = useState<Menu[]>([]);
+  const [filteredData, setFilteredData] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Menu | null>(null);
+  const [searchForm] = Form.useForm();
   const [form] = Form.useForm();
 
   // 菜单类型选项
@@ -144,8 +147,10 @@ const MenuPage: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const result = await menuApi.getMenuTree() as Menu[];
+      // 使用 getFullMenuTree 获取包含按钮的完整菜单树
+      const result = await menuApi.getFullMenuTree() as Menu[];
       setDataSource(result);
+      setFilteredData(result);
     } catch (error) {
       message.error('加载数据失败');
     } finally {
@@ -156,6 +161,51 @@ const MenuPage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // 搜索
+  const handleSearch = () => {
+    const values = searchForm.getFieldsValue();
+    const { name } = values;
+
+    if (!name) {
+      setFilteredData(dataSource);
+      return;
+    }
+
+    const filterTree = (items: Menu[]): Menu[] => {
+      return items.reduce((acc: Menu[], item) => {
+        const matchName = item.name?.toLowerCase().includes(name.toLowerCase());
+        const children = item.children ? filterTree(item.children) : [];
+        
+        if (matchName || children.length > 0) {
+          acc.push({
+            ...item,
+            children: children.length > 0 ? children : item.children,
+          });
+        }
+        return acc;
+      }, []);
+    };
+
+    setFilteredData(filterTree(dataSource));
+  };
+
+  // 重置
+  const handleReset = () => {
+    searchForm.resetFields();
+    setFilteredData(dataSource);
+  };
+
+  // 构建父级菜单树选择器数据
+  const buildParentTreeData = (menus: Menu[], excludeId?: number): any[] => {
+    return menus
+      .filter(menu => menu.id !== excludeId && menu.type !== 3) // 排除当前菜单和按钮类型
+      .map(menu => ({
+        title: menu.name,
+        value: menu.id,
+        children: menu.children ? buildParentTreeData(menu.children, excludeId) : undefined,
+      }));
+  };
 
   // 新增（根节点）
   const handleAddRoot = () => {
@@ -211,15 +261,39 @@ const MenuPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
+      {/* 搜索表单 */}
+      <Form
+        form={searchForm}
+        layout="inline"
+        onFinish={handleSearch}
+        style={{ marginBottom: 16 }}
+      >
+        <Form.Item label="菜单名称" name="name">
+          <Input placeholder="请输入菜单名称" style={{ width: 200 }} />
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+              查询
+            </Button>
+            <Button onClick={handleReset}>
+              重置
+            </Button>
+          </Space>
+        </Form.Item>
+      </Form>
+
+      {/* 新增按钮 */}
       <div style={{ marginBottom: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
           新增菜单
         </Button>
       </div>
 
+      {/* 数据表格 */}
       <Table
         columns={columns}
-        dataSource={dataSource}
+        dataSource={filteredData}
         loading={loading}
         rowKey="id"
         pagination={false}
@@ -236,10 +310,27 @@ const MenuPage: React.FC = () => {
         onCancel={() => setFormVisible(false)}
         width={600}
         destroyOnClose
+        bodyStyle={{ 
+          maxHeight: 'calc(100vh - 300px)', 
+          overflowY: 'auto',
+          paddingRight: '8px' 
+        }}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="parentId" hidden>
-            <InputNumber />
+          <Form.Item
+            label="父级菜单"
+            name="parentId"
+            rules={[{ required: true, message: '请选择父级菜单' }]}
+          >
+            <TreeSelect
+              showSearch
+              placeholder="请选择父级菜单（根节点请选择0）"
+              treeDefaultExpandAll
+              treeData={[
+                { title: '根目录', value: 0 },
+                ...buildParentTreeData(dataSource, editingRecord?.id),
+              ]}
+            />
           </Form.Item>
 
           <Form.Item
@@ -282,21 +373,25 @@ const MenuPage: React.FC = () => {
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
 
-          <Form.Item label="菜单状态" name="status">
-            <Select options={statusOptions} />
-          </Form.Item>
+          {editingRecord && (
+            <>
+              <Form.Item label="菜单状态" name="status">
+                <Select options={statusOptions} />
+              </Form.Item>
 
-          <Form.Item label="是否可见" name="visible">
-            <Select options={yesNoOptions} />
-          </Form.Item>
+              <Form.Item label="是否可见" name="visible">
+                <Select options={yesNoOptions} />
+              </Form.Item>
 
-          <Form.Item label="是否缓存" name="keepAlive">
-            <Select options={yesNoOptions} />
-          </Form.Item>
+              <Form.Item label="是否缓存" name="keepAlive">
+                <Select options={yesNoOptions} />
+              </Form.Item>
 
-          <Form.Item label="总是显示" name="alwaysShow">
-            <Select options={yesNoOptions} />
-          </Form.Item>
+              <Form.Item label="总是显示" name="alwaysShow">
+                <Select options={yesNoOptions} />
+              </Form.Item>
+            </>
+          )}
         </Form>
       </Modal>
     </div>

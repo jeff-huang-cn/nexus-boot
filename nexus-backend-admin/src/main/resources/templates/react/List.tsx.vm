@@ -213,6 +213,12 @@ const ${className}List: React.FC = () => {
         }}
         footer={null}
         width={800}
+        destroyOnClose
+        bodyStyle={{ 
+          maxHeight: 'calc(100vh - 300px)', 
+          overflowY: 'auto',
+          paddingRight: '8px' 
+        }}
       >
         <${className}Form
           initialValues={editingRecord}

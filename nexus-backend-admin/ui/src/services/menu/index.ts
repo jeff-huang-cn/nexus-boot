@@ -37,10 +37,17 @@ export const menuApi = {
   },
 
   /**
-   * 获取菜单树列表
+   * 获取菜单树列表（用于前端导航，过滤掉按钮）
    */
   getMenuTree: () => {
     return request.get<Menu[]>(`${API_BASE}/tree`);
+  },
+
+  /**
+   * 获取完整菜单树（用于菜单管理页面，包含按钮）
+   */
+  getFullMenuTree: () => {
+    return request.get<Menu[]>(`${API_BASE}/tree/full`);
   },
 
   /**
