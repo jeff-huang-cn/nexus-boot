@@ -36,6 +36,7 @@ public class ${className}ServiceImpl implements ${className}Service {
     public Long create(${className}SaveReqVO createReqVO) {
         // 转换为 DO 并插入
         ${className}DO ${classNameFirstLower} = BeanUtil.copyProperties(createReqVO, ${className}DO.class);
+        // dateCreated、creator、lastUpdated、updater 由 MyBatis-Plus 自动填充
         ${classNameFirstLower}Mapper.insert(${classNameFirstLower});
         return ${classNameFirstLower}.getId();
     }
@@ -47,6 +48,7 @@ public class ${className}ServiceImpl implements ${className}Service {
         validateExists(updateReqVO.getId());
         // 更新
         ${className}DO update${className} = BeanUtil.copyProperties(updateReqVO, ${className}DO.class);
+        // lastUpdated、updater 由 MyBatis-Plus 自动填充
         ${classNameFirstLower}Mapper.updateById(update${className});
     }
 
