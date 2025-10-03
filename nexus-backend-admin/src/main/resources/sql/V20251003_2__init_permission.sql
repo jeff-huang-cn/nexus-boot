@@ -95,11 +95,6 @@ VALUES ('超级管理员', 'admin', 0, 1, 1, '超级管理员拥有所有权限'
 
 -- 获取刚创建的角色ID
 SET @admin_role_id = LAST_INSERT_ID();
-
--- 2. 初始化系统管理目录（其他菜单由V20251003_4统一初始化）
-INSERT INTO `system_menu` (`name`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `creator`) 
-VALUES ('系统管理', 1, 1, 0, '/system', 'setting', 'Layout', 'system');
-
 -- 3. 为默认用户分配超级管理员角色（假设ID为1的用户存在）
 INSERT IGNORE INTO `system_user_role` (`user_id`, `role_id`, `creator`) 
 VALUES (1, @admin_role_id, 'system');

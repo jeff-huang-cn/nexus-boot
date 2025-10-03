@@ -72,8 +72,10 @@ public class MenuController {
         // 1. Service 返回 DO 列表
         List<MenuDO> menuList = menuService.getMenuList();
 
-        // 2. Controller 转换为 VO
+        // 2. Controller 转换为 VO，过滤掉按钮类型（type=3）
+        // 按钮权限用于权限控制，不显示在菜单树中
         List<MenuRespVO> menuVOList = menuList.stream()
+                .filter(menu -> menu.getType() != 3) // 过滤掉按钮
                 .map(menu -> BeanUtil.copyProperties(menu, MenuRespVO.class))
                 .collect(Collectors.toList());
 

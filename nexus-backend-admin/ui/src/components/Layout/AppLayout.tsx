@@ -37,6 +37,11 @@ const getIcon = (iconName?: string) => {
 
 /**
  * 转换菜单数据为Ant Design Menu格式
+ * 
+ * 菜单类型说明：
+ * - type=1: 目录（Directory）- 可以有子菜单，显示展开箭头
+ * - type=2: 菜单（Menu）- 点击跳转页面，不显示子菜单
+ * - type=3: 按钮（Button）- 权限控制，不在菜单中显示（后端已过滤）
  */
 const convertMenus = (menuList: MenuItem[]): MenuProps['items'] => {
   return menuList
@@ -45,7 +50,9 @@ const convertMenus = (menuList: MenuItem[]): MenuProps['items'] => {
       key: item.path || `menu-${item.id}`,
       icon: getIcon(item.icon), // 动态获取图标
       label: item.name,
-      children: item.children && item.children.length > 0
+      // 只有目录类型（type=1）才递归处理子菜单
+      // 菜单类型（type=2）点击后直接跳转，不显示子菜单
+      children: item.type === 1 && item.children && item.children.length > 0
         ? convertMenus(item.children)
         : undefined,
     }));
