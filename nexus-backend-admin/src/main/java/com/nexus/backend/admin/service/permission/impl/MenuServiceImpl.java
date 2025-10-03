@@ -2,7 +2,6 @@ package com.nexus.backend.admin.service.permission.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.nexus.backend.admin.controller.permission.vo.menu.MenuRespVO;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuSaveReqVO;
 import com.nexus.backend.admin.dal.dataobject.permission.MenuDO;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleMenuDO;
@@ -13,9 +12,7 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -81,28 +78,20 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
-    public MenuRespVO getById(Long id) {
+    public MenuDO getById(Long id) {
         MenuDO menu = menuMapper.selectById(id);
         if (menu == null) {
             throw new RuntimeException("菜单不存在");
         }
-        return BeanUtil.copyProperties(menu, MenuRespVO.class);
+        return menu;
     }
 
     @Override
-    public List<MenuRespVO> getMenuTree() {
-        // 查询所有菜单
-        List<MenuDO> menuList = menuMapper.selectList(
+    public List<MenuDO> getMenuList() {
+        // 查询所有菜单，按排序号排序
+        return menuMapper.selectList(
                 new LambdaQueryWrapper<MenuDO>()
                         .orderByAsc(MenuDO::getSort));
-
-        // 转换为 VO
-        List<MenuRespVO> menuVOList = menuList.stream()
-                .map(menu -> BeanUtil.copyProperties(menu, MenuRespVO.class))
-                .collect(Collectors.toList());
-
-        // 构建树形结构
-        return buildMenuTree(menuVOList, 0L);
     }
 
     @Override
@@ -113,34 +102,6 @@ public class MenuServiceImpl implements MenuService {
         return roleMenuList.stream()
                 .map(RoleMenuDO::getMenuId)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * 构建菜单树
-     *
-     * @param menuList 菜单列表
-     * @param parentId 父菜单ID
-     * @return 菜单树
-     */
-    private List<MenuRespVO> buildMenuTree(List<MenuRespVO> menuList, Long parentId) {
-        List<MenuRespVO> result = new ArrayList<>();
-
-        // 按父ID分组
-        Map<Long, List<MenuRespVO>> menuMap = menuList.stream()
-                .collect(Collectors.groupingBy(MenuRespVO::getParentId));
-
-        // 递归构建树
-        for (MenuRespVO menu : menuList) {
-            if (menu.getParentId().equals(parentId)) {
-                List<MenuRespVO> children = menuMap.get(menu.getId());
-                if (children != null && !children.isEmpty()) {
-                    menu.setChildren(children);
-                }
-                result.add(menu);
-            }
-        }
-
-        return result;
     }
 
     /**

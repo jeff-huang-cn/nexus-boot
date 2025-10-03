@@ -69,9 +69,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserRespVO getById(Long id) {
+    public UserDO getById(Long id) {
         UserDO user = userMapper.selectById(id);
-        return BeanUtil.copyProperties(user, UserRespVO.class);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        return user;
     }
 
     @Override
@@ -92,17 +95,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserRespVO> getList(UserPageReqVO pageReqVO) {
+    public List<UserDO> getList(UserPageReqVO pageReqVO) {
         // 构建查询条件
         LambdaQueryWrapper<UserDO> wrapper = buildQueryWrapper(pageReqVO);
 
         // 查询列表
-        List<UserDO> list = userMapper.selectList(wrapper);
-
-        // 转换为 VO
-        return list.stream()
-                .map(item -> BeanUtil.copyProperties(item, UserRespVO.class))
-                .collect(Collectors.toList());
+        return userMapper.selectList(wrapper);
     }
 
     /**
@@ -208,4 +206,3 @@ public class UserServiceImpl implements UserService {
         }
     }
 }
-

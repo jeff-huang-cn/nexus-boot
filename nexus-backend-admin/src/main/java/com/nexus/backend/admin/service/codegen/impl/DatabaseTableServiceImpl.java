@@ -1,6 +1,6 @@
 package com.nexus.backend.admin.service.codegen.impl;
 
-import com.nexus.backend.admin.common.exception.BusinessException;
+import com.nexus.framework.web.exception.BusinessException;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
 import com.nexus.backend.admin.dal.dataobject.codegen.DataSourceConfigDO;

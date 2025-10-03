@@ -1,14 +1,18 @@
 package com.nexus.backend.admin.controller.permission;
 
-import com.nexus.backend.admin.common.result.Result;
+import cn.hutool.core.bean.BeanUtil;
+import com.nexus.framework.web.result.Result;
+import com.nexus.framework.utils.tree.TreeUtils;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuRespVO;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuSaveReqVO;
+import com.nexus.backend.admin.dal.dataobject.permission.MenuDO;
 import com.nexus.backend.admin.service.permission.MenuService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 菜单管理接口
@@ -55,8 +59,9 @@ public class MenuController {
      */
     @GetMapping("/{id}")
     public Result<MenuRespVO> getById(@PathVariable Long id) {
-        MenuRespVO menu = menuService.getById(id);
-        return Result.success(menu);
+        MenuDO menu = menuService.getById(id);
+        MenuRespVO vo = BeanUtil.copyProperties(menu, MenuRespVO.class);
+        return Result.success(vo);
     }
 
     /**
@@ -64,7 +69,22 @@ public class MenuController {
      */
     @GetMapping("/tree")
     public Result<List<MenuRespVO>> getMenuTree() {
-        List<MenuRespVO> menuTree = menuService.getMenuTree();
+        // 1. Service 返回 DO 列表
+        List<MenuDO> menuList = menuService.getMenuList();
+
+        // 2. Controller 转换为 VO
+        List<MenuRespVO> menuVOList = menuList.stream()
+                .map(menu -> BeanUtil.copyProperties(menu, MenuRespVO.class))
+                .collect(Collectors.toList());
+
+        // 3. 使用 TreeUtils 构建树形结构
+        List<MenuRespVO> menuTree = TreeUtils.buildTree(
+                menuVOList,
+                MenuRespVO::getId,
+                MenuRespVO::getParentId,
+                MenuRespVO::setChildren,
+                0L);
+
         return Result.success(menuTree);
     }
 

@@ -1,9 +1,9 @@
 package com.nexus.backend.admin.service.user;
 
-
 import com.nexus.backend.admin.controller.user.vo.UserPageReqVO;
 import com.nexus.backend.admin.controller.user.vo.UserRespVO;
 import com.nexus.backend.admin.controller.user.vo.UserSaveReqVO;
+import com.nexus.backend.admin.dal.dataobject.user.UserDO;
 import com.nexus.framework.web.result.PageResult;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -51,7 +51,7 @@ public interface UserService {
      * @param id 编号
      * @return 用户信息表详情
      */
-    UserRespVO getById(Long id);
+    UserDO getById(Long id);
 
     /**
      * 获得用户信息表分页
@@ -67,6 +67,5 @@ public interface UserService {
      * @param pageReqVO 查询条件
      * @return 用户信息表列表
      */
-    List<UserRespVO> getList(UserPageReqVO pageReqVO);
+    List<UserDO> getList(UserPageReqVO pageReqVO);
 }
-

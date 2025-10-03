@@ -1,15 +1,18 @@
 package com.nexus.backend.admin.controller.permission;
 
-import com.nexus.backend.admin.common.result.Result;
+import cn.hutool.core.bean.BeanUtil;
+import com.nexus.framework.web.result.Result;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleAssignMenuReqVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleRespVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleSaveReqVO;
+import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 import com.nexus.backend.admin.service.permission.RoleService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 角色管理接口
@@ -56,8 +59,9 @@ public class RoleController {
      */
     @GetMapping("/{id}")
     public Result<RoleRespVO> getById(@PathVariable Long id) {
-        RoleRespVO role = roleService.getById(id);
-        return Result.success(role);
+        RoleDO role = roleService.getById(id);
+        RoleRespVO vo = BeanUtil.copyProperties(role, RoleRespVO.class);
+        return Result.success(vo);
     }
 
     /**
@@ -65,8 +69,11 @@ public class RoleController {
      */
     @GetMapping("/list")
     public Result<List<RoleRespVO>> getList() {
-        List<RoleRespVO> roleList = roleService.getList();
-        return Result.success(roleList);
+        List<RoleDO> roleList = roleService.getList();
+        List<RoleRespVO> voList = roleList.stream()
+                .map(role -> BeanUtil.copyProperties(role, RoleRespVO.class))
+                .collect(Collectors.toList());
+        return Result.success(voList);
     }
 
     /**

@@ -49,7 +49,7 @@ public interface ${className}Service {
      * @param id 编号
      * @return ${classComment}详情
      */
-    ${className}RespVO getById(Long id);
+    ${className}DO getById(Long id);
 
     /**
      * 获得${classComment}分页
@@ -65,6 +65,6 @@ public interface ${className}Service {
      * @param pageReqVO 查询条件
      * @return ${classComment}列表
      */
-    List<${className}RespVO> getList(${className}PageReqVO pageReqVO);
+    List<${className}DO> getList(${className}PageReqVO pageReqVO);
 }
 

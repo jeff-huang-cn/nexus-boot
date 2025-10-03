@@ -1,7 +1,8 @@
 package com.nexus.backend.admin.controller.user;
 
-
+import cn.hutool.core.bean.BeanUtil;
 import com.nexus.backend.admin.controller.user.vo.*;
+import com.nexus.backend.admin.dal.dataobject.user.UserDO;
 import com.nexus.backend.admin.service.user.UserService;
 import com.nexus.framework.web.result.PageResult;
 import com.nexus.framework.web.result.Result;
@@ -12,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户信息表 控制器
@@ -69,7 +71,8 @@ public class UserController {
      */
     @GetMapping("/get/{id}")
     public Result<UserRespVO> getById(@PathVariable("id") Long id) {
-        UserRespVO respVO = userService.getById(id);
+        UserDO user = userService.getById(id);
+        UserRespVO respVO = BeanUtil.copyProperties(user, UserRespVO.class);
         return Result.success(respVO);
     }
 
@@ -87,8 +90,13 @@ public class UserController {
      */
     @GetMapping("/export")
     public void export(@Valid UserPageReqVO pageReqVO) {
-        List<UserRespVO> list = userService.getList(pageReqVO);
+        List<UserDO> list = userService.getList(pageReqVO);
+
+        // 转换为 VO
+        List<UserRespVO> voList = list.stream()
+                .map(user -> BeanUtil.copyProperties(user, UserRespVO.class))
+                .collect(Collectors.toList());
+
         // TODO: 实现 Excel 导出逻辑
     }
 }
-

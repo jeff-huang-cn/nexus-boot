@@ -1,4 +1,4 @@
-package com.nexus.backend.admin.common.exception;
+package com.nexus.framework.web.exception;
 
 import com.nexus.framework.web.result.Result;
 import jakarta.validation.ConstraintViolation;
@@ -17,8 +17,7 @@ import java.util.stream.Collectors;
 /**
  * 全局异常处理器
  *
- * @author yourcompany
- * @since 2024-01-01
+ * @author nexus
  */
 @Slf4j
 @RestControllerAdvice

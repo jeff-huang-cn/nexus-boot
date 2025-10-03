@@ -1,5 +1,6 @@
 package ${packageName}.controller.${businessName};
 
+import cn.hutool.core.bean.BeanUtil;
 import com.nexus.framework.common.result.Result;
 import com.nexus.framework.common.result.PageResult;
 import ${packageName}.controller.${businessName}.vo.*;
@@ -12,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ${classComment} 控制器
@@ -69,7 +71,8 @@ public class ${className}Controller {
      */
     @GetMapping("/get/{id}")
     public Result<${className}RespVO> getById(@PathVariable("id") Long id) {
-        ${className}RespVO respVO = ${classNameFirstLower}Service.getById(id);
+        ${className}DO ${classNameFirstLower} = ${classNameFirstLower}Service.getById(id);
+        ${className}RespVO respVO = BeanUtil.copyProperties(${classNameFirstLower}, ${className}RespVO.class);
         return Result.success(respVO);
     }
 
@@ -87,7 +90,13 @@ public class ${className}Controller {
      */
     @GetMapping("/export")
     public void export(@Valid ${className}PageReqVO pageReqVO) {
-        List<${className}RespVO> list = ${classNameFirstLower}Service.getList(pageReqVO);
+        List<${className}DO> list = ${classNameFirstLower}Service.getList(pageReqVO);
+        
+        // 转换为 VO
+        List<${className}RespVO> voList = list.stream()
+                .map(item -> BeanUtil.copyProperties(item, ${className}RespVO.class))
+                .collect(Collectors.toList());
+        
         // TODO: 实现 Excel 导出逻辑
     }
 }

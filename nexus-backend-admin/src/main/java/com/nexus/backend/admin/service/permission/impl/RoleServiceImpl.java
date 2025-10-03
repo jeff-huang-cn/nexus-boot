@@ -3,7 +3,6 @@ package com.nexus.backend.admin.service.permission.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleAssignMenuReqVO;
-import com.nexus.backend.admin.controller.permission.vo.role.RoleRespVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleSaveReqVO;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleMenuDO;
@@ -97,22 +96,19 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public RoleRespVO getById(Long id) {
+    public RoleDO getById(Long id) {
         RoleDO role = roleMapper.selectById(id);
         if (role == null) {
             throw new RuntimeException("角色不存在");
         }
-        return BeanUtil.copyProperties(role, RoleRespVO.class);
+        return role;
     }
 
     @Override
-    public List<RoleRespVO> getList() {
-        List<RoleDO> roleList = roleMapper.selectList(
+    public List<RoleDO> getList() {
+        return roleMapper.selectList(
                 new LambdaQueryWrapper<RoleDO>()
                         .orderByAsc(RoleDO::getSort));
-        return roleList.stream()
-                .map(role -> BeanUtil.copyProperties(role, RoleRespVO.class))
-                .collect(Collectors.toList());
     }
 
     @Override

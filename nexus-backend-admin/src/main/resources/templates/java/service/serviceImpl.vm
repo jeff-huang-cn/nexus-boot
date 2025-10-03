@@ -67,9 +67,12 @@ public class ${className}ServiceImpl implements ${className}Service {
     }
 
     @Override
-    public ${className}RespVO getById(Long id) {
+    public ${className}DO getById(Long id) {
         ${className}DO ${classNameFirstLower} = ${classNameFirstLower}Mapper.selectById(id);
-        return BeanUtil.copyProperties(${classNameFirstLower}, ${className}RespVO.class);
+        if (${classNameFirstLower} == null) {
+            throw new RuntimeException("${classComment}不存在");
+        }
+        return ${classNameFirstLower};
     }
 
     @Override
@@ -90,17 +93,12 @@ public class ${className}ServiceImpl implements ${className}Service {
     }
 
     @Override
-    public List<${className}RespVO> getList(${className}PageReqVO pageReqVO) {
+    public List<${className}DO> getList(${className}PageReqVO pageReqVO) {
         // 构建查询条件
         LambdaQueryWrapper<${className}DO> wrapper = buildQueryWrapper(pageReqVO);
         
         // 查询列表
-        List<${className}DO> list = ${classNameFirstLower}Mapper.selectList(wrapper);
-        
-        // 转换为 VO
-        return list.stream()
-                .map(item -> BeanUtil.copyProperties(item, ${className}RespVO.class))
-                .collect(Collectors.toList());
+        return ${classNameFirstLower}Mapper.selectList(wrapper);
     }
 
     /**

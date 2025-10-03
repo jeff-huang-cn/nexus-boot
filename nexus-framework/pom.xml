@@ -46,6 +46,13 @@
             <artifactId>jackson-annotations</artifactId>
         </dependency>
 
+        <!-- Spring Boot Web Starter (可选，用于 GlobalExceptionHandler) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Boot Validation Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

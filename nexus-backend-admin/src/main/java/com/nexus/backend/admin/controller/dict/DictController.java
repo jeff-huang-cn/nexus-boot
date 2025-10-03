@@ -1,6 +1,6 @@
 package com.nexus.backend.admin.controller.dict;
 
-import com.nexus.backend.admin.common.result.Result;
+import com.nexus.framework.web.result.Result;
 import com.nexus.backend.admin.controller.dict.vo.DictRespVO;
 import com.nexus.backend.admin.service.dict.DictService;
 import org.springframework.web.bind.annotation.*;

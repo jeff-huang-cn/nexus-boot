@@ -1,8 +1,8 @@
 package com.nexus.backend.admin.service.permission;
 
 import com.nexus.backend.admin.controller.permission.vo.role.RoleAssignMenuReqVO;
-import com.nexus.backend.admin.controller.permission.vo.role.RoleRespVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleSaveReqVO;
+import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 
 import java.util.List;
 
@@ -41,14 +41,14 @@ public interface RoleService {
      * @param id 角色ID
      * @return 角色信息
      */
-    RoleRespVO getById(Long id);
+    RoleDO getById(Long id);
 
     /**
      * 获取角色列表
      *
      * @return 角色列表
      */
-    List<RoleRespVO> getList();
+    List<RoleDO> getList();
 
     /**
      * 分配菜单

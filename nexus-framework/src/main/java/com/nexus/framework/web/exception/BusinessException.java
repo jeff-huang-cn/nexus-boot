@@ -1,10 +1,9 @@
-package com.nexus.backend.admin.common.exception;
+package com.nexus.framework.web.exception;
 
 /**
  * 业务异常
  *
- * @author yourcompany
- * @since 2024-01-01
+ * @author nexus
  */
 public class BusinessException extends RuntimeException {
 

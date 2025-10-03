@@ -1,7 +1,7 @@
 package com.nexus.backend.admin.service.permission;
 
-import com.nexus.backend.admin.controller.permission.vo.menu.MenuRespVO;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuSaveReqVO;
+import com.nexus.backend.admin.dal.dataobject.permission.MenuDO;
 
 import java.util.List;
 
@@ -40,14 +40,14 @@ public interface MenuService {
      * @param id 菜单ID
      * @return 菜单信息
      */
-    MenuRespVO getById(Long id);
+    MenuDO getById(Long id);
 
     /**
-     * 获取菜单树列表
+     * 获取菜单列表
      *
-     * @return 菜单树列表
+     * @return 菜单列表
      */
-    List<MenuRespVO> getMenuTree();
+    List<MenuDO> getMenuList();
 
     /**
      * 获取角色的菜单ID列表
