@@ -2,17 +2,20 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import { MenuProvider } from './contexts/MenuContext';
 import AppLayout from './components/Layout/AppLayout';
-import AppRoutes from './router/AppRoutes';
+import DynamicRoutes from './router/DynamicRoutes';
 import './App.css';
 
 function App() {
   return (
     <ConfigProvider locale={zhCN}>
       <BrowserRouter>
-        <AppLayout>
-          <AppRoutes />
-        </AppLayout>
+        <MenuProvider>
+          <AppLayout>
+            <DynamicRoutes />
+          </AppLayout>
+        </MenuProvider>
       </BrowserRouter>
     </ConfigProvider>
   );

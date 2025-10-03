@@ -1,10 +1,11 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
-import CodegenTableList from '../pages/codegen/TableList';
-import ImportTable from '../pages/codegen/ImportTable';
-import EditTable from '../pages/codegen/EditTable';
-import PreviewCode from '../pages/codegen/PreviewCode';
+import CodegenTableList from '../pages/dev/codegen/index';
+import ImportTable from '../pages/dev/codegen/ImportTable';
+import EditTable from '../pages/dev/codegen/EditTable';
+import PreviewCode from '../pages/dev/codegen/PreviewCode';
+import UserList from '../pages/system/user/index';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -20,7 +21,9 @@ const AppRoutes: React.FC = () => {
       <Route path="/codegen/import" element={<ImportTable />} />
       <Route path="/codegen/edit/:id" element={<EditTable />} />
       <Route path="/codegen/preview/:id" element={<PreviewCode />} />
-      
+
+      <Route path="/user/list" element={<UserList />} />
+
       {/* 404页面 */}
       <Route path="*" element={<div>页面未找到</div>} />
     </Routes>

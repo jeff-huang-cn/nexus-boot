@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/user/user")
+@RequestMapping("/user/user")
 @RequiredArgsConstructor
 @Validated
 public class UserController {

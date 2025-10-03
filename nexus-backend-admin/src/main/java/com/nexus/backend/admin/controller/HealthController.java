@@ -14,16 +14,16 @@ import java.util.Map;
  * @since 2024-01-01
  */
 @RestController
-@RequestMapping("/test")
-public class TestController {
+@RequestMapping("/health")
+public class HealthController {
 
-    @GetMapping("/health")
+    @GetMapping
     public Map<String, Object> health() {
         Map<String, Object> result = new HashMap<>();
         result.put("status", "OK");
         result.put("timestamp", System.currentTimeMillis());
         result.put("message", "服务正常运行");
-        result.put("package", "com.beckend.admin");
+        result.put("package", "com.backend.admin");
         return result;
     }
 

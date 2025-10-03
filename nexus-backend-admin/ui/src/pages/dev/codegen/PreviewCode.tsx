@@ -22,7 +22,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { codegenApi } from '../../services/codegen';
+import { codegenApi } from '../../../services/codegen/codegen';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;

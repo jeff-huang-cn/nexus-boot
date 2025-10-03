@@ -1,13 +1,29 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
+// 从环境变量读取配置
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/admin';
+
+// 自定义请求接口，返回实际数据而不是 AxiosResponse
+interface RequestInstance extends AxiosInstance {
+  <T = any>(config: AxiosRequestConfig): Promise<T>;
+  <T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+}
+
 // 创建axios实例
-const request: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api/',
+const service: AxiosInstance = axios.create({
+  baseURL: `${API_BASE_URL}${API_PREFIX}`, // 自动包含API前缀
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+const request = service as RequestInstance;
 
 // 请求拦截器
 request.interceptors.request.use(

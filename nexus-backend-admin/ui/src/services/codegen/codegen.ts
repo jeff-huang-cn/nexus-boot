@@ -1,4 +1,4 @@
-import request from '../utils/request';
+import request from '../../utils/request';
 import type {
   PageResult,
   CodegenTable,
@@ -6,7 +6,7 @@ import type {
   CodegenTableVO,
   ImportTableRequest,
   UpdateTableConfigRequest,
-} from '../types/codegen';
+} from '../../types/codegen';
 
 /**
  * 代码生成相关API

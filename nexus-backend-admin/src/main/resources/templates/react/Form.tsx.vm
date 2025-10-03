@@ -14,7 +14,7 @@ import { ${classNameFirstLower}Api } from '../../services/${businessName}';
 
 interface ${className} {
 #foreach($column in $columns)
-  ${column.javaField}?: ${column.javaType};
+  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
 #end
 }
 

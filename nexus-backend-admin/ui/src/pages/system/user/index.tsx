@@ -7,18 +7,20 @@ import {
   Form,
   Card,
   message,
-  Modal,
   Popconfirm,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { ${classNameFirstLower}Api } from '../../services/${businessName}';
-import ${className}Form from './${className}Form';
+import { userApi } from '../../../services/user/user';
 
-interface ${className} {
-#foreach($column in $columns)
-  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
-#end
+interface User {
+  id?: number;
+  username?: string;
+  nickname?: string;
+  email?: string;
+  mobile?: string;
+  status?: number;
+  dateCreated?: string;
 }
 
 interface PageResult<T> {
@@ -26,29 +28,52 @@ interface PageResult<T> {
   total: number;
 }
 
-const ${className}List: React.FC = () => {
+const UserList: React.FC = () => {
   const [form] = Form.useForm();
-  const [data, setData] = useState<${className}[]>([]);
+  const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
-  const [formVisible, setFormVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<${className} | null>(null);
 
-  const columns: ColumnsType<${className}> = [
-#foreach($column in $columns)
-#if(${column.listOperationResult})
+  const columns: ColumnsType<User> = [
     {
-      title: '${column.columnComment}',
-      dataIndex: '${column.javaField}',
-      key: '${column.javaField}',
-#if(${column.javaField} == "dateCreated" || ${column.javaField} == "lastUpdated")
-      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
-#end
+      title: '用户ID',
+      dataIndex: 'id',
+      key: 'id',
     },
-#end
-#end
+    {
+      title: '用户账号',
+      dataIndex: 'username',
+      key: 'username',
+    },
+    {
+      title: '用户昵称',
+      dataIndex: 'nickname',
+      key: 'nickname',
+    },
+    {
+      title: '用户邮箱',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: '手机号码',
+      dataIndex: 'mobile',
+      key: 'mobile',
+    },
+    {
+      title: '帐号状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: number) => (status === 0 ? '正常' : '停用'),
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'dateCreated',
+      key: 'dateCreated',
+      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
+    },
     {
       title: '操作',
       key: 'action',
@@ -77,7 +102,6 @@ const ${className}List: React.FC = () => {
     },
   ];
 
-  // 加载数据
   const loadData = async (params?: any) => {
     setLoading(true);
     try {
@@ -88,7 +112,7 @@ const ${className}List: React.FC = () => {
         ...params,
       };
       
-      const result = await ${classNameFirstLower}Api.getPage(searchParams);
+      const result = await userApi.getPage(searchParams);
       setData(result.list);
       setTotal(result.total);
       setCurrent(searchParams.pageNum);
@@ -104,47 +128,33 @@ const ${className}List: React.FC = () => {
     loadData();
   }, [current, size]);
 
-  // 搜索
   const handleSearch = () => {
     setCurrent(1);
     loadData({ pageNum: 1 });
   };
 
-  // 重置
   const handleReset = () => {
     form.resetFields();
     setCurrent(1);
     loadData({ pageNum: 1 });
   };
 
-  // 新增
   const handleAdd = () => {
-    setEditingRecord(null);
-    setFormVisible(true);
+    message.info('新增功能待实现');
   };
 
-  // 编辑
-  const handleEdit = (record: ${className}) => {
-    setEditingRecord(record);
-    setFormVisible(true);
+  const handleEdit = (record: User) => {
+    message.info('编辑功能待实现');
   };
 
-  // 删除
   const handleDelete = async (id: number) => {
     try {
-      await ${classNameFirstLower}Api.delete(id);
+      await userApi.delete(id);
       message.success('删除成功');
       loadData();
     } catch (error) {
       message.error('删除失败');
     }
-  };
-
-  // 表单保存成功
-  const handleFormSuccess = () => {
-    setFormVisible(false);
-    setEditingRecord(null);
-    loadData();
   };
 
   return (
@@ -156,31 +166,25 @@ const ${className}List: React.FC = () => {
           onFinish={handleSearch}
           style={{ marginBottom: 16 }}
         >
-#foreach($column in $columns)
-#if(${column.listOperation})
-          <Form.Item
-            label="${column.columnComment}"
-            name="${column.javaField}"
-          >
-            <Input placeholder="请输入${column.columnComment}" style={{ width: 200 }} />
+          <Form.Item label="用户账号" name="username">
+            <Input placeholder="请输入用户账号" style={{ width: 200 }} />
           </Form.Item>
-#end
-#end
+          <Form.Item label="用户昵称" name="nickname">
+            <Input placeholder="请输入用户昵称" style={{ width: 200 }} />
+          </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
                 查询
               </Button>
-              <Button onClick={handleReset}>
-                重置
-              </Button>
+              <Button onClick={handleReset}>重置</Button>
             </Space>
           </Form.Item>
         </Form>
 
         <div style={{ marginBottom: 16 }}>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增${classComment}
+            新增用户
           </Button>
         </div>
 
@@ -195,7 +199,7 @@ const ${className}List: React.FC = () => {
             total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 $${'{'}total${'}'} 条记录`,
+            showTotal: (total) => `共 ${total} 条记录`,
             onChange: (page, pageSize) => {
               setCurrent(page);
               setSize(pageSize || 10);
@@ -203,28 +207,9 @@ const ${className}List: React.FC = () => {
           }}
         />
       </Card>
-
-      <Modal
-        title={editingRecord ? '编辑${classComment}' : '新增${classComment}'}
-        open={formVisible}
-        onCancel={() => {
-          setFormVisible(false);
-          setEditingRecord(null);
-        }}
-        footer={null}
-        width={800}
-      >
-        <${className}Form
-          initialValues={editingRecord}
-          onSuccess={handleFormSuccess}
-          onCancel={() => {
-            setFormVisible(false);
-            setEditingRecord(null);
-          }}
-        />
-      </Modal>
     </div>
   );
 };
 
-export default ${className}List;
+export default UserList;
+

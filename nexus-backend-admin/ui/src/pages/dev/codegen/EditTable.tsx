@@ -20,8 +20,8 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate, useParams } from 'react-router-dom';
-import { codegenApi } from '../../services/codegen';
-import type { CodegenTable, CodegenColumn } from '../../types/codegen';
+import { codegenApi } from '../../../services/codegen/codegen';
+import type { CodegenTable, CodegenColumn } from '../../../types/codegen';
 
 const { Option } = Select;
 const { TextArea } = Input;

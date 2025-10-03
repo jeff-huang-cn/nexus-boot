@@ -1,0 +1,307 @@
+import React, { useEffect, useState } from 'react';
+import {
+  Button,
+  Table,
+  Space,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  message,
+  Popconfirm,
+  Tag,
+} from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { menuApi } from '../../../services/menu';
+import type { Menu, MenuForm } from '../../../services/menu/types';
+
+const MenuPage: React.FC = () => {
+  const [dataSource, setDataSource] = useState<Menu[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [formVisible, setFormVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<Menu | null>(null);
+  const [form] = Form.useForm();
+
+  // 菜单类型选项
+  const menuTypeOptions = [
+    { label: '目录', value: 1 },
+    { label: '菜单', value: 2 },
+    { label: '按钮', value: 3 },
+  ];
+
+  // 状态选项
+  const statusOptions = [
+    { label: '启用', value: 1 },
+    { label: '禁用', value: 0 },
+  ];
+
+  // 是否选项
+  const yesNoOptions = [
+    { label: '是', value: 1 },
+    { label: '否', value: 0 },
+  ];
+
+  // 表格列定义
+  const columns = [
+    {
+      title: '菜单名称',
+      dataIndex: 'name',
+      key: 'name',
+      width: 200,
+    },
+    {
+      title: '图标',
+      dataIndex: 'icon',
+      key: 'icon',
+      width: 80,
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+      width: 80,
+      render: (type: number) => {
+        const typeMap = {
+          1: <Tag color="blue">目录</Tag>,
+          2: <Tag color="green">菜单</Tag>,
+          3: <Tag color="orange">按钮</Tag>,
+        };
+        return typeMap[type as keyof typeof typeMap] || '-';
+      },
+    },
+    {
+      title: '权限标识',
+      dataIndex: 'permission',
+      key: 'permission',
+      width: 180,
+    },
+    {
+      title: '路由地址',
+      dataIndex: 'path',
+      key: 'path',
+      width: 150,
+    },
+    {
+      title: '组件路径',
+      dataIndex: 'component',
+      key: 'component',
+      width: 200,
+    },
+    {
+      title: '排序',
+      dataIndex: 'sort',
+      key: 'sort',
+      width: 80,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 80,
+      render: (status: number) =>
+        status === 1 ? <Tag color="success">启用</Tag> : <Tag color="error">禁用</Tag>,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      fixed: 'right' as const,
+      width: 200,
+      render: (_: any, record: Menu) => (
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => handleAdd(record.id)}
+          >
+            新增
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          >
+            编辑
+          </Button>
+          <Popconfirm
+            title="确定删除该菜单吗？"
+            onConfirm={() => handleDelete(record.id!)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  // 加载数据
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const result = await menuApi.getMenuTree() as Menu[];
+      setDataSource(result);
+    } catch (error) {
+      message.error('加载数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // 新增（根节点）
+  const handleAddRoot = () => {
+    setEditingRecord(null);
+    form.resetFields();
+    form.setFieldsValue({ parentId: 0, type: 1, status: 1, visible: 1, keepAlive: 1, alwaysShow: 0, sort: 0 });
+    setFormVisible(true);
+  };
+
+  // 新增（子节点）
+  const handleAdd = (parentId?: number) => {
+    setEditingRecord(null);
+    form.resetFields();
+    form.setFieldsValue({ parentId: parentId || 0, type: 2, status: 1, visible: 1, keepAlive: 1, alwaysShow: 0, sort: 0 });
+    setFormVisible(true);
+  };
+
+  // 编辑
+  const handleEdit = (record: Menu) => {
+    setEditingRecord(record);
+    form.setFieldsValue(record);
+    setFormVisible(true);
+  };
+
+  // 删除
+  const handleDelete = async (id: number) => {
+    try {
+      await menuApi.delete(id);
+      message.success('删除成功');
+      loadData();
+    } catch (error) {
+      message.error('删除失败');
+    }
+  };
+
+  // 保存
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      if (editingRecord?.id) {
+        await menuApi.update(editingRecord.id, values);
+        message.success('更新成功');
+      } else {
+        await menuApi.create(values);
+        message.success('创建成功');
+      }
+      setFormVisible(false);
+      loadData();
+    } catch (error) {
+      console.error('保存失败:', error);
+    }
+  };
+
+  return (
+    <div style={{ padding: 24 }}>
+      <div style={{ marginBottom: 16 }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+          新增菜单
+        </Button>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={dataSource}
+        loading={loading}
+        rowKey="id"
+        pagination={false}
+        scroll={{ x: 1400 }}
+        expandable={{
+          defaultExpandAllRows: true,
+        }}
+      />
+
+      <Modal
+        title={editingRecord ? '编辑菜单' : '新增菜单'}
+        open={formVisible}
+        onOk={handleSave}
+        onCancel={() => setFormVisible(false)}
+        width={600}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="parentId" hidden>
+            <InputNumber />
+          </Form.Item>
+
+          <Form.Item
+            label="菜单名称"
+            name="name"
+            rules={[{ required: true, message: '请输入菜单名称' }]}
+          >
+            <Input placeholder="请输入菜单名称" />
+          </Form.Item>
+
+          <Form.Item
+            label="菜单类型"
+            name="type"
+            rules={[{ required: true, message: '请选择菜单类型' }]}
+          >
+            <Select options={menuTypeOptions} placeholder="请选择菜单类型" />
+          </Form.Item>
+
+          <Form.Item label="权限标识" name="permission">
+            <Input placeholder="如：system:user:create" />
+          </Form.Item>
+
+          <Form.Item label="路由地址" name="path">
+            <Input placeholder="如：/system/user" />
+          </Form.Item>
+
+          <Form.Item label="菜单图标" name="icon">
+            <Input placeholder="图标名称" />
+          </Form.Item>
+
+          <Form.Item label="组件路径" name="component">
+            <Input placeholder="如：system/user/index" />
+          </Form.Item>
+
+          <Form.Item label="组件名称" name="componentName">
+            <Input placeholder="如：SystemUser" />
+          </Form.Item>
+
+          <Form.Item label="显示顺序" name="sort">
+            <InputNumber min={0} style={{ width: '100%' }} />
+          </Form.Item>
+
+          <Form.Item label="菜单状态" name="status">
+            <Select options={statusOptions} />
+          </Form.Item>
+
+          <Form.Item label="是否可见" name="visible">
+            <Select options={yesNoOptions} />
+          </Form.Item>
+
+          <Form.Item label="是否缓存" name="keepAlive">
+            <Select options={yesNoOptions} />
+          </Form.Item>
+
+          <Form.Item label="总是显示" name="alwaysShow">
+            <Select options={yesNoOptions} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  );
+};
+
+export default MenuPage;
+

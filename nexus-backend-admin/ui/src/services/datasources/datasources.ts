@@ -1,9 +1,12 @@
-import request from '../utils/request';
+import request from '../../utils/request';
 import type {
   DatabaseTable,
   DatabaseColumn,
   DataSourceConfig,
-} from '../types/codegen';
+} from '../../types/codegen';
+
+// 数据库模块API基础路径
+const API_BASE = '/database';
 
 /**
  * 数据库管理相关API
@@ -13,7 +16,7 @@ export const databaseApi = {
    * 查询数据源配置列表
    */
   getDataSourceList: (): Promise<DataSourceConfig[]> => {
-    return request.get('/database/datasources');
+    return request.get(`${API_BASE}/datasources`);
   },
 
   /**
@@ -23,7 +26,7 @@ export const databaseApi = {
     datasourceConfigId?: number;
     tableName?: string;
   }): Promise<DatabaseTable[]> => {
-    return request.get('/database/tables', { params });
+    return request.get(`${API_BASE}/tables`, { params });
   },
 
   /**
@@ -34,7 +37,7 @@ export const databaseApi = {
     tableName: string;
   }): Promise<DatabaseColumn[]> => {
     const { tableName, ...restParams } = params;
-    return request.get(`/database/tables/${tableName}/columns`, { 
+    return request.get(`${API_BASE}/tables/${tableName}/columns`, { 
       params: restParams 
     });
   },
@@ -47,7 +50,7 @@ export const databaseApi = {
     tableName: string;
   }): Promise<DatabaseTable> => {
     const { tableName, ...restParams } = params;
-    return request.get(`/database/tables/${tableName}`, { 
+    return request.get(`${API_BASE}/tables/${tableName}`, { 
       params: restParams 
     });
   },
