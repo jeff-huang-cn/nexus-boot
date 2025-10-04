@@ -68,4 +68,12 @@ public interface UserService {
      * @return 用户信息表列表
      */
     List<UserDO> getList(UserPageReqVO pageReqVO);
+
+    /**
+     * 根据用户名获取用户
+     *
+     * @param username 用户名
+     * @return 用户信息
+     */
+    UserDO getUserByUsername(String username);
 }

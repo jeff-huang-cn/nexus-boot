@@ -1,6 +1,6 @@
 package com.nexus.backend.admin.dal.mapper.permission;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -10,5 +10,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author nexus
  */
 @Mapper
-public interface RoleMapper extends BaseMapper<RoleDO> {
+public interface RoleMapper extends MPJBaseMapper<RoleDO> {
 }

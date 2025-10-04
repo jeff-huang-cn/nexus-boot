@@ -56,5 +56,4 @@ public interface MenuService {
      * @return 菜单ID列表
      */
     List<Long> getMenuIdsByRoleId(Long roleId);
-
 }

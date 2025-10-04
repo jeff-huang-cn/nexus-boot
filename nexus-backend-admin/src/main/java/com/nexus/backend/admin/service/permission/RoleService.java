@@ -57,4 +57,5 @@ public interface RoleService {
      */
     void assignMenu(RoleAssignMenuReqVO reqVO);
 
+    List<RoleDO> getListByUserId(Long userId);
 }

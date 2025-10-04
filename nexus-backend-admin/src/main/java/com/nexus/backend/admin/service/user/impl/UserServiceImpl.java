@@ -103,6 +103,13 @@ public class UserServiceImpl implements UserService {
         return userMapper.selectList(wrapper);
     }
 
+    @Override
+    public UserDO getUserByUsername(String username) {
+        LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserDO::getUsername, username);
+        return userMapper.selectOne(wrapper);
+    }
+
     /**
      * 构建查询条件
      */

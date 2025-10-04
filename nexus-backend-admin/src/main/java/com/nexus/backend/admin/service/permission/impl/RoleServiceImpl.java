@@ -2,6 +2,8 @@ package com.nexus.backend.admin.service.permission.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.github.yulichang.query.MPJLambdaQueryWrapper;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleAssignMenuReqVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleSaveReqVO;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
@@ -135,6 +137,15 @@ public class RoleServiceImpl implements RoleService {
 
             roleMenuList.forEach(roleMenuMapper::insert);
         }
+    }
+
+    @Override
+    public List<RoleDO> getListByUserId(Long userId) {
+        MPJLambdaWrapper<RoleDO> wrapper = new MPJLambdaWrapper<RoleDO>()
+                .selectAll(RoleDO.class)
+                .innerJoin(UserRoleDO.class, UserRoleDO::getRoleId, RoleDO::getId)
+                .eq(UserRoleDO::getUserId, userId);
+        return roleMapper.selectJoinList(RoleDO.class, wrapper);
     }
 
     /**
