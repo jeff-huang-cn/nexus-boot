@@ -17,7 +17,6 @@ import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -47,15 +46,7 @@ import java.util.UUID;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    private final JwtAuthenticationSuccessHandler successHandler;
-    private final JwtAuthenticationFailureHandler failureHandler;
-
-    public SecurityConfig(JwtAuthenticationSuccessHandler successHandler,
-            JwtAuthenticationFailureHandler failureHandler) {
-        this.successHandler = successHandler;
-        this.failureHandler = failureHandler;
-    }
+    // 移除构造函数注入，改为方法参数注入，避免循环依赖
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -132,16 +123,24 @@ public class SecurityConfig {
 
     /**
      * 配置安全过滤链（核心配置）
+     * 通过方法参数注入Handler，避免构造函数循环依赖
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtDecoder jwtDecoder,
+            JwtAuthenticationSuccessHandler successHandler,
+            JwtAuthenticationFailureHandler failureHandler,
+            CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
                 // 1. 关闭CSRF（JWT不需要）
                 .csrf(AbstractHttpConfigurer::disable)
-                // 2. 配置会话管理（无状态，不创建会话）
+                // 2. 启用CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                // 3. 配置会话管理（无状态，不创建会话）
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 3. 配置登录端点（前后端分离，只处理POST，不生成登录页面）
+                // 4. 配置登录端点（前后端分离，只处理POST，不生成登录页面）
                 .formLogin(form -> form
                         .loginProcessingUrl("/login") // 只处理POST /login
                         .successHandler(successHandler) // 登录成功返回JSON
@@ -155,15 +154,18 @@ public class SecurityConfig {
                             response.setStatus(401);
                             response.getWriter().write("{\"code\":401,\"message\":\"未登录或登录已过期\"}");
                         }))
-                // 4. 配置URL权限规则
+                // 5. 配置URL权限规则
                 .authorizeHttpRequests(auth -> auth
                         // 允许测试端点
                         .requestMatchers("/test/**").permitAll()
-                        // 允许登录端点（OPTIONS请求已由CorsFilter处理）
+                        // 允许登录端点
                         .requestMatchers("/login").permitAll()
+                        // 允许自定义认证端点
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/admin/auth/**").permitAll()
                         // 其他接口需要认证
                         .anyRequest().authenticated())
-                // 5. 添加JWT验证过滤器（在用户名密码过滤器之前执行）
+                // 6. 添加JWT验证过滤器（在用户名密码过滤器之前执行）
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtDecoder),
                         UsernamePasswordAuthenticationFilter.class);
