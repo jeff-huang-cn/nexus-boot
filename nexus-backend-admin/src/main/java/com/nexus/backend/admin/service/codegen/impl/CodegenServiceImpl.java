@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nexus.framework.web.exception.BusinessException;
-import com.nexus.backend.admin.common.utils.CodegenUtils;
+import com.nexus.backend.admin.utils.CodegenUtils;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
 import com.nexus.backend.admin.dal.dataobject.codegen.CodegenColumnDO;

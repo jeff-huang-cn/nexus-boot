@@ -1,4 +1,4 @@
-package com.nexus.backend.admin.common.utils;
+package com.nexus.backend.admin.utils;
 
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;

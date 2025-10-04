@@ -1,14 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { Layout, Menu, Button, theme, Breadcrumb } from 'antd';
+import { Layout, Menu, Button, theme, Breadcrumb, Dropdown, Avatar, Space, Modal } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HomeOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import * as Icons from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 import { useMenu } from '../../contexts/MenuContext';
+import { useAuth } from '../../contexts/AuthContext';
 import type { Menu as MenuItem } from '../../services/menu/types';
 
 const { Header, Sider, Content } = Layout;
@@ -63,6 +67,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { menus, loading } = useMenu();
+  const { userInfo, logout } = useAuth();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -166,6 +171,43 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     return items;
   };
 
+  // 用户下拉菜单
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人信息',
+      onClick: () => navigate('/profile'),
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: '系统设置',
+      onClick: () => navigate('/settings'),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      danger: true,
+      onClick: () => {
+        Modal.confirm({
+          title: '确认退出',
+          content: '确定要退出登录吗？',
+          okText: '确定',
+          cancelText: '取消',
+          onOk: () => {
+            logout();
+            navigate('/login');
+          },
+        });
+      },
+    },
+  ];
+
   if (loading) {
     return <div>加载中...</div>;
   }
@@ -198,7 +240,15 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         />
       </Sider>
       <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }}>
+        <Header
+          style={{
+            padding: 0,
+            background: colorBgContainer,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
             <Button
               type="text"
@@ -211,6 +261,16 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               }}
             />
             <Breadcrumb style={{ margin: '0 16px' }} items={getBreadcrumbItems()} />
+          </div>
+
+          {/* 右侧用户信息 */}
+          <div style={{ paddingRight: '24px' }}>
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<UserOutlined />} />
+                <span>{userInfo?.username || '未知用户'}</span>
+              </Space>
+            </Dropdown>
           </div>
         </Header>
         <Content

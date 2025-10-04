@@ -4,15 +4,21 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuSaveReqVO;
 import com.nexus.backend.admin.dal.dataobject.permission.MenuDO;
+import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleMenuDO;
 import com.nexus.backend.admin.dal.mapper.permission.MenuMapper;
 import com.nexus.backend.admin.dal.mapper.permission.RoleMenuMapper;
+import com.nexus.backend.admin.enums.CommonStatusEnum;
+import com.nexus.backend.admin.enums.MenuTypeEnum;
 import com.nexus.backend.admin.service.permission.MenuService;
+import com.nexus.backend.admin.service.permission.RoleService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +34,9 @@ public class MenuServiceImpl implements MenuService {
 
     @Resource
     private RoleMenuMapper roleMenuMapper;
+
+    @Resource
+    private RoleService roleService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -102,6 +111,40 @@ public class MenuServiceImpl implements MenuService {
         return roleMenuList.stream()
                 .map(RoleMenuDO::getMenuId)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MenuDO> getUserMenus(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        // 1. 获取用户的所有角色
+        List<RoleDO> userRoles = roleService.getListByUserId(userId);
+        if (userRoles.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 获取所有角色的菜单ID（去重）
+        Set<Long> menuIds = userRoles.stream()
+                .map(RoleDO::getId)
+                .flatMap(roleId -> getMenuIdsByRoleId(roleId).stream())
+                .collect(Collectors.toSet());
+
+        if (menuIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 3. 查询菜单列表，过滤条件：
+        // - 菜单ID在用户有权限的列表中
+        // - 状态为启用
+        // - 类型不是按钮（按钮权限不显示在菜单树中）
+        return menuMapper.selectList(
+                new LambdaQueryWrapper<MenuDO>()
+                        .in(MenuDO::getId, menuIds)
+                        .eq(MenuDO::getStatus, CommonStatusEnum.ENABLE.getValue())
+                        .ne(MenuDO::getType, MenuTypeEnum.BUTTON.getValue())
+                        .orderByAsc(MenuDO::getSort));
     }
 
     /**

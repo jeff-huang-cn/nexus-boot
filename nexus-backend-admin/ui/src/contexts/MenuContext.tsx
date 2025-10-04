@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { menuApi } from '../services/menu';
+import request from '../utils/request';
+import { getPermissions } from '../utils/auth';
 import type { Menu } from '../services/menu/types';
 
 interface MenuContextType {
@@ -17,37 +18,26 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 从菜单树中提取所有权限
-  const extractPermissions = (menuList: Menu[]): string[] => {
-    const perms: string[] = [];
-    const traverse = (items: Menu[]) => {
-      items.forEach(item => {
-        if (item.permission) {
-          perms.push(item.permission);
-        }
-        if (item.children && item.children.length > 0) {
-          traverse(item.children);
-        }
-      });
-    };
-    traverse(menuList);
-    return perms;
-  };
-
   // 加载用户菜单
   const loadMenus = async () => {
     setLoading(true);
     try {
-      // TODO: 后续改为 menuApi.getUserMenus() 获取当前用户的菜单
-      const menuTree = await menuApi.getMenuTree();
+      // 1. 从JWT Token获取权限列表（按钮权限）
+      const userPermissions = getPermissions();
+      setPermissions(userPermissions);
+      
+      // 2. 调用后端接口获取用户菜单树（已根据用户权限过滤）
+      const menuTree = await request.get<Menu[]>('/system/menu/user');
       setMenus(menuTree);
       
-      // 提取所有权限
-      const perms = extractPermissions(menuTree);
-      setPermissions(perms);
+      // 3. 存储到localStorage（可选，用于刷新页面时快速恢复）
+      localStorage.setItem('user_menus', JSON.stringify(menuTree));
+      localStorage.setItem('user_permissions', JSON.stringify(userPermissions));
       
-      // 存储到 localStorage
-      localStorage.setItem('user_permissions', JSON.stringify(perms));
+      if (process.env.NODE_ENV === 'development') {
+        console.log('User menus loaded:', menuTree);
+        console.log('User permissions:', userPermissions);
+      }
     } catch (error) {
       console.error('加载菜单失败:', error);
       setMenus([]);

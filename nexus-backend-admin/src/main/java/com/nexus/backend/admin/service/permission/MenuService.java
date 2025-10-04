@@ -56,4 +56,13 @@ public interface MenuService {
      * @return 菜单ID列表
      */
     List<Long> getMenuIdsByRoleId(Long roleId);
+
+    /**
+     * 获取用户的菜单列表（根据用户权限过滤）
+     * 用于前端导航菜单展示，只返回用户有权限访问的菜单
+     *
+     * @param userId 用户ID
+     * @return 菜单列表（已过滤权限，不包含按钮）
+     */
+    List<MenuDO> getUserMenus(Long userId);
 }

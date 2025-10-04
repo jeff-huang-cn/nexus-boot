@@ -1,8 +1,10 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { message } from 'antd';
+import { getToken, removeToken, isTokenExpired } from './auth';
 
 // 从环境变量读取配置
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
-const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/admin';
+const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/';
 
 // 自定义请求接口，返回实际数据而不是 AxiosResponse
 interface RequestInstance extends AxiosInstance {
@@ -28,8 +30,34 @@ const request = service as RequestInstance;
 // 请求拦截器
 request.interceptors.request.use(
   (config: any) => {
-    // 在发送请求之前做些什么
-    console.log('Request:', config);
+    // 1. 获取Token
+    const token = getToken();
+    
+    // 2. 如果Token存在且未过期，添加到请求头
+    if (token) {
+      // 检查Token是否过期
+      if (isTokenExpired(token)) {
+        // Token已过期，清除并跳转登录页
+        removeToken();
+        message.error('登录已过期，请重新登录');
+        
+        // 避免在登录页循环重定向
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        
+        return Promise.reject(new Error('Token已过期'));
+      }
+      
+      // 添加Authorization Header
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // 3. 打印请求日志（开发环境）
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Request:', config.method?.toUpperCase(), config.url);
+    }
+    
     return config;
   },
   (error) => {
@@ -56,6 +84,7 @@ request.interceptors.response.use(
     } else {
       // 业务错误
       console.error('Business Error:', data.message);
+      message.error(data.message || '请求失败');
       throw new Error(data.message || '请求失败');
     }
   },
@@ -63,19 +92,55 @@ request.interceptors.response.use(
     // 对响应错误做点什么
     console.error('Response Error:', error);
     
-    let message = '网络错误';
+    let errorMessage = '网络错误';
+    
     if (error.response) {
-      // 服务器返回错误状态码
-      message = error.response.data?.message || `请求失败 ${error.response.status}`;
+      const status = error.response.status;
+      
+      // 处理401未授权
+      if (status === 401) {
+        errorMessage = '登录已过期，请重新登录';
+        
+        // 清除Token
+        removeToken();
+        
+        // 显示提示
+        message.error(errorMessage);
+        
+        // 跳转登录页（避免循环重定向）
+        if (window.location.pathname !== '/login') {
+          // 延迟跳转，确保消息显示
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 500);
+        }
+        
+        return Promise.reject(new Error(errorMessage));
+      }
+      
+      // 处理403无权限
+      if (status === 403) {
+        errorMessage = '无权限访问';
+        message.error(errorMessage);
+        return Promise.reject(new Error(errorMessage));
+      }
+      
+      // 其他错误
+      errorMessage = error.response.data?.message || `请求失败 (${status})`;
     } else if (error.request) {
       // 请求已发出但没有收到响应
-      message = '网络连接超时';
+      errorMessage = '网络连接超时，请检查网络';
     } else {
       // 其他错误
-      message = error.message || '请求失败';
+      errorMessage = error.message || '请求失败';
     }
     
-    throw new Error(message);
+    // 显示错误提示（排除401，已单独处理）
+    if (error.response?.status !== 401) {
+      message.error(errorMessage);
+    }
+    
+    throw new Error(errorMessage);
   }
 );
 

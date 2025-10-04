@@ -6,8 +6,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Objects;
-
 /**
  * Security 上下文工具类
  * 用于获取当前登录用户信息
