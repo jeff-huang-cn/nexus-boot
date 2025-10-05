@@ -62,7 +62,7 @@ public class PermissionServiceImpl implements PermissionService {
         List<MenuDO> buttons = menuMapper.selectList(
                 new LambdaQueryWrapper<MenuDO>()
                         .select(MenuDO::getPermission)
-                        .in(MenuDO::getId, menuIds)
+                        .in(MenuDO::getParentId, menuIds)
                         .eq(MenuDO::getType, MenuTypeEnum.BUTTON.getValue()) // 类型=按钮
                         .eq(MenuDO::getStatus, CommonStatusEnum.ENABLE.getValue()) // 状态=启用
                         .isNotNull(MenuDO::getPermission) // 权限标识不为空

@@ -33,10 +33,18 @@ request.interceptors.request.use(
     // 1. 获取Token
     const token = getToken();
     
+    console.log('=== 请求拦截器 ===');
+    console.log('URL:', config.url);
+    console.log('Method:', config.method);
+    console.log('Token存在:', !!token);
+    
     // 2. 如果Token存在且未过期，添加到请求头
     if (token) {
       // 检查Token是否过期
-      if (isTokenExpired(token)) {
+      const expired = isTokenExpired(token);
+      console.log('Token是否过期:', expired);
+      
+      if (expired) {
         // Token已过期，清除并跳转登录页
         removeToken();
         message.error('登录已过期，请重新登录');
@@ -51,11 +59,16 @@ request.interceptors.request.use(
       
       // 添加Authorization Header
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('已添加Authorization头');
+      console.log('Token前20个字符:', token.substring(0, 20) + '...');
+    } else {
+      console.warn('没有Token，跳过Authorization头');
     }
     
     // 3. 打印请求日志（开发环境）
     if (process.env.NODE_ENV === 'development') {
       console.log('Request:', config.method?.toUpperCase(), config.url);
+      console.log('Headers:', config.headers);
     }
     
     return config;
@@ -99,21 +112,24 @@ request.interceptors.response.use(
       
       // 处理401未授权
       if (status === 401) {
-        errorMessage = '登录已过期，请重新登录';
+        console.error('=== 401错误详情 ===');
+        console.error('URL:', error.config?.url);
+        console.error('响应数据:', error.response.data);
         
-        // 清除Token
-        removeToken();
+        // 尝试从响应中获取更详细的错误信息
+        const detailMessage = error.response.data?.message || error.response.data?.error || '认证失败';
+        errorMessage = `${detailMessage}（请检查Token是否有效）`;
         
-        // 显示提示
+        // 显示提示（暂时不清除Token，让用户看到详细错误）
         message.error(errorMessage);
         
-        // 跳转登录页（避免循环重定向）
-        if (window.location.pathname !== '/login') {
-          // 延迟跳转，确保消息显示
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 500);
-        }
+        // 注释掉自动清除Token和跳转，方便调试
+        // removeToken();
+        // if (window.location.pathname !== '/login') {
+        //   setTimeout(() => {
+        //     window.location.href = '/login';
+        //   }, 500);
+        // }
         
         return Promise.reject(new Error(errorMessage));
       }

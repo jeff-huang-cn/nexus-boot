@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/user/user")
+@RequestMapping("/system/user")
 @RequiredArgsConstructor
 @Validated
 public class UserController {

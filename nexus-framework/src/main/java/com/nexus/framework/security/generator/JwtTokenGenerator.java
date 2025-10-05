@@ -26,22 +26,32 @@ public class JwtTokenGenerator {
      */
     public String generateToken(Authentication authentication) {
         Instant now = Instant.now();
-        
-        // 提取用户权限（如：ROLE_ADMIN, ROLE_USER）
-        String authorities = authentication.getAuthorities().stream()
+
+        // 提取用户权限为列表（前端需要数组格式）
+        java.util.List<String> authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(" ")); // 用空格分隔多个权限
-        
+                .collect(Collectors.toList());
+
+        System.out.println("=== 生成JWT Token ===");
+        System.out.println("用户名: " + authentication.getName());
+        System.out.println("权限列表: " + authorities);
+        System.out.println("权限类型: " + authorities.getClass().getName());
+
         // 构建JWT声明（Claims）
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("my-app") // 发行者（自定义）
+                .issuer("nexus-app") // 发行者
                 .issuedAt(now) // 发行时间
                 .expiresAt(now.plus(2, ChronoUnit.HOURS)) // 过期时间（2小时）
                 .subject(authentication.getName()) // 用户名
-                .claim("authorities", authorities) // 权限信息（关键：前端需用此判断按钮权限）
+                .claim("authorities", authorities) // 权限信息（List格式，Spring会自动转换为JSON数组）
                 .build();
-        
+
+        System.out.println("JWT Claims: " + claims.getClaims());
+
         // 生成并返回JWT令牌
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        String token = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        System.out.println("生成的Token长度: " + token.length());
+
+        return token;
     }
 }

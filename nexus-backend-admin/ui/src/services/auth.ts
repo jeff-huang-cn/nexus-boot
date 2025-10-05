@@ -55,7 +55,7 @@ export const authApi = {
           },
         }
       );
-        debugger
+      
       // 检查响应格式
       if (response.data && response.data.code === 200) {
         const result = response.data.data;
@@ -70,14 +70,48 @@ export const authApi = {
         throw new Error(response.data?.message || '登录失败');
       }
     } catch (error: any) {
+      console.error('登录请求失败:', error);
+      
       // 处理错误响应
       if (error.response) {
-        const message = error.response.data?.message || `登录失败 (${error.response.status})`;
+        // 后端返回了响应
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        // 尝试从不同的响应格式中提取错误消息
+        let message = '登录失败';
+        
+        if (data) {
+          // 尝试标准格式：{ code, message, data }
+          if (data.message) {
+            message = data.message;
+          }
+          // 尝试Spring Security默认格式：{ error, error_description }
+          else if (data.error_description) {
+            message = data.error_description;
+          }
+          // 尝试纯文本格式
+          else if (typeof data === 'string') {
+            message = data;
+          }
+          // 添加状态码说明
+          else {
+            message = `登录失败 (HTTP ${status})`;
+          }
+        }
+        
+        // 特殊处理401错误
+        if (status === 401) {
+          message = data?.message || '用户名或密码错误';
+        }
+        
         throw new Error(message);
       } else if (error.request) {
-        throw new Error('网络连接超时，请检查网络');
+        // 请求已发出但没有收到响应
+        throw new Error('网络连接超时，请检查网络设置');
       } else {
-        throw new Error(error.message || '登录失败');
+        // 其他错误
+        throw new Error(error.message || '登录失败，请重试');
       }
     }
   },
