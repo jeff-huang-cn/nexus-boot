@@ -1,16 +1,13 @@
 package com.nexus.backend.admin.service.security;
 
-import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 import com.nexus.backend.admin.dal.dataobject.user.UserDO;
-import com.nexus.backend.admin.service.permission.MenuService;
 import com.nexus.backend.admin.service.permission.PermissionService;
-import com.nexus.backend.admin.service.permission.RoleService;
 import com.nexus.backend.admin.service.user.UserService;
+import com.nexus.framework.security.model.LoginUser;
 import com.nexus.framework.security.service.DatabaseUserDetailsService;
 import jakarta.annotation.Resource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
@@ -37,15 +34,15 @@ public class DatabaseUserDetailsServiceImpl implements DatabaseUserDetailsServic
         Set<String> roleNames = permissionService.getUserAllPermissions(user.getId());
         Collection<GrantedAuthority> authorities = getAuthorities(roleNames);
 
-        return User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .authorities(authorities)
-                .accountExpired(!user.isAccountNonExpired())
-                .accountLocked(!user.isAccountNonLocked())
-                .credentialsExpired(!user.isCredentialsNonExpired())
-                .disabled(!user.isEnabled())
-                .build();
+        return new LoginUser(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.isEnabled(),
+                user.isAccountNonExpired(),
+                user.isCredentialsNonExpired(),
+                user.isAccountNonLocked(),
+                authorities);
     }
 
     private Collection<GrantedAuthority> getAuthorities(Set<String> permissions) {

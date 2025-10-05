@@ -1,15 +1,13 @@
 package com.nexus.backend.admin.controller.permission;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.nexus.framework.security.util.SecurityUtils;
+import com.nexus.framework.security.util.SecurityContextUtils;
 import com.nexus.framework.web.result.Result;
 import com.nexus.framework.utils.tree.TreeUtils;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuRespVO;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuSaveReqVO;
 import com.nexus.backend.admin.dal.dataobject.permission.MenuDO;
-import com.nexus.backend.admin.dal.dataobject.user.UserDO;
 import com.nexus.backend.admin.service.permission.MenuService;
-import com.nexus.backend.admin.service.user.UserService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -28,9 +26,6 @@ public class MenuController {
 
     @Resource
     private MenuService menuService;
-
-    @Resource
-    private UserService userService;
 
     /**
      * 创建菜单
@@ -135,27 +130,17 @@ public class MenuController {
      */
     @GetMapping("/user")
     public Result<List<MenuRespVO>> getUserMenuTree() {
-        // 1. 获取当前登录用户名
-        String username = SecurityUtils.getUsername();
-        if (username == null) {
+        Long userId = SecurityContextUtils.getLoginUserId();
+        if (userId == null) {
             throw new RuntimeException("未登录");
         }
 
-        // 2. 根据用户名获取用户信息
-        UserDO user = userService.getUserByUsername(username);
-        if (user == null) {
-            throw new RuntimeException("用户不存在");
-        }
+        List<MenuDO> menuList = menuService.getUserMenus(userId);
 
-        // 3. 获取用户的菜单列表（已过滤权限和按钮）
-        List<MenuDO> menuList = menuService.getUserMenus(user.getId());
-
-        // 4. 转换为VO
         List<MenuRespVO> menuVOList = menuList.stream()
                 .map(menu -> BeanUtil.copyProperties(menu, MenuRespVO.class))
                 .collect(Collectors.toList());
 
-        // 5. 构建树形结构
         List<MenuRespVO> menuTree = TreeUtils.buildTree(
                 menuVOList,
                 MenuRespVO::getId,

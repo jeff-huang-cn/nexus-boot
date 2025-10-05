@@ -5,14 +5,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 /**
  * Security 上下文工具类
  * 用于获取当前登录用户信息
- * 
- * <p>
- * 参考 Yudao 项目 SecurityFrameworkUtils 实现
- * </p>
  * 
  * @author nexus
  */
@@ -41,13 +39,6 @@ public class SecurityContextUtils {
     /**
      * 获取当前登录用户ID（String类型）
      * 
-     * <p>
-     * 获取逻辑：
-     * 1. 从 SecurityContext 获取 Authentication
-     * 2. 从 Authentication 获取 Principal
-     * 3. 尝试从 Principal 中提取用户ID
-     * </p>
-     * 
      * @return 用户ID字符串，未登录或获取失败返回 null
      */
     public static String getLoginUserIdAsString() {
@@ -57,57 +48,66 @@ public class SecurityContextUtils {
             return null;
         }
 
+        // 场景1: JWT认证（从JWT claims中获取userId）
+        if (authentication instanceof JwtAuthenticationToken) {
+            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+            Jwt jwt = jwtAuth.getToken();
+            Object userId = jwt.getClaim("userId");
+            if (userId != null) {
+                log.debug("从JWT claims中获取userId: {}", userId);
+                return userId.toString();
+            }
+        }
+
         Object principal = authentication.getPrincipal();
         if (principal == null) {
             log.debug("Principal 为空");
             return null;
         }
 
-        // 场景1: Principal 是自定义的 LoginUser 对象（包含 userId 字段）
-        // 通过反射尝试获取 userId 或 id 字段
+        // 场景2: Principal 是自定义的 LoginUser 对象（包含 userId 字段）
         try {
-            // 尝试获取 userId 字段
             java.lang.reflect.Field userIdField = principal.getClass().getDeclaredField("userId");
             userIdField.setAccessible(true);
             Object userId = userIdField.get(principal);
             if (userId != null) {
+                log.debug("从LoginUser对象反射获取userId: {}", userId);
                 return userId.toString();
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            // 字段不存在或访问失败，尝试下一个方式
+            // 字段不存在，继续尝试其他方式
         }
 
         try {
-            // 尝试获取 id 字段
             java.lang.reflect.Field idField = principal.getClass().getDeclaredField("id");
             idField.setAccessible(true);
             Object id = idField.get(principal);
             if (id != null) {
+                log.debug("从Principal对象反射获取id: {}", id);
                 return id.toString();
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            // 字段不存在或访问失败，继续
+            // 字段不存在，继续
         }
 
-        // 场景2: Principal 是 UserDetails 对象
+        // 场景3: Principal 是 UserDetails 对象
         if (principal instanceof UserDetails) {
             UserDetails userDetails = (UserDetails) principal;
-            // UserDetails 的 username 可能是用户ID或用户名
-            // 这里假设 username 是用户ID（可根据实际情况调整）
             return userDetails.getUsername();
         }
 
-        // 场景3: Principal 是字符串（用户名或用户ID）
+        // 场景4: Principal 是字符串
         if (principal instanceof String) {
             return (String) principal;
         }
 
-        // 场景4: Principal 是数字（用户ID）
+        // 场景5: Principal 是数字
         if (principal instanceof Number) {
             return principal.toString();
         }
 
-        log.warn("无法从 Principal 中提取用户ID，Principal类型: {}", principal.getClass().getName());
+        log.warn("无法从Principal中提取用户ID，Authentication类型: {}, Principal类型: {}",
+                authentication.getClass().getName(), principal.getClass().getName());
         return null;
     }
 
