@@ -5,7 +5,7 @@
  */
 
 import axios from 'axios';
-import { setToken, getUserInfo } from '../utils/auth';
+import { setToken, getUserInfo, getToken } from '../utils/auth';
 import type { UserInfo } from '../utils/auth';
 import type { Menu } from './menu/types';
 
@@ -122,8 +122,10 @@ export const authApi = {
    */
   async logout(): Promise<void> {
     try {
-      const token = (await import('../utils/auth')).getToken();
+      const token = getToken();
       if (token) {
+        console.log('调用后端logout接口，Token:', token.substring(0, 20) + '...');
+        
         // 调用Spring Security默认的logout端点
         await axios.post(
           `${API_BASE_URL}/logout`,
@@ -135,6 +137,10 @@ export const authApi = {
             },
           }
         );
+        
+        console.log('后端logout接口调用成功');
+      } else {
+        console.log('未找到Token，跳过后端logout调用');
       }
     } catch (error) {
       console.error('调用logout接口失败:', error);

@@ -4,6 +4,8 @@ import { Spin } from 'antd';
 import { useMenu } from '../contexts/MenuContext';
 import type { Menu } from '../services/menu/types';
 import Dashboard from '../pages/Dashboard';
+import Profile from '../pages/Profile';
+import Settings from '../pages/Settings';
 
 // 加载页面组件的函数
 const loadComponent = (componentPath: string) => {
@@ -68,8 +70,10 @@ const DynamicRoutes: React.FC = () => {
       {/* 默认重定向到仪表盘 */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      {/* 仪表盘（固定路由） */}
+      {/* 固定路由 */}
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/settings" element={<Settings />} />
 
       {/* 动态生成的路由 */}
       {dynamicRoutes}

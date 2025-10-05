@@ -193,17 +193,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       icon: <LogoutOutlined />,
       label: '退出登录',
       danger: true,
-      onClick: () => {
-        Modal.confirm({
-          title: '确认退出',
-          content: '确定要退出登录吗？',
-          okText: '确定',
-          cancelText: '取消',
-          onOk: () => {
-            logout();
-            navigate('/login');
-          },
-        });
+      onClick: async () => {
+        try {
+          await logout();
+          navigate('/login');
+        } catch (error) {
+          console.error('退出登录过程中发生错误:', error);
+        }
       },
     },
   ];

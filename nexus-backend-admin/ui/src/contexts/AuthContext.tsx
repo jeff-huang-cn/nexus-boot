@@ -97,21 +97,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * 登出
    * 清除Token和用户信息，重置认证状态
    */
-  const logout = () => {
+  const logout = async () => {
+    console.log('===== 开始退出登录 =====');
     try {
-      // 调用后端登出接口（可选）
-      authApi.logout().catch(err => {
-        console.error('Logout API error:', err);
-      });
+      // 调用后端登出接口
+      console.log('调用后端logout接口...');
+      await authApi.logout();
+      console.log('后端logout接口调用完成');
+    } catch (err) {
+      console.error('后端logout接口调用失败:', err);
+      // 即使后端失败，也继续清除前端状态
     } finally {
       // 清除前端状态
+      console.log('清除前端认证状态...');
       removeToken();
       setIsAuthenticated(false);
       setUserInfo(null);
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Logout completed');
-      }
+      console.log('===== 退出登录完成 =====');
     }
   };
 
