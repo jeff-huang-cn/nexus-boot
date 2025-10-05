@@ -9,6 +9,8 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,14 +36,26 @@ public class JwkService {
 
     private final JwkMapper jwkMapper;
     private final RedisTemplate<String, String> redisTemplate;
+    private final RedissonClient redissonClient;
     private final JwkProperties jwkProperties;
 
     private static final String JWK_CACHE_KEY = "oauth2:jwk:active";
+    private static final String JWK_CREATE_LOCK_KEY = "oauth2:jwk:create:lock";
 
     /**
      * 获取活跃的JWK集合（混合模式：Redis缓存 + 数据库持久化）
+     * 
+     * 流程：
+     * 1. 尝试从Redis缓存读取
+     * 2. 缓存miss → 获取分布式锁
+     * 3. 双重检查Redis（可能其他线程已缓存）
+     * 4. Redis还是miss → 查询数据库
+     * 5. 数据库为空 → 创建新JWK
+     * 6. 缓存到Redis
+     * 7. 释放锁
      */
     public JWKSet getJwkSet() {
+        // 第一次检查：尝试从Redis缓存读取
         try {
             String cachedJwkSet = redisTemplate.opsForValue().get(JWK_CACHE_KEY);
             if (cachedJwkSet != null) {
@@ -49,23 +63,61 @@ public class JwkService {
                 return JWKSet.parse(cachedJwkSet);
             }
         } catch (Exception e) {
-            log.warn("从Redis加载JWK失败，降级到数据库: {}", e.getMessage());
+            log.warn("从Redis加载JWK失败: {}", e.getMessage());
         }
 
-        log.info("Redis缓存miss，从数据库加载JWK");
-        JWKSet jwkSet = loadFromDatabase();
-        cacheJwkSet(jwkSet);
-        return jwkSet;
+        // Redis缓存miss，获取分布式锁避免并发加载
+        log.info("Redis缓存miss，尝试获取分布式锁");
+        RLock lock = redissonClient.getLock(JWK_CREATE_LOCK_KEY);
+
+        try {
+            // 尝试获取锁，最多等待10秒，锁持有时间30秒
+            boolean locked = lock.tryLock(10, 30, TimeUnit.SECONDS);
+            if (!locked) {
+                log.warn("获取分布式锁超时，直接查询数据库");
+                return loadFromDatabaseWithoutLock();
+            }
+
+            try {
+                // 双重检查：获取锁后再次检查Redis缓存
+                // 可能其他线程已经加载并缓存了
+                log.debug("获取分布式锁成功，进行双重检查Redis");
+                String cachedJwkSet = redisTemplate.opsForValue().get(JWK_CACHE_KEY);
+                if (cachedJwkSet != null) {
+                    log.info("其他线程已缓存JWK到Redis，无需重复加载");
+                    return JWKSet.parse(cachedJwkSet);
+                }
+
+                // Redis仍然miss，从数据库加载
+                log.info("双重检查后Redis仍miss，从数据库加载JWK");
+                JWKSet jwkSet = loadFromDatabaseWithoutLock();
+                cacheJwkSet(jwkSet);
+                return jwkSet;
+
+            } finally {
+                lock.unlock();
+                log.debug("释放JWK加载分布式锁");
+            }
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("获取分布式锁时被中断，降级到直接查询数据库");
+            return loadFromDatabaseWithoutLock();
+        } catch (Exception e) {
+            log.error("获取JWK失败", e);
+            throw new RuntimeException("无法加载JWK", e);
+        }
     }
 
     /**
      * 从数据库加载JWK集合
      */
-    private JWKSet loadFromDatabase() {
+    private JWKSet loadFromDatabaseWithoutLock() {
         List<JwkDO> activeJwks = jwkMapper.selectList(
                 new LambdaQueryWrapper<JwkDO>()
                         .eq(JwkDO::getIsActive, true)
-                        .gt(JwkDO::getExpiresAt, LocalDateTime.now()));
+                        .gt(JwkDO::getExpiresAt, LocalDateTime.now())
+                        .orderByDesc(JwkDO::getCreatedTime)); // 最新的JWK排在最前面
 
         if (activeJwks.isEmpty()) {
             log.warn("数据库中没有活跃的JWK，创建新的JWK");
@@ -82,15 +134,19 @@ public class JwkService {
 
     /**
      * 缓存JWK集合到Redis
+     * 注意：必须使用toJSONObject(true)来包含私钥，否则JWT签名会失败
      */
     private void cacheJwkSet(JWKSet jwkSet) {
         try {
+            // 使用toJSONObject(true)将私钥也序列化到JSON中
+            String jwkSetJson = jwkSet.toJSONObject(true).toString();
+
             redisTemplate.opsForValue().set(
                     JWK_CACHE_KEY,
-                    jwkSet.toString(),
+                    jwkSetJson,
                     jwkProperties.getCacheExpireHours(),
                     TimeUnit.HOURS);
-            log.info("JWK已缓存到Redis，过期时间: {}小时", jwkProperties.getCacheExpireHours());
+            log.info("JWK已缓存到Redis（包含私钥），过期时间: {}小时", jwkProperties.getCacheExpireHours());
         } catch (Exception e) {
             log.error("缓存JWK到Redis失败，但不影响正常使用: {}", e.getMessage());
         }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -25,13 +26,17 @@ public class JwtTokenGenerator {
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
         Long userId = loginUser.getUserId();
 
-        log.info("生成JWT Token，用户ID: {}", userId);
+        // 生成唯一的JWT ID（用于黑名单机制）
+        String jti = UUID.randomUUID().toString();
+
+        log.info("生成JWT Token，用户ID: {}, JTI: {}", userId, jti);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("nexus-app")
                 .issuedAt(now)
                 .expiresAt(now.plus(2, ChronoUnit.HOURS))
                 .subject(authentication.getName())
+                .id(jti) // JWT唯一标识
                 .claim("userId", userId)
                 .build();
 

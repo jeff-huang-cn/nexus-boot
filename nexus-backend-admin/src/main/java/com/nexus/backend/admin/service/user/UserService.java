@@ -1,8 +1,6 @@
 package com.nexus.backend.admin.service.user;
 
-import com.nexus.backend.admin.controller.user.vo.UserPageReqVO;
-import com.nexus.backend.admin.controller.user.vo.UserRespVO;
-import com.nexus.backend.admin.controller.user.vo.UserSaveReqVO;
+import com.nexus.backend.admin.controller.user.vo.*;
 import com.nexus.backend.admin.dal.dataobject.user.UserDO;
 import com.nexus.framework.web.result.PageResult;
 import jakarta.validation.Valid;
@@ -76,4 +74,25 @@ public interface UserService {
      * @return 用户信息
      */
     UserDO getUserByUsername(String username);
+
+    /**
+     * 获取当前用户个人信息
+     *
+     * @return 个人信息
+     */
+    UserDO getProfile();
+
+    /**
+     * 更新当前用户个人信息
+     *
+     * @param updateReqVO 更新信息
+     */
+    void updateProfile(@Valid ProfileUpdateReqVO updateReqVO);
+
+    /**
+     * 修改当前用户密码
+     *
+     * @param updateReqVO 密码更新信息
+     */
+    void updatePassword(@Valid PasswordUpdateReqVO updateReqVO);
 }

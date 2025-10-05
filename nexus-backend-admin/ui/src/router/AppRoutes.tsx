@@ -6,6 +6,8 @@ import ImportTable from '../pages/dev/codegen/ImportTable';
 import EditTable from '../pages/dev/codegen/EditTable';
 import PreviewCode from '../pages/dev/codegen/PreviewCode';
 import UserList from '../pages/system/user/index';
+import Profile from '../pages/Profile';
+import Settings from '../pages/Settings';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -23,6 +25,12 @@ const AppRoutes: React.FC = () => {
       <Route path="/codegen/preview/:id" element={<PreviewCode />} />
 
       <Route path="/user/list" element={<UserList />} />
+
+      {/* 个人中心 */}
+      <Route path="/profile" element={<Profile />} />
+      
+      {/* 系统设置 */}
+      <Route path="/settings" element={<Settings />} />
 
       {/* 404页面 */}
       <Route path="*" element={<div>页面未找到</div>} />

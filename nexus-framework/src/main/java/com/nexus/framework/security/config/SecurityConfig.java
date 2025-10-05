@@ -3,6 +3,8 @@ package com.nexus.framework.security.config;
 import com.nexus.framework.security.filter.JwtAuthenticationFilter;
 import com.nexus.framework.security.handler.JwtAuthenticationFailureHandler;
 import com.nexus.framework.security.handler.JwtAuthenticationSuccessHandler;
+import com.nexus.framework.security.handler.JwtBlacklistLogoutHandler;
+import com.nexus.framework.security.handler.JwtLogoutSuccessHandler;
 import com.nexus.framework.security.service.UserDetailsServiceImpl;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -26,6 +28,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -97,6 +100,9 @@ public class SecurityConfig {
             com.nexus.framework.security.service.PermissionLoader permissionLoader,
             JwtAuthenticationSuccessHandler successHandler,
             JwtAuthenticationFailureHandler failureHandler,
+            JwtBlacklistLogoutHandler blacklistLogoutHandler,
+            JwtLogoutSuccessHandler logoutSuccessHandler,
+            RedisTemplate<String, String> redisTemplate,
             CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -108,6 +114,11 @@ public class SecurityConfig {
                         .successHandler(successHandler)
                         .failureHandler(failureHandler)
                         .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .addLogoutHandler(blacklistLogoutHandler)
+                        .logoutSuccessHandler(logoutSuccessHandler)
+                        .permitAll())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setContentType("application/json;charset=UTF-8");
@@ -117,11 +128,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/test/**").permitAll()
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/logout").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/admin/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtDecoder, permissionLoader),
+                        new JwtAuthenticationFilter(jwtDecoder, permissionLoader, redisTemplate),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

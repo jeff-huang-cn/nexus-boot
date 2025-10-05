@@ -117,14 +117,29 @@ export const authApi = {
   },
 
   /**
-   * 登出（可选，如果后端不需要登出接口，只在前端清除Token即可）
+   * 登出
+   * 调用后端/logout端点，将JWT加入黑名单
    */
   async logout(): Promise<void> {
-    // 如果后端有登出接口，可以在这里调用
-    // await request.post('/logout');
-    
-    // 清除前端存储的Token
-    // removeToken(); // 由调用方处理
+    try {
+      const token = (await import('../utils/auth')).getToken();
+      if (token) {
+        // 调用Spring Security默认的logout端点
+        await axios.post(
+          `${API_BASE_URL}/logout`,
+          {},
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.error('调用logout接口失败:', error);
+      // 即使后端失败，前端也要清除Token
+    }
   },
 
   /**

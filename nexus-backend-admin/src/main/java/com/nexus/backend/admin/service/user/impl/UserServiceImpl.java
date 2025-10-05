@@ -4,15 +4,16 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nexus.backend.admin.controller.user.vo.UserPageReqVO;
-import com.nexus.backend.admin.controller.user.vo.UserRespVO;
-import com.nexus.backend.admin.controller.user.vo.UserSaveReqVO;
+import com.nexus.backend.admin.controller.user.vo.*;
 import com.nexus.backend.admin.dal.dataobject.user.UserDO;
 import com.nexus.backend.admin.dal.mapper.user.UserMapper;
 import com.nexus.backend.admin.service.user.UserService;
+import com.nexus.framework.security.util.SecurityContextUtils;
+import com.nexus.framework.web.exception.BusinessException;
 import com.nexus.framework.web.result.PageResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -211,5 +213,86 @@ public class UserServiceImpl implements UserService {
         if (userMapper.selectById(id) == null) {
             throw new RuntimeException("用户信息表不存在");
         }
+    }
+
+    @Override
+    public UserDO getProfile() {
+        // 获取当前登录用户ID
+        Long userId = SecurityContextUtils.getLoginUserId();
+        if (userId == null) {
+            throw new BusinessException("未登录或登录已过期");
+        }
+
+        // 查询用户信息
+        UserDO user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        return user;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateProfile(ProfileUpdateReqVO updateReqVO) {
+        // 获取当前登录用户ID
+        Long userId = SecurityContextUtils.getLoginUserId();
+        if (userId == null) {
+            throw new BusinessException("未登录或登录已过期");
+        }
+
+        // 查询用户信息
+        UserDO user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 更新个人信息（只更新允许修改的字段）
+        user.setNickname(updateReqVO.getNickname());
+        user.setEmail(updateReqVO.getEmail());
+        user.setMobile(updateReqVO.getMobile());
+        user.setSex(updateReqVO.getSex());
+        user.setAvatar(updateReqVO.getAvatar());
+
+        userMapper.updateById(user);
+        log.info("用户更新个人信息成功，userId: {}", userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updatePassword(PasswordUpdateReqVO updateReqVO) {
+        // 获取当前登录用户ID
+        Long userId = SecurityContextUtils.getLoginUserId();
+        if (userId == null) {
+            throw new BusinessException("未登录或登录已过期");
+        }
+
+        // 验证新密码和确认密码是否一致
+        if (!updateReqVO.getNewPassword().equals(updateReqVO.getConfirmPassword())) {
+            throw new BusinessException("新密码和确认密码不一致");
+        }
+
+        // 查询用户信息
+        UserDO user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 验证旧密码是否正确
+        if (!passwordEncoder.matches(updateReqVO.getOldPassword(), user.getPassword())) {
+            throw new BusinessException("旧密码错误");
+        }
+
+        // 不能与旧密码相同
+        if (updateReqVO.getOldPassword().equals(updateReqVO.getNewPassword())) {
+            throw new BusinessException("新密码不能与旧密码相同");
+        }
+
+        // 加密新密码并更新
+        String encodedPassword = passwordEncoder.encode(updateReqVO.getNewPassword());
+        user.setPassword(encodedPassword);
+        userMapper.updateById(user);
+
+        log.info("用户修改密码成功，userId: {}", userId);
     }
 }
