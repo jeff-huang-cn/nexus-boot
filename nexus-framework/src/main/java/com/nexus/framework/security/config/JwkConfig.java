@@ -5,6 +5,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,10 +13,10 @@ import org.springframework.context.annotation.Configuration;
  * JWK配置类
  * 
  * 职责：
- * 1. 提供JWKSource Bean供Spring Security使用
- * 2. 实现数据库持久化 + Redis缓存的混合模式
- * 3. 使用分布式锁避免并发创建多个JWK
- * 
+ * 1. 提供两个独立的 JWKSource Bean
+ * - signingJwkSource: 用于 JWT 签发（包含私钥，从数据库）
+ * - verificationJwkSource: 用于 JWT 验证（只含公钥，从 Redis 缓存）
+ * 2. 实现职责分离和性能优化
  * 
  * @author nexus
  */
@@ -27,22 +28,41 @@ public class JwkConfig {
     private final JwkService jwkService;
 
     /**
-     * 提供JWKSource Bean供Spring Security使用
+     * 用于签发 JWT 的 JWKSource（包含私钥）
      * 
-     * 使用延迟加载策略：
-     * 1. 每次调用时从 JwkService 获取最新的 JWK
-     * 2. JwkService 优先从 Redis 缓存读取
-     * 3. 缓存 miss 时从数据库加载并更新缓存
+     * 使用场景：JwtEncoder 调用
+     * 数据源：数据库（每次加载最新）
+     * 包含：完整密钥对（公钥+私钥）
      */
     @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        log.info("创建JWKSource Bean（数据库持久化模式）");
+    @Qualifier("signingJwkSource")
+    public JWKSource<SecurityContext> signingJwkSource() {
         return (jwkSelector, context) -> {
             try {
-                return jwkSelector.select(jwkService.getJwkSet());
+                return jwkSelector.select(jwkService.getSigningJwkSet());
             } catch (Exception e) {
-                log.error("获取JWK失败", e);
-                throw new RuntimeException("无法加载JWK，JWT功能不可用", e);
+                log.error("获取签发JWK失败", e);
+                throw new RuntimeException("无法加载签发JWK", e);
+            }
+        };
+    }
+
+    /**
+     * 用于验证 JWT 的 JWKSource（只包含公钥）
+     * 
+     * 使用场景：JwtDecoder 调用
+     * 数据源：Redis 缓存（降级到数据库）
+     * 包含：只有公钥
+     */
+    @Bean
+    @Qualifier("verificationJwkSource")
+    public JWKSource<SecurityContext> verificationJwkSource() {
+        return (jwkSelector, context) -> {
+            try {
+                return jwkSelector.select(jwkService.getVerificationJwkSet());
+            } catch (Exception e) {
+                log.error("获取验证JWK失败", e);
+                throw new RuntimeException("无法加载验证JWK", e);
             }
         };
     }

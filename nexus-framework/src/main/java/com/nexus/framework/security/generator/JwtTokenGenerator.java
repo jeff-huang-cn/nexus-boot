@@ -4,6 +4,7 @@ import com.nexus.framework.security.model.LoginUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
@@ -39,7 +40,10 @@ public class JwtTokenGenerator {
                 .id(jti) // JWT唯一标识
                 .claim("userId", userId)
                 .build();
-
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        JwtEncoderParameters jwtEncoderParameters = JwtEncoderParameters.from(claims);
+        Jwt encode = jwtEncoder.encode(jwtEncoderParameters);
+        String token = encode.getTokenValue();
+        log.info("生成JWT Token成功，用户ID: {}, JTI: {}", userId, jti);
+        return token;
     }
 }

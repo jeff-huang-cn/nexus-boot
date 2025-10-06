@@ -13,6 +13,7 @@ import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -56,13 +57,21 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * JwtEncoder：用于签发 JWT
+     * 使用 signingJwkSource（包含私钥，从数据库加载）
+     */
     @Bean
-    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+    public JwtEncoder jwtEncoder(@Qualifier("signingJwkSource") JWKSource<SecurityContext> jwkSource) {
         return new NimbusJwtEncoder(jwkSource);
     }
 
+    /**
+     * JwtDecoder：用于验证 JWT
+     * 使用 verificationJwkSource（只含公钥，从 Redis 缓存）
+     */
     @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+    public JwtDecoder jwtDecoder(@Qualifier("verificationJwkSource") JWKSource<SecurityContext> jwkSource) {
         ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
         JWSKeySelector<SecurityContext> jwsKeySelector = new JWSVerificationKeySelector<>(
                 JWSAlgorithm.RS256,

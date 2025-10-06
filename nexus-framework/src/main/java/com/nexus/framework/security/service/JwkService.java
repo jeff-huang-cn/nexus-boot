@@ -1,17 +1,22 @@
 package com.nexus.framework.security.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.nexus.framework.security.config.JwkProperties;
 import com.nexus.framework.security.dal.dataobject.JwkDO;
 import com.nexus.framework.security.dal.mapper.JwkMapper;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.Schedules;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,16 +36,27 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class JwkService {
 
-    private final JwkMapper jwkMapper;
-    private final RedisTemplate<String, String> redisTemplate;
-    private final RedissonClient redissonClient;
-    private final JwkProperties jwkProperties;
+    @Resource
+    private JwkMapper jwkMapper;
+    @Resource
+    private RedisTemplate<String, String> redisTemplate;
+    @Resource
+    private RedissonClient redissonClient;
+    @Resource
+    private JwkProperties jwkProperties;
+
+    @Resource
+    @Lazy
+    private JwkService jwkService;
 
     private static final String JWK_CACHE_KEY = "oauth2:jwk:active";
     private static final String JWK_CREATE_LOCK_KEY = "oauth2:jwk:create:lock";
+
+    public JWKSet getSigningJwkSet() {
+        return loadFromDatabaseWithoutLock();
+    }
 
     /**
      * 获取活跃的JWK集合（混合模式：Redis缓存 + 数据库持久化）
@@ -54,8 +70,7 @@ public class JwkService {
      * 6. 缓存到Redis
      * 7. 释放锁
      */
-    public JWKSet getJwkSet() {
-        // 第一次检查：尝试从Redis缓存读取
+    public JWKSet getVerificationJwkSet() {
         try {
             String cachedJwkSet = redisTemplate.opsForValue().get(JWK_CACHE_KEY);
             if (cachedJwkSet != null) {
@@ -121,13 +136,13 @@ public class JwkService {
 
         if (activeJwks.isEmpty()) {
             log.warn("数据库中没有活跃的JWK，创建新的JWK");
-            JwkDO newJwk = createAndSaveJwk();
+            JwkDO newJwk = jwkService.createAndSaveJwk();
             activeJwks = List.of(newJwk);
         }
 
         List<JWK> jwks = activeJwks.stream()
                 .map(this::convertToJwk)
-                .collect(Collectors.toList());
+                .toList();
 
         return new JWKSet(jwks);
     }
@@ -175,6 +190,9 @@ public class JwkService {
             jwkMapper.insert(jwkDO);
             log.info("成功创建并保存JWK到数据库，keyId={}, 过期时间={}天",
                     jwkDO.getKeyId(), jwkProperties.getValidityDays());
+
+            // 清除缓存，下次验证时会加载包含新密钥的JWKSet
+            clearCache();
 
             return jwkDO;
         } catch (Exception e) {
@@ -234,45 +252,9 @@ public class JwkService {
     }
 
     /**
-     * 检查是否需要轮换密钥
-     */
-    public boolean needsRotation() {
-        if (!jwkProperties.isAutoRotationEnabled()) {
-            return false;
-        }
-
-        List<JwkDO> activeJwks = jwkMapper.selectList(
-                new LambdaQueryWrapper<JwkDO>()
-                        .eq(JwkDO::getIsActive, true)
-                        .gt(JwkDO::getExpiresAt, LocalDateTime.now()));
-
-        if (activeJwks.isEmpty()) {
-            return true;
-        }
-
-        LocalDateTime rotationThreshold = LocalDateTime.now()
-                .plusDays(jwkProperties.getRotationAdvanceDays());
-
-        return activeJwks.stream()
-                .allMatch(jwk -> jwk.getExpiresAt().isBefore(rotationThreshold));
-    }
-
-    /**
-     * 手动轮换密钥
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void rotateKey() {
-        log.info("开始轮换JWK密钥");
-
-        createAndSaveJwk();
-        clearCache();
-
-        log.info("JWK密钥轮换完成");
-    }
-
-    /**
      * 禁用过期的JWK
      */
+
     @Transactional(rollbackFor = Exception.class)
     public void deactivateExpiredKeys() {
         List<JwkDO> expiredJwks = jwkMapper.selectList(
