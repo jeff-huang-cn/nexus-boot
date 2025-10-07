@@ -206,12 +206,51 @@ SELECT '生成', 'codegen:table:generate', 3, 6, @codegen_menu_id, 1, 1, 0, 0, '
 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `permission` = 'codegen:table:generate');
 
+-- ----------------------------
+-- 7. 数据源管理菜单（如果不存在则创建）
+-- ----------------------------
+INSERT INTO `system_menu` 
+(`name`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`) 
+SELECT '数据源管理', 2, 2, @dev_dir_id, '/dev/datasource', 'database', 'dev/datasource/index', 'DatasourceManage', 1, 1, 1, 0, 'system'
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `path` = '/dev/datasource' AND `type` = 2);
+
+-- 获取数据源管理菜单ID
+SET @datasource_menu_id = (SELECT id FROM `system_menu` WHERE `path` = '/dev/datasource' AND `type` = 2 LIMIT 1);
+
+-- 7.1 数据源管理按钮权限
+INSERT INTO `system_menu`
+(`name`, `permission`, `type`, `sort`, `parent_id`, `status`, `visible`, `keep_alive`, `always_show`, `creator`)
+SELECT '查询', 'codegen:database:query', 3, 1, @datasource_menu_id, 1, 1, 0, 0, 'system'
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `permission` = 'codegen:database:query' AND `type` = 3);
+
+INSERT INTO `system_menu` 
+(`name`, `permission`, `type`, `sort`, `parent_id`, `status`, `visible`, `keep_alive`, `always_show`, `creator`) 
+SELECT '新增', 'codegen:database:create', 3, 2, @datasource_menu_id, 1, 1, 0, 0, 'system'
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `permission` = 'codegen:database:create');
+
+INSERT INTO `system_menu` 
+(`name`, `permission`, `type`, `sort`, `parent_id`, `status`, `visible`, `keep_alive`, `always_show`, `creator`) 
+SELECT '编辑', 'codegen:database:update', 3, 3, @datasource_menu_id, 1, 1, 0, 0, 'system'
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `permission` = 'codegen:database:update');
+
+INSERT INTO `system_menu` 
+(`name`, `permission`, `type`, `sort`, `parent_id`, `status`, `visible`, `keep_alive`, `always_show`, `creator`) 
+SELECT '删除', 'codegen:database:delete', 3, 4, @datasource_menu_id, 1, 1, 0, 0, 'system'
+FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `permission` = 'codegen:database:delete');
+
+
+
 -- ============================================================
 -- 第三部分：为超级管理员分配所有权限
 -- ============================================================
 
 -- 获取超级管理员角色ID
-SET @admin_role_id = (SELECT id FROM `system_role` WHERE code = 'admin' LIMIT 1);
+SET @admin_role_id = (SELECT id FROM `system_role` WHERE code = 'SuperAdmin' LIMIT 1);
 
 -- 为超级管理员分配所有菜单权限（使用INSERT IGNORE避免重复）
 INSERT IGNORE INTO `system_role_menu` (`role_id`, `menu_id`, `creator`) 

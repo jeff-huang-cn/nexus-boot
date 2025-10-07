@@ -149,12 +149,11 @@ public class JwkService {
 
     /**
      * 缓存JWK集合到Redis
-     * 注意：必须使用toJSONObject(true)来包含私钥，否则JWT签名会失败
+     * 注意：必须使用toString(true)来包含私钥，否则JWT签名会失败
      */
     private void cacheJwkSet(JWKSet jwkSet) {
         try {
-            // 使用toJSONObject(true)将私钥也序列化到JSON中
-            String jwkSetJson = jwkSet.toJSONObject(true).toString();
+            String jwkSetJson = jwkSet.toString(true);
 
             redisTemplate.opsForValue().set(
                     JWK_CACHE_KEY,

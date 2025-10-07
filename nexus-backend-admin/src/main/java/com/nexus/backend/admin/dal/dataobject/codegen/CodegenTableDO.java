@@ -1,7 +1,7 @@
 package com.nexus.backend.admin.dal.dataobject.codegen;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.nexus.framework.mybatis.entity.BaseUpdateEntity;
+import com.nexus.framework.mybatis.entity.BaseUpdateDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("codegen_table")
-public class CodegenTableDO extends BaseUpdateEntity {
+public class CodegenTableDO extends BaseUpdateDO {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;

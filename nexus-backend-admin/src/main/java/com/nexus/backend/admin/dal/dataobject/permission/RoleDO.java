@@ -1,9 +1,7 @@
 package com.nexus.backend.admin.dal.dataobject.permission;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.nexus.framework.mybatis.entity.BaseCreateEntity;
-import com.nexus.framework.mybatis.entity.BaseDO;
-import com.nexus.framework.mybatis.entity.BaseUpdateEntity;
+import com.nexus.framework.mybatis.entity.BaseUpdateDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("system_role")
-public class RoleDO extends BaseUpdateEntity {
+public class RoleDO extends BaseUpdateDO {
 
     /**
      * 角色ID

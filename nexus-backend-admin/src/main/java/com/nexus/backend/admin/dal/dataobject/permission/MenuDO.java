@@ -2,7 +2,6 @@ package com.nexus.backend.admin.dal.dataobject.permission;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.nexus.framework.mybatis.entity.BaseDO;
-import com.nexus.framework.mybatis.entity.BaseUpdateEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("system_menu")
-public class MenuDO extends BaseUpdateEntity {
+public class MenuDO extends BaseDO {
 
     /**
      * 菜单ID

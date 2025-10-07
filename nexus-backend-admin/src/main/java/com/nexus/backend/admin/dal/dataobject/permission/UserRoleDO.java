@@ -3,10 +3,8 @@ package com.nexus.backend.admin.dal.dataobject.permission;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.nexus.framework.mybatis.entity.BaseCreateEntity;
+import com.nexus.framework.mybatis.entity.BaseCreateDO;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /**
  * 用户角色关联 DO
@@ -15,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("system_user_role")
-public class UserRoleDO extends BaseCreateEntity {
+public class UserRoleDO extends BaseCreateDO {
 
     /**
      * ID

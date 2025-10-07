@@ -12,3 +12,7 @@ ALTER TABLE `codegen_table`
 
 -- 说明：如果上述字段已存在会报错，属于正常情况，可以忽略
 
+
+ALTER TABLE `system_menu`
+    ADD COLUMN `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-否 1-是' AFTER `always_show`,
+    ADD INDEX `idx_deleted` (`deleted`);

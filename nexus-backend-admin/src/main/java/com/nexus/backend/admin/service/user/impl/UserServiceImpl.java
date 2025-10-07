@@ -195,10 +195,6 @@ public class UserServiceImpl implements UserService {
         if (pageReqVO.getLastUpdatedEnd() != null) {
             wrapper.le(UserDO::getLastUpdated, pageReqVO.getLastUpdatedEnd());
         }
-        // 租户编号 - 精确匹配
-        if (pageReqVO.getTenantId() != null) {
-            wrapper.eq(UserDO::getTenantId, pageReqVO.getTenantId());
-        }
 
         // 默认按创建时间倒序
         wrapper.orderByDesc(UserDO::getDateCreated);

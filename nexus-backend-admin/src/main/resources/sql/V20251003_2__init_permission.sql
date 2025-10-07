@@ -27,6 +27,7 @@ CREATE TABLE `system_menu` (
   `date_created` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updater` VARCHAR(64) DEFAULT NULL COMMENT '更新者',
   `last_updated` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-否 1-是',
   PRIMARY KEY (`id`),
   KEY `idx_parent_id` (`parent_id`),
   KEY `idx_status` (`status`)

@@ -115,10 +115,5 @@ public class UserPageReqVO extends BasePageQuery {
      */
     private LocalDateTime lastUpdatedEnd;
 
-    /**
-     * 租户编号
-     */
-    private Long tenantId;
-
 }
 
