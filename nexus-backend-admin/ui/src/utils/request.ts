@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { message } from 'antd';
 import { getToken, removeToken, isTokenExpired } from './auth';
+import { globalMessage } from './globalMessage';
 
 // 从环境变量读取配置
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
@@ -47,7 +47,7 @@ request.interceptors.request.use(
       if (expired) {
         // Token已过期，清除并跳转登录页
         removeToken();
-        message.error('登录已过期，请重新登录');
+        globalMessage.error('登录已过期，请重新登录');
         
         // 避免在登录页循环重定向
         if (window.location.pathname !== '/login') {
@@ -95,68 +95,87 @@ request.interceptors.response.use(
     if (data.code === 200) {
       return data.data;
     } else {
-      // 业务错误
-      console.error('Business Error:', data.message);
-      message.error(data.message || '请求失败');
-      throw new Error(data.message || '请求失败');
+      // 业务错误 - 提取错误信息并显示
+      const errorMsg = data.message || data.msg || data.error || '请求失败';
+      console.error('❌ 业务错误:', { code: data.code, message: errorMsg, fullData: data });
+      console.log('🔴 准备调用 globalMessage.error (业务错误):', errorMsg);
+      globalMessage.error(errorMsg);
+      console.log('🔴 globalMessage.error 已调用 (业务错误)');
+      
+      return Promise.reject(new Error(errorMsg));
     }
   },
   (error) => {
     // 对响应错误做点什么
-    console.error('Response Error:', error);
+    console.error('响应错误:', error);
     
     let errorMessage = '网络错误';
     
     if (error.response) {
       const status = error.response.status;
+      const responseData = error.response.data;
       
-      // 处理401未授权
-      if (status === 401) {
-        console.error('=== 401错误详情 ===');
-        console.error('URL:', error.config?.url);
-        console.error('响应数据:', error.response.data);
-        
-        // 尝试从响应中获取更详细的错误信息
-        const detailMessage = error.response.data?.message || error.response.data?.error || '认证失败';
-        errorMessage = `${detailMessage}（请检查Token是否有效）`;
-        
-        // 显示提示（暂时不清除Token，让用户看到详细错误）
-        message.error(errorMessage);
-        
-        // 注释掉自动清除Token和跳转，方便调试
-        // removeToken();
-        // if (window.location.pathname !== '/login') {
-        //   setTimeout(() => {
-        //     window.location.href = '/login';
-        //   }, 500);
-        // }
-        
-        return Promise.reject(new Error(errorMessage));
+      // 统一的错误信息提取函数
+      const extractErrorMessage = (data: any, defaultMsg: string): string => {
+        if (!data) return defaultMsg;
+        if (typeof data === 'string') return data;
+        return data.message || data.msg || data.error || defaultMsg;
+      };
+      
+      console.error('错误详情:', {
+        status,
+        url: error.config?.url,
+        method: error.config?.method,
+        responseData
+      });
+      
+      // 根据HTTP状态码提取错误信息
+      switch (status) {
+        case 400:
+          errorMessage = extractErrorMessage(responseData, '请求参数错误');
+          break;
+        case 401:
+          errorMessage = extractErrorMessage(responseData, '认证失败，请重新登录');
+          // 可选：自动跳转登录（生产环境建议启用）
+          // removeToken();
+          // if (window.location.pathname !== '/login') {
+          //   setTimeout(() => window.location.href = '/login', 500);
+          // }
+          break;
+        case 403:
+          errorMessage = extractErrorMessage(responseData, '无权限访问');
+          break;
+        case 404:
+          errorMessage = extractErrorMessage(responseData, '请求的资源不存在');
+          break;
+        case 500:
+          errorMessage = extractErrorMessage(responseData, '服务器内部错误');
+          break;
+        default:
+          errorMessage = extractErrorMessage(responseData, `请求失败 (HTTP ${status})`);
       }
       
-      // 处理403无权限
-      if (status === 403) {
-        errorMessage = '无权限访问';
-        message.error(errorMessage);
-        return Promise.reject(new Error(errorMessage));
-      }
+      // 统一显示HTTP错误
+      console.error('❌ HTTP错误:', errorMessage);
+      console.log('🔴 准备调用 globalMessage.error:', errorMessage);
+      globalMessage.error(errorMessage);
+      console.log('🔴 globalMessage.error 已调用');
       
-      // 其他错误
-      errorMessage = error.response.data?.message || `请求失败 (${status})`;
+      return Promise.reject(new Error(errorMessage));
+      
     } else if (error.request) {
       // 请求已发出但没有收到响应
       errorMessage = '网络连接超时，请检查网络';
+      console.error('❌ 网络错误:', errorMessage);
+      globalMessage.error(errorMessage);
+      return Promise.reject(new Error(errorMessage));
     } else {
       // 其他错误
       errorMessage = error.message || '请求失败';
+      console.error('❌ 其他错误:', errorMessage);
+      globalMessage.error(errorMessage);
+      return Promise.reject(new Error(errorMessage));
     }
-    
-    // 显示错误提示（排除401，已单独处理）
-    if (error.response?.status !== 401) {
-      message.error(errorMessage);
-    }
-    
-    throw new Error(errorMessage);
   }
 );
 

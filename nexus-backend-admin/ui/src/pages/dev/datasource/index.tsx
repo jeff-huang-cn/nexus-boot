@@ -138,7 +138,6 @@ const DatasourceManage: React.FC = () => {
           >
             编辑
           </Button>
-          <Divider type="vertical" />
           <Popconfirm
             title="确定要删除这个数据源吗？"
             onConfirm={() => handleDelete(record.id!)}

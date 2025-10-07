@@ -59,8 +59,9 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
       // 获取角色已分配的菜单ID
       const menuIds = await menuApi.getMenuIdsByRoleId(roleId) as number[];
       setCheckedKeys(menuIds);
-    } catch (error) {
-      message.error('加载数据失败');
+    } catch (error: any) {
+      // 错误已在 request.ts 中统一显示
+      console.error('加载数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -80,9 +81,11 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
         roleId,
         menuIds: checkedKeys as number[],
       });
+      message.success('分配权限成功');
       onSuccess();
-    } catch (error) {
-      message.error('分配权限失败');
+    } catch (error: any) {
+      // 错误已在 request.ts 中统一显示
+      console.error('分配权限失败:', error);
     } finally {
       setLoading(false);
     }

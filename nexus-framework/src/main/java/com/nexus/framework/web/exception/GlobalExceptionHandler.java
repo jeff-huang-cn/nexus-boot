@@ -79,7 +79,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleException(Exception e) {
         log.error("系统异常", e);
-        return Result.error(500, "系统内部错误");
+        // 返回具体的错误信息，而不是统一的"系统内部错误"
+        String message = e.getMessage();
+        if (message == null || message.isEmpty()) {
+            message = "系统内部错误";
+        }
+        return Result.error(500, message);
     }
 
 }

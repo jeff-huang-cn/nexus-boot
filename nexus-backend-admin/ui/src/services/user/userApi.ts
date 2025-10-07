@@ -122,14 +122,14 @@ export const userApi = {
    * 删除用户信息表
    */
   delete: (id: number): Promise<void> => {
-    return request.delete(`${API_BASE}/${id}`);
+    return request.delete(`${API_BASE}/delete/${id}`);
   },
 
   /**
    * 批量删除用户信息表
    */
   deleteBatch: (ids: number[]): Promise<void> => {
-    return request.delete(`${API_BASE}/batch`, { data: { ids } });
+    return request.delete(`${API_BASE}/delete-batch`, { data: { ids } });
   },
 };
 

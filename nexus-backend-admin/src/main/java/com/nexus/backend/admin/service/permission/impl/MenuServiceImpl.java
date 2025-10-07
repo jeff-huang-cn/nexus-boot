@@ -12,6 +12,7 @@ import com.nexus.backend.admin.enums.CommonStatusEnum;
 import com.nexus.backend.admin.enums.MenuTypeEnum;
 import com.nexus.backend.admin.service.permission.MenuService;
 import com.nexus.backend.admin.service.permission.RoleService;
+import com.nexus.framework.web.exception.BusinessException;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,7 +75,7 @@ public class MenuServiceImpl implements MenuService {
                 new LambdaQueryWrapper<MenuDO>()
                         .eq(MenuDO::getParentId, id));
         if (childCount > 0) {
-            throw new RuntimeException("存在子菜单，无法删除");
+            throw new BusinessException(400, "存在子菜单，无法删除");
         }
 
         // 删除菜单
@@ -90,7 +91,7 @@ public class MenuServiceImpl implements MenuService {
     public MenuDO getById(Long id) {
         MenuDO menu = menuMapper.selectById(id);
         if (menu == null) {
-            throw new RuntimeException("菜单不存在");
+            throw new BusinessException(404, "菜单不存在");
         }
         return menu;
     }
@@ -155,7 +156,7 @@ public class MenuServiceImpl implements MenuService {
     private void validateExists(Long id) {
         MenuDO menu = menuMapper.selectById(id);
         if (menu == null) {
-            throw new RuntimeException("菜单不存在");
+            throw new BusinessException(404, "菜单不存在");
         }
     }
 

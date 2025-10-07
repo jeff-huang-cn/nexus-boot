@@ -16,6 +16,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined, SearchOutli
 import { roleApi } from '../../../services/role/roleApi';
 import type { Role, RoleForm } from '../../../services/role/roleApi';
 import AssignMenuModal from './AssignMenuModal';
+import { useMenu } from '../../../contexts/MenuContext';
 
 const RolePage: React.FC = () => {
   const [dataSource, setDataSource] = useState<Role[]>([]);
@@ -27,6 +28,12 @@ const RolePage: React.FC = () => {
   const [currentRoleId, setCurrentRoleId] = useState<number | null>(null);
   const [searchForm] = Form.useForm();
   const [form] = Form.useForm();
+  const { permissions } = useMenu();
+
+  // 权限检查函数
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
 
   // 状态选项
   const statusOptions = [
@@ -95,23 +102,27 @@ const RolePage: React.FC = () => {
       width: 250,
       render: (_: any, record: Role) => (
         <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<SafetyOutlined />}
-            onClick={() => handleAssignMenu(record.id!)}
-          >
-            分配权限
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          {record.type !== 1 && (
+          {hasPermission('system:role:update') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<SafetyOutlined />}
+              onClick={() => handleAssignMenu(record.id!)}
+            >
+              分配权限
+            </Button>
+          )}
+          {hasPermission('system:role:update') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            >
+              编辑
+            </Button>
+          )}
+          {record.type !== 1 && hasPermission('system:role:delete') && (
             <Popconfirm
               title="确定删除该角色吗？"
               onConfirm={() => handleDelete(record.id!)}
@@ -135,8 +146,9 @@ const RolePage: React.FC = () => {
       const result = await roleApi.getList() as Role[];
       setDataSource(result);
         setFilteredData(result);
-    } catch (error) {
-      message.error('加载数据失败');
+    } catch (error: any) {
+      // 错误已在 request.ts 中统一显示
+      console.error('加载数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -191,8 +203,9 @@ const RolePage: React.FC = () => {
       await roleApi.delete(id);
       message.success('删除成功');
       loadData();
-    } catch (error) {
-      message.error('删除失败');
+    } catch (error: any) {
+      // 错误已在 request.ts 中统一显示
+      console.error('删除角色失败:', error);
     }
   };
 
@@ -248,11 +261,13 @@ const RolePage: React.FC = () => {
       </Form>
 
       {/* 新增按钮 */}
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          新增角色
-        </Button>
-      </div>
+      {hasPermission('system:role:create') && (
+        <div style={{ marginBottom: 16 }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            新增角色
+          </Button>
+        </div>
+      )}
 
       {/* 数据表格 */}
       <Table

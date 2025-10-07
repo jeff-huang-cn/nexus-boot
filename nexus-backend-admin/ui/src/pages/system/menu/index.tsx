@@ -16,6 +16,7 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { menuApi } from '../../../services/menu/menuApi';
 import type { Menu, MenuForm } from '../../../services/menu/menuApi';
+import { useMenu as useMenuContext } from '../../../contexts/MenuContext';
 
 const MenuPage: React.FC = () => {
   const [dataSource, setDataSource] = useState<Menu[]>([]);
@@ -25,6 +26,12 @@ const MenuPage: React.FC = () => {
   const [editingRecord, setEditingRecord] = useState<Menu | null>(null);
   const [searchForm] = Form.useForm();
   const [form] = Form.useForm();
+  const { permissions } = useMenuContext();
+
+  // 权限检查函数
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
 
   // 菜单类型选项
   const menuTypeOptions = [
@@ -112,32 +119,38 @@ const MenuPage: React.FC = () => {
       width: 200,
       render: (_: any, record: Menu) => (
         <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={() => handleAdd(record.id)}
-          >
-            新增
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定删除该菜单吗？"
-            onConfirm={() => handleDelete(record.id!)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              删除
+          {hasPermission('system:menu:create') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => handleAdd(record.id)}
+            >
+              新增
             </Button>
-          </Popconfirm>
+          )}
+          {hasPermission('system:menu:update') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            >
+              编辑
+            </Button>
+          )}
+          {hasPermission('system:menu:delete') && (
+            <Popconfirm
+              title="确定删除该菜单吗？"
+              onConfirm={() => handleDelete(record.id!)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -151,8 +164,9 @@ const MenuPage: React.FC = () => {
       const result = await menuApi.getFullMenuTree() as Menu[];
       setDataSource(result);
       setFilteredData(result);
-    } catch (error) {
-      message.error('加载数据失败');
+    } catch (error: any) {
+      // 错误已在 request.ts 中统一显示
+      console.error('加载数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -236,8 +250,11 @@ const MenuPage: React.FC = () => {
       await menuApi.delete(id);
       message.success('删除成功');
       loadData();
-    } catch (error) {
-      message.error('删除失败');
+    } catch (error: any) {
+      // 直接在这里显示错误，确保用户能看到
+      console.error('❌ 删除菜单失败:', error);
+      const errorMsg = error?.message || error?.response?.data?.message || '删除失败';
+      message.error(errorMsg);
     }
   };
 
@@ -284,11 +301,13 @@ const MenuPage: React.FC = () => {
       </Form>
 
       {/* 新增按钮 */}
-      <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
-          新增菜单
-        </Button>
-      </div>
+      {hasPermission('system:menu:create') && (
+        <div style={{ marginBottom: 16 }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+            新增菜单
+          </Button>
+        </div>
+      )}
 
       {/* 数据表格 */}
       <Table

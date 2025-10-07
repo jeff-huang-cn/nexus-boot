@@ -13,6 +13,7 @@ import com.nexus.backend.admin.dal.mapper.permission.RoleMapper;
 import com.nexus.backend.admin.dal.mapper.permission.RoleMenuMapper;
 import com.nexus.backend.admin.dal.mapper.permission.UserRoleMapper;
 import com.nexus.backend.admin.service.permission.RoleService;
+import com.nexus.framework.web.exception.BusinessException;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,7 +78,7 @@ public class RoleServiceImpl implements RoleService {
 
         // 校验是否为系统内置角色
         if (role.getType().equals(1)) {
-            throw new RuntimeException("系统内置角色，无法删除");
+            throw new BusinessException(400, "系统内置角色，无法删除");
         }
 
         // 校验是否有用户关联
@@ -85,7 +86,7 @@ public class RoleServiceImpl implements RoleService {
                 new LambdaQueryWrapper<UserRoleDO>()
                         .eq(UserRoleDO::getRoleId, id));
         if (userCount > 0) {
-            throw new RuntimeException("角色已分配给用户，无法删除");
+            throw new BusinessException(400, "角色已分配给用户，无法删除");
         }
 
         // 删除角色
@@ -101,7 +102,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleDO getById(Long id) {
         RoleDO role = roleMapper.selectById(id);
         if (role == null) {
-            throw new RuntimeException("角色不存在");
+            throw new BusinessException(404, "角色不存在");
         }
         return role;
     }
@@ -157,7 +158,7 @@ public class RoleServiceImpl implements RoleService {
     private RoleDO validateExists(Long id) {
         RoleDO role = roleMapper.selectById(id);
         if (role == null) {
-            throw new RuntimeException("角色不存在");
+            throw new BusinessException(404, "角色不存在");
         }
         return role;
     }
@@ -173,7 +174,7 @@ public class RoleServiceImpl implements RoleService {
                 new LambdaQueryWrapper<RoleDO>()
                         .eq(RoleDO::getCode, code));
         if (role != null && !role.getId().equals(id)) {
-            throw new RuntimeException("角色编码已存在");
+            throw new BusinessException(400, "角色编码已存在");
         }
     }
 

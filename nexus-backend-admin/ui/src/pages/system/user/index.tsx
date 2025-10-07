@@ -8,10 +8,13 @@ import {
   Card,
   message,
   Popconfirm,
+  Modal,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { userApi } from '../../../services/user/userApi';
+import UserForm from './UserForm';
+import { useMenu } from '../../../contexts/MenuContext';
 
 interface User {
   id?: number;
@@ -35,6 +38,14 @@ const UserList: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<User | null>(null);
+  const { permissions } = useMenu();
+
+  // 权限检查函数
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
 
   const columns: ColumnsType<User> = [
     {
@@ -80,23 +91,27 @@ const UserList: React.FC = () => {
       width: 200,
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条记录吗？"
-            onConfirm={() => handleDelete(record.id!)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              删除
+          {hasPermission('system:user:update') && (
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            >
+              编辑
             </Button>
-          </Popconfirm>
+          )}
+          {hasPermission('system:user:delete') && (
+            <Popconfirm
+              title="确定要删除这条记录吗？"
+              onConfirm={() => handleDelete(record.id!)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -117,8 +132,9 @@ const UserList: React.FC = () => {
       setTotal(result.total);
       setCurrent(searchParams.pageNum);
       setSize(searchParams.pageSize);
-    } catch (error) {
-      message.error('加载数据失败');
+    } catch (error: any) {
+      // 错误已在 request.ts 中统一显示
+      console.error('加载数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -140,11 +156,19 @@ const UserList: React.FC = () => {
   };
 
   const handleAdd = () => {
-    message.info('新增功能待实现');
+    setEditingRecord(null);
+    setModalVisible(true);
   };
 
   const handleEdit = (record: User) => {
-    message.info('编辑功能待实现');
+    setEditingRecord(record);
+    setModalVisible(true);
+  };
+
+  const handleFormSuccess = () => {
+    setModalVisible(false);
+    setEditingRecord(null);
+    loadData();
   };
 
   const handleDelete = async (id: number) => {
@@ -152,8 +176,9 @@ const UserList: React.FC = () => {
       await userApi.delete(id);
       message.success('删除成功');
       loadData();
-    } catch (error) {
-      message.error('删除失败');
+    } catch (error: any) {
+      // 错误已在 request.ts 中统一显示
+      console.error('删除用户失败:', error);
     }
   };
 
@@ -182,11 +207,13 @@ const UserList: React.FC = () => {
           </Form.Item>
         </Form>
 
-        <div style={{ marginBottom: 16 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增用户
-          </Button>
-        </div>
+        {hasPermission('system:user:create') && (
+          <div style={{ marginBottom: 16 }}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+              新增用户
+            </Button>
+          </div>
+        )}
 
         <Table
           columns={columns}
@@ -207,6 +234,27 @@ const UserList: React.FC = () => {
           }}
         />
       </Card>
+
+      <Modal
+        title={editingRecord ? '编辑用户' : '新增用户'}
+        open={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+          setEditingRecord(null);
+        }}
+        footer={null}
+        width={600}
+        destroyOnClose
+      >
+        <UserForm
+          initialValues={editingRecord}
+          onSuccess={handleFormSuccess}
+          onCancel={() => {
+            setModalVisible(false);
+            setEditingRecord(null);
+          }}
+        />
+      </Modal>
     </div>
   );
 };

@@ -131,14 +131,14 @@ const CodegenTableList: React.FC = () => {
           >
             编辑
           </Button>
-          <Button
+          {/* <Button
             type="link"
             size="small"
             icon={<SyncOutlined />}
             onClick={() => handleSync(record.id!)}
           >
             同步
-          </Button>
+          </Button> */}
           <Button
             type="link"
             size="small"
@@ -147,7 +147,6 @@ const CodegenTableList: React.FC = () => {
           >
             生成
           </Button>
-          <Divider type="vertical" />
           <Popconfirm
             title="确定要删除这个表配置吗？"
             onConfirm={() => handleDelete(record.id!)}

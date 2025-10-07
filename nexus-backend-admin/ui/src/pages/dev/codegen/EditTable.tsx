@@ -322,12 +322,12 @@ const EditTable: React.FC = () => {
         }
         extra={
           <Space>
-            <Button
+            {/* <Button
               icon={<ReloadOutlined />}
               onClick={handleSync}
             >
               同步表结构
-            </Button>
+            </Button> */}
             <Button
               type="primary"
               icon={<SaveOutlined />}

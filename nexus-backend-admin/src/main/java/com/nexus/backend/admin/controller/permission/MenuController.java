@@ -2,6 +2,7 @@ package com.nexus.backend.admin.controller.permission;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.nexus.framework.security.util.SecurityContextUtils;
+import com.nexus.framework.web.exception.BusinessException;
 import com.nexus.framework.web.result.Result;
 import com.nexus.framework.utils.tree.TreeUtils;
 import com.nexus.backend.admin.controller.permission.vo.menu.MenuRespVO;
@@ -141,7 +142,7 @@ public class MenuController {
     public Result<List<MenuRespVO>> getUserMenuTree() {
         Long userId = SecurityContextUtils.getLoginUserId();
         if (userId == null) {
-            throw new RuntimeException("未登录");
+            throw new BusinessException(401, "未登录");
         }
 
         List<MenuDO> menuList = menuService.getUserMenus(userId);

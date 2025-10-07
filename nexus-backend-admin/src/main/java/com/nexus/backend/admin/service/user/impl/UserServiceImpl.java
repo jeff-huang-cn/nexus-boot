@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
     public UserDO getById(Long id) {
         UserDO user = userMapper.selectById(id);
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw new BusinessException(404, "用户不存在");
         }
         return user;
     }
@@ -207,7 +207,7 @@ public class UserServiceImpl implements UserService {
      */
     private void validateExists(Long id) {
         if (userMapper.selectById(id) == null) {
-            throw new RuntimeException("用户信息表不存在");
+            throw new BusinessException(404, "用户信息表不存在");
         }
     }
 
