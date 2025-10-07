@@ -212,17 +212,17 @@ const CodegenTableList: React.FC = () => {
 
   // 导入表
   const handleImport = () => {
-    navigate('/codegen/import');
+    navigate('/dev/codegen/import');
   };
 
   // 编辑表配置
   const handleEdit = (id: number) => {
-    navigate(`/codegen/edit/${id}`);
+    navigate(`/dev/codegen/edit/${id}`);
   };
 
   // 预览代码
   const handlePreview = (id: number) => {
-    navigate(`/codegen/preview/${id}`);
+    navigate(`/dev/codegen/preview/${id}`);
   };
 
   // 同步表结构

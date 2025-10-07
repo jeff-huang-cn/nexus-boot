@@ -68,19 +68,19 @@ const Dashboard: React.FC = () => {
           <Card title="功能特性" bordered={false}>
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
               <div>
-                <strong>✅ 数据库表导入和管理</strong>
+                <strong>数据库表导入和管理</strong>
                 <p>支持从MySQL数据库导入表结构，自动解析字段类型和注释</p>
               </div>
               <div>
-                <strong>✅ 可视化字段配置</strong>
+                <strong>可视化字段配置</strong>
                 <p>提供友好的界面配置字段属性、验证规则和显示类型</p>
               </div>
               <div>
-                <strong>✅ 多种代码模板支持</strong>
+                <strong>多种代码模板支持</strong>
                 <p>支持生成Java后端代码和React前端页面</p>
               </div>
               <div>
-                <strong>✅ 实时代码预览</strong>
+                <strong>实时代码预览</strong>
                 <p>在生成前可以预览代码内容，确保生成结果符合预期</p>
               </div>
             </Space>

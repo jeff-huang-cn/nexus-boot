@@ -8,6 +8,7 @@ import com.nexus.backend.admin.service.codegen.DatabaseTableService;
 import com.nexus.framework.web.result.Result;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class DatabaseController {
      * @return 数据源配置列表
      */
     @GetMapping("/datasources")
+    @PreAuthorize("hasAuthority('codegen:database:query')")
     public Result<List<DataSourceConfigDO>> getDataSourceList() {
         List<DataSourceConfigDO> list = dataSourceConfigMapper.selectActiveList();
         return Result.success(list);
@@ -52,6 +54,7 @@ public class DatabaseController {
      * @return 表列表
      */
     @GetMapping("/tables")
+    @PreAuthorize("hasAuthority('codegen:database:query')")
     public Result<List<DatabaseTableDVO>> getTableList(
             @RequestParam @NotNull Long datasourceConfigId,
             @RequestParam(required = false) String tableName) {
@@ -68,6 +71,7 @@ public class DatabaseController {
      * @return 字段列表
      */
     @GetMapping("/tables/{tableName}/columns")
+    @PreAuthorize("hasAuthority('codegen:database:query')")
     public Result<List<DatabaseColumnVO>> getColumnList(
             @RequestParam @NotNull Long datasourceConfigId,
             @PathVariable @NotBlank String tableName) {
@@ -84,6 +88,7 @@ public class DatabaseController {
      * @return 表信息
      */
     @GetMapping("/tables/{tableName}")
+    @PreAuthorize("hasAuthority('codegen:database:query')")
     public Result<DatabaseTableDVO> getTableInfo(
             @RequestParam @NotNull Long datasourceConfigId,
             @PathVariable @NotBlank String tableName) {

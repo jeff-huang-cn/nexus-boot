@@ -41,6 +41,6 @@ public class DeactivateExpiredKeys {
         int deleted = jwkMapper.delete(new LambdaQueryWrapper<JwkDO>()
                 .lt(JwkDO::getExpiresAt, thirtyDaysAgo));
 
-        log.info("✅ 已删除{}个30天前过期的JWK", deleted);
+        log.info("已删除{}个30天前过期的JWK", deleted);
     }
 }

@@ -10,6 +10,7 @@ import com.nexus.backend.admin.dal.dataobject.permission.MenuDO;
 import com.nexus.backend.admin.service.permission.MenuService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class MenuController {
      * 创建菜单
      */
     @PostMapping
+    @PreAuthorize("@ss.hasPermission('system:menu:create')")
     public Result<Long> create(@Valid @RequestBody MenuSaveReqVO reqVO) {
         Long id = menuService.create(reqVO);
         return Result.success(id);
@@ -40,6 +42,7 @@ public class MenuController {
      * 更新菜单
      */
     @PutMapping("/{id}")
+    @PreAuthorize("@ss.hasPermission('system:menu:update')")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody MenuSaveReqVO reqVO) {
         reqVO.setId(id);
         menuService.update(reqVO);
@@ -50,6 +53,7 @@ public class MenuController {
      * 删除菜单
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("@ss.hasPermission('system:menu:delete')")
     public Result<Void> delete(@PathVariable Long id) {
         menuService.delete(id);
         return Result.success();
@@ -59,6 +63,7 @@ public class MenuController {
      * 获取菜单详情
      */
     @GetMapping("/{id}")
+    @PreAuthorize("@ss.hasPermission('system:menu:query')")
     public Result<MenuRespVO> getById(@PathVariable Long id) {
         MenuDO menu = menuService.getById(id);
         MenuRespVO vo = BeanUtil.copyProperties(menu, MenuRespVO.class);
@@ -69,6 +74,7 @@ public class MenuController {
      * 获取菜单树列表（用于前端导航，过滤掉按钮）
      */
     @GetMapping("/tree")
+    @PreAuthorize("@ss.hasPermission('system:menu:query')")
     public Result<List<MenuRespVO>> getMenuTree() {
         // 1. Service 返回 DO 列表
         List<MenuDO> menuList = menuService.getMenuList();
@@ -95,6 +101,7 @@ public class MenuController {
      * 获取完整菜单树（用于菜单管理页面，包含按钮）
      */
     @GetMapping("/tree/full")
+    @PreAuthorize("@ss.hasPermission('system:menu:query')")
     public Result<List<MenuRespVO>> getFullMenuTree() {
         // 1. Service 返回 DO 列表
         List<MenuDO> menuList = menuService.getMenuList();
@@ -119,6 +126,7 @@ public class MenuController {
      * 获取角色的菜单ID列表
      */
     @GetMapping("/role/{roleId}")
+    @PreAuthorize("@ss.hasPermission('system:menu:query')")
     public Result<List<Long>> getMenuIdsByRoleId(@PathVariable Long roleId) {
         List<Long> menuIds = menuService.getMenuIdsByRoleId(roleId);
         return Result.success(menuIds);
@@ -129,6 +137,7 @@ public class MenuController {
      * 用于前端导航菜单，根据用户权限过滤
      */
     @GetMapping("/user")
+    @PreAuthorize("@ss.hasPermission('system:menu:query')")
     public Result<List<MenuRespVO>> getUserMenuTree() {
         Long userId = SecurityContextUtils.getLoginUserId();
         if (userId == null) {

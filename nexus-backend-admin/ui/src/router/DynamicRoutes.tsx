@@ -6,6 +6,9 @@ import type { Menu } from '../services/menu/types';
 import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
 import Settings from '../pages/Settings';
+import ImportTable from '../pages/dev/codegen/ImportTable';
+import EditTable from '../pages/dev/codegen/EditTable';
+import PreviewCode from '../pages/dev/codegen/PreviewCode';
 
 // 加载页面组件的函数
 const loadComponent = (componentPath: string) => {
@@ -74,6 +77,11 @@ const DynamicRoutes: React.FC = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/settings" element={<Settings />} />
+
+      {/* 代码生成子页面路由（这些页面不在菜单中，需要手动注册） */}
+      <Route path="/dev/codegen/import" element={<ImportTable />} />
+      <Route path="/dev/codegen/edit/:id" element={<EditTable />} />
+      <Route path="/dev/codegen/preview/:id" element={<PreviewCode />} />
 
       {/* 动态生成的路由 */}
       {dynamicRoutes}

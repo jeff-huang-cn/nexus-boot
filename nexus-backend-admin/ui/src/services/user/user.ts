@@ -2,7 +2,7 @@ import request from '../../utils/request';
 import type { User, UserQuery, UserForm, PageResult } from '../../types/user';
 
 // 用户模块API基础路径
-const API_BASE = '/user';
+const API_BASE = '/system/user';
 
 /**
  * 用户信息表相关API

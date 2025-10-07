@@ -10,6 +10,7 @@ import com.nexus.framework.web.result.Result;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class UserProfileController {
      * 获取当前用户个人信息
      */
     @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
     public Result<ProfileRespVO> getProfile() {
         UserDO user = userService.getProfile();
         ProfileRespVO respVO = BeanUtil.copyProperties(user, ProfileRespVO.class);
@@ -41,6 +43,7 @@ public class UserProfileController {
      * 更新当前用户个人信息
      */
     @PutMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
     public Result<Boolean> updateProfile(@Valid @RequestBody ProfileUpdateReqVO updateReqVO) {
         userService.updateProfile(updateReqVO);
         return Result.success(true);
@@ -50,6 +53,7 @@ public class UserProfileController {
      * 修改当前用户密码
      */
     @PutMapping("/update-password")
+    @PreAuthorize("isAuthenticated()")
     public Result<Boolean> updatePassword(@Valid @RequestBody PasswordUpdateReqVO updateReqVO) {
         userService.updatePassword(updateReqVO);
         return Result.success(true);

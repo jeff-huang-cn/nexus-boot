@@ -160,7 +160,7 @@ const ImportTable: React.FC = () => {
       message.success(`成功导入 ${selectedRows.length} 个表，已自动设置合理的默认配置`);
       
       // 导入成功后跳转到表列表页面
-      navigate('/codegen/table');
+      navigate('/dev/codegen');
     } catch (error) {
       message.error('导入表失败');
       console.error('导入表失败:', error);

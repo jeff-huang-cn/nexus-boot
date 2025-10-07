@@ -482,7 +482,7 @@ const PreviewCode: React.FC = () => {
 
   // 返回上一页
   const handleBack = () => {
-    navigate('/codegen/table');
+    navigate('/dev/codegen');
   };
 
   // 优化的Tab切换处理

@@ -16,10 +16,10 @@ import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,6 +41,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -111,6 +112,7 @@ public class SecurityConfig {
             JwtAuthenticationFailureHandler failureHandler,
             JwtBlacklistLogoutHandler blacklistLogoutHandler,
             JwtLogoutSuccessHandler logoutSuccessHandler,
+            com.nexus.framework.security.handler.CustomAccessDeniedHandler accessDeniedHandler,
             RedisTemplate<String, String> redisTemplate,
             CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
@@ -134,6 +136,7 @@ public class SecurityConfig {
                             response.setStatus(401);
                             response.getWriter().write("{\"code\":401,\"message\":\"未登录或登录已过期\"}");
                         }))
+                //.accessDeniedHandler(accessDeniedHandler)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/test/**").permitAll()
                         .requestMatchers("/login").permitAll()

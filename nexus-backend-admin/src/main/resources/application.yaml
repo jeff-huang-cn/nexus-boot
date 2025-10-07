@@ -53,6 +53,10 @@ logging:
   level:
     com.nexus: DEBUG
     com.nexus.framework.security: DEBUG
+    # 权限校验日志 - 设置为 DEBUG 可以看到详细的权限校验过程
+    com.nexus.framework.security.util.com.nexus.framework.security.util.SecurityFrameworkService: DEBUG
+    # Spring Security 权限相关日志
+    org.springframework.security.access: DEBUG
 
 nexus:
   security:

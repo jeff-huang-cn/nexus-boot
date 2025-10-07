@@ -3,6 +3,7 @@ package com.nexus.backend.admin.controller.dict;
 import com.nexus.framework.web.result.Result;
 import com.nexus.backend.admin.controller.dict.vo.DictRespVO;
 import com.nexus.backend.admin.service.dict.DictService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
@@ -24,6 +25,7 @@ public class DictController {
      * 根据字典类型获取字典列表
      */
     @GetMapping("/type/{dictType}")
+    @PreAuthorize("hasAuthority('system:dict:query')")
     public Result<List<DictRespVO>> getListByType(@PathVariable String dictType) {
         List<DictRespVO> dictList = dictService.getListByType(dictType);
         return Result.success(dictList);
@@ -33,6 +35,7 @@ public class DictController {
      * 获取所有字典数据
      */
     @GetMapping("/all")
+    @PreAuthorize("hasAuthority('system:dict:query')")
     public Result<List<DictRespVO>> getAllDict() {
         List<DictRespVO> dictList = dictService.getAllDict();
         return Result.success(dictList);

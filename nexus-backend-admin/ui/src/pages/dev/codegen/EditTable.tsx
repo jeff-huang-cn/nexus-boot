@@ -303,7 +303,7 @@ const EditTable: React.FC = () => {
 
   // 返回上一页
   const handleBack = () => {
-    navigate('/codegen/table');
+    navigate('/dev/codegen');
   };
 
   return (

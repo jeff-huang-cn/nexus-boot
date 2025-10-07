@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +51,7 @@ public class CodegenController {
      * @return 分页结果
      */
     @GetMapping("/tables")
+    @PreAuthorize("hasAuthority('codegen:table:query')")
     public Result<PageResult<CodegenTableDO>> getTableList(
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") Long size,
@@ -67,6 +69,7 @@ public class CodegenController {
      * @return 表配置
      */
     @GetMapping("/tables/{id}")
+    @PreAuthorize("@ss.hasPermission('codegen:table:query')")
     public Result<CodegenTableVO> getTableConfig(@PathVariable @NotNull Long id) {
         CodegenTableDO table = codegenService.getTableById(id);
         List<CodegenColumnDO> columns = codegenService.getColumnsByTableId(id);
@@ -85,6 +88,7 @@ public class CodegenController {
      * @return 导入的表ID列表
      */
     @PostMapping("/import")
+    @PreAuthorize("hasAuthority('codegen:table:import')")
     public Result<List<Long>> importTables(@Valid @RequestBody ImportTableVO dto) {
         List<Long> tableIds = codegenService.importTables(dto.getDatasourceConfigId(), dto.getTableNames());
         return Result.success(tableIds);
@@ -98,6 +102,7 @@ public class CodegenController {
      * @return 成功结果
      */
     @PutMapping("/tables/{id}")
+    @PreAuthorize("hasAuthority('codegen:table:update')")
     public Result<Void> updateTableConfig(@PathVariable @NotNull Long id,
             @Valid @RequestBody UpdateTableConfigVo dto) {
         // 确保ID一致
@@ -114,6 +119,7 @@ public class CodegenController {
      * @return 成功结果
      */
     @DeleteMapping("/tables/{id}")
+    @PreAuthorize("hasAuthority('codegen:table:delete')")
     public Result<Void> deleteTable(@PathVariable @NotNull Long id) {
         codegenService.deleteTable(id);
         return Result.success();
@@ -126,6 +132,7 @@ public class CodegenController {
      * @return 成功结果
      */
     @DeleteMapping("/tables")
+    @PreAuthorize("hasAuthority('codegen:table:delete')")
     public Result<Void> deleteTables(@RequestBody @NotEmpty List<Long> ids) {
         for (Long id : ids) {
             codegenService.deleteTable(id);
@@ -140,6 +147,7 @@ public class CodegenController {
      * @return 预览代码
      */
     @GetMapping("/preview/{id}")
+    @PreAuthorize("@ss.hasPermission('codegen:table:preview')")
     public Result<Map<String, String>> previewCode(@PathVariable @NotNull Long id) {
         Map<String, String> codeMap = codegenService.previewCode(id);
         return Result.success(codeMap);
@@ -152,6 +160,7 @@ public class CodegenController {
      * @return 代码文件
      */
     @PostMapping("/generate/{id}")
+    @PreAuthorize("hasAuthority('codegen:table:generate')")
     public ResponseEntity<byte[]> generateCode(@PathVariable @NotNull Long id) {
         CodegenTableDO table = codegenService.getTableById(id);
         byte[] data = codegenService.generateCode(id);
@@ -172,6 +181,7 @@ public class CodegenController {
      * @return 代码文件
      */
     @PostMapping("/generate")
+    @PreAuthorize("hasAuthority('codegen:table:generate')")
     public ResponseEntity<byte[]> batchGenerateCode(@RequestBody @NotEmpty List<Long> ids) {
         byte[] data = codegenService.batchGenerateCode(ids);
         String fileName = "batch_code_" + System.currentTimeMillis() + ".zip";

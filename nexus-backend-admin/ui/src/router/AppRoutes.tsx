@@ -19,10 +19,10 @@ const AppRoutes: React.FC = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       
       {/* 代码生成模块 */}
-      <Route path="/codegen/table" element={<CodegenTableList />} />
-      <Route path="/codegen/import" element={<ImportTable />} />
-      <Route path="/codegen/edit/:id" element={<EditTable />} />
-      <Route path="/codegen/preview/:id" element={<PreviewCode />} />
+      <Route path="/dev/codegen" element={<CodegenTableList />} />
+      <Route path="/dev/codegen/import" element={<ImportTable />} />
+      <Route path="/dev/codegen/edit/:id" element={<EditTable />} />
+      <Route path="/dev/codegen/preview/:id" element={<PreviewCode />} />
 
       <Route path="/user/list" element={<UserList />} />
 
