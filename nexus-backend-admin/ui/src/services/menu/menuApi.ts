@@ -1,5 +1,50 @@
 import request from '../../utils/request';
-import type { Menu, MenuForm } from './types';
+
+// ==================== 类型定义 ====================
+
+/**
+ * 菜单
+ */
+export interface Menu {
+  id?: number;
+  name?: string;
+  permission?: string;
+  type?: number; // 1-目录 2-菜单 3-按钮
+  sort?: number;
+  parentId?: number;
+  path?: string;
+  icon?: string;
+  component?: string;
+  componentName?: string;
+  status?: number; // 0-禁用 1-启用
+  visible?: number; // 0-隐藏 1-显示
+  keepAlive?: number; // 0-不缓存 1-缓存
+  alwaysShow?: number; // 0-否 1-是
+  dateCreated?: string;
+  children?: Menu[];
+}
+
+/**
+ * 菜单保存参数
+ */
+export interface MenuForm {
+  id?: number;
+  name: string;
+  permission?: string;
+  type: number;
+  sort?: number;
+  parentId: number;
+  path?: string;
+  icon?: string;
+  component?: string;
+  componentName?: string;
+  status?: number;
+  visible?: number;
+  keepAlive?: number;
+  alwaysShow?: number;
+}
+
+// ==================== API 定义 ====================
 
 // 菜单模块API基础路径
 const API_BASE = '/system/menu';
@@ -57,3 +102,6 @@ export const menuApi = {
     return request.get<number[]>(`${API_BASE}/role/${roleId}`);
   },
 };
+
+export default menuApi;
+

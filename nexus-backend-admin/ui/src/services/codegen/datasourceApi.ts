@@ -100,3 +100,5 @@ export const datasourceApi = {
   },
 };
 
+export default datasourceApi;
+

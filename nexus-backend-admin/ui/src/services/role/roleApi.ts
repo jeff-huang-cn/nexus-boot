@@ -1,5 +1,42 @@
 import request from '../../utils/request';
-import type { Role, RoleForm, RoleAssignMenuForm } from './types';
+
+// ==================== 类型定义 ====================
+
+/**
+ * 角色
+ */
+export interface Role {
+  id?: number;
+  name?: string;
+  code?: string;
+  sort?: number;
+  status?: number; // 0-禁用 1-启用
+  type?: number; // 1-系统内置 2-自定义
+  remark?: string;
+  dateCreated?: string;
+}
+
+/**
+ * 角色保存参数
+ */
+export interface RoleForm {
+  id?: number;
+  name: string;
+  code: string;
+  sort?: number;
+  status?: number;
+  remark?: string;
+}
+
+/**
+ * 角色分配菜单参数
+ */
+export interface RoleAssignMenuForm {
+  roleId: number;
+  menuIds: number[];
+}
+
+// ==================== API 定义 ====================
 
 // 角色模块API基础路径
 const API_BASE = '/system/role';
@@ -50,3 +87,6 @@ export const roleApi = {
     return request.post(`${API_BASE}/assign-menu`, data);
   },
 };
+
+export default roleApi;
+

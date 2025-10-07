@@ -13,7 +13,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 import { useMenu } from '../../contexts/MenuContext';
 import { useAuth } from '../../contexts/AuthContext';
-import type { Menu as MenuItem } from '../../services/menu/types';
+import type { Menu as MenuItem } from '../../services/menu/menuApi';
 
 const { Header, Sider, Content } = Layout;
 

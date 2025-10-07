@@ -9,7 +9,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Input, Button, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
-import type { LoginRequest } from '../services/auth';
+import type { LoginRequest } from '../services/authApi';
 
 const Login: React.FC = () => {
   const { login } = useAuth();

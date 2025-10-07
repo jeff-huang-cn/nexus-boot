@@ -18,9 +18,8 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
-import { databaseApi } from '../../../services/datasources/datasources';
-import { codegenApi } from '../../../services/codegen/codegen';
-import type { DatabaseTable, DataSourceConfig } from '../../../types/codegen';
+import { databaseApi, DatabaseTable, DataSourceConfig } from '../../../services/datasources/databaseApi';
+import { codegenApi } from '../../../services/codegen/codegenApi';
 
 /**
  * 导入数据库表页面

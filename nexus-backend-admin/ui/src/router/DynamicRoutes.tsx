@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import { useMenu } from '../contexts/MenuContext';
-import type { Menu } from '../services/menu/types';
+import type { Menu } from '../services/menu/menuApi';
 import Dashboard from '../pages/Dashboard';
 import Profile from '../pages/Profile';
 import Settings from '../pages/Settings';

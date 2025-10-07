@@ -11,7 +11,7 @@ import {
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { userApi } from '../../../services/user/user';
+import { userApi } from '../../../services/user/userApi';
 
 interface User {
   id?: number;

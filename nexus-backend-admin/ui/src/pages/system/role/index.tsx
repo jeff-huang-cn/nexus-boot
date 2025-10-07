@@ -13,8 +13,8 @@ import {
   Tag,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined, SearchOutlined } from '@ant-design/icons';
-import { roleApi } from '../../../services/role';
-import type { Role, RoleForm } from '../../../services/role/types';
+import { roleApi } from '../../../services/role/roleApi';
+import type { Role, RoleForm } from '../../../services/role/roleApi';
 import AssignMenuModal from './AssignMenuModal';
 
 const RolePage: React.FC = () => {

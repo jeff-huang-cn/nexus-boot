@@ -24,7 +24,7 @@ import {
   EyeInvisibleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { datasourceApi, DataSourceConfig, DataSourceConfigCreateReq, DataSourceConfigUpdateReq } from '../../../services/codegen/database';
+import { datasourceApi, DataSourceConfig, DataSourceConfigCreateReq, DataSourceConfigUpdateReq } from '../../../services/codegen/datasourceApi';
 
 /**
  * 数据源管理页面

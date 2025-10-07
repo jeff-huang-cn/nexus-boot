@@ -6,8 +6,8 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi } from '../services/auth';
-import type { LoginRequest } from '../services/auth';
+import { authApi } from '../services/authApi';
+import type { LoginRequest } from '../services/authApi';
 import { getUserInfo, isTokenValid, removeToken, getToken } from '../utils/auth';
 import type { UserInfo } from '../utils/auth';
 

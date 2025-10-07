@@ -58,3 +58,6 @@ export const profileApi = {
     return request.put('/system/user/update-password', data);
   },
 };
+
+export default profileApi;
+

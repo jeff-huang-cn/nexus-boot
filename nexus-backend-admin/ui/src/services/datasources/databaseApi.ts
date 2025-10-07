@@ -1,9 +1,52 @@
 import request from '../../utils/request';
-import type {
-  DatabaseTable,
-  DatabaseColumn,
-  DataSourceConfig,
-} from '../../types/codegen';
+
+// ==================== 类型定义 ====================
+
+/**
+ * 数据库表信息
+ */
+export interface DatabaseTable {
+  tableName: string;
+  tableComment: string;
+  dateCreated?: string;
+  lastUpdated?: string;
+  engine?: string;
+  tableCollation?: string;
+  dataLength?: number;
+  tableRows?: number;
+}
+
+/**
+ * 数据库字段信息
+ */
+export interface DatabaseColumn {
+  columnName: string;
+  dataType: string;
+  columnComment: string;
+  isNullable: string;
+  columnKey: string;
+  extra?: string;
+  columnDefault?: string;
+  ordinalPosition: number;
+  characterMaximumLength?: number;
+  numericPrecision?: number;
+  numericScale?: number;
+}
+
+/**
+ * 数据源配置
+ */
+export interface DataSourceConfig {
+  id: number;
+  name: string;
+  url: string;
+  username: string;
+  password?: string;
+  dateCreated?: string;
+  lastUpdated?: string;
+}
+
+// ==================== API 定义 ====================
 
 // 数据库模块API基础路径
 const API_BASE = '/database';
@@ -55,3 +98,6 @@ export const databaseApi = {
     });
   },
 };
+
+export default databaseApi;
+

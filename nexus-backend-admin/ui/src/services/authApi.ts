@@ -7,7 +7,7 @@
 import axios from 'axios';
 import { setToken, getUserInfo, getToken } from '../utils/auth';
 import type { UserInfo } from '../utils/auth';
-import type { Menu } from './menu/types';
+import type { Menu } from './menu/menuApi';
 
 // API Base URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';

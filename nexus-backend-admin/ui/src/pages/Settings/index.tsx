@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, message } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
-import { profileApi, PasswordUpdateDTO } from '../../services/user/profile';
+import { profileApi, PasswordUpdateDTO } from '../../services/user/profileApi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
