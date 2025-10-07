@@ -1,17 +1,20 @@
 package ${packageName}.controller.${businessName};
 
 import cn.hutool.core.bean.BeanUtil;
-import com.nexus.framework.common.result.Result;
-import com.nexus.framework.common.result.PageResult;
+import com.nexus.framework.web.result.Result;
+import com.nexus.framework.web.result.PageResult;
 import ${packageName}.controller.${businessName}.vo.*;
 import ${packageName}.dal.dataobject.${businessName}.${className}DO;
 import ${packageName}.service.${businessName}.${className}Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +26,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/${moduleName}/${businessName}")
+@RequestMapping("/${moduleName}/${businessName}")
 @RequiredArgsConstructor
 @Validated
 public class ${className}Controller {
@@ -32,8 +35,12 @@ public class ${className}Controller {
 
     /**
      * 创建${classComment}
+     *
+     * @param createReqVO 创建请求
+     * @return 创建的记录ID
      */
-    @PostMapping("/create")
+    @PostMapping
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:create')")
     public Result<Long> create(@Valid @RequestBody ${className}SaveReqVO createReqVO) {
         Long id = ${classNameFirstLower}Service.create(createReqVO);
         return Result.success(id);
@@ -41,36 +48,54 @@ public class ${className}Controller {
 
     /**
      * 更新${classComment}
+     *
+     * @param id 记录ID
+     * @param updateReqVO 更新请求
+     * @return 成功结果
      */
-    @PutMapping("/update")
-    public Result<Boolean> update(@Valid @RequestBody ${className}SaveReqVO updateReqVO) {
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:update')")
+    public Result<Void> update(@PathVariable @NotNull Long id, 
+                                @Valid @RequestBody ${className}SaveReqVO updateReqVO) {
         ${classNameFirstLower}Service.update(updateReqVO);
-        return Result.success(true);
+        return Result.success();
     }
 
     /**
      * 删除${classComment}
+     *
+     * @param id 记录ID
+     * @return 成功结果
      */
-    @DeleteMapping("/delete/{id}")
-    public Result<Boolean> delete(@PathVariable("id") Long id) {
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:delete')")
+    public Result<Void> delete(@PathVariable @NotNull Long id) {
         ${classNameFirstLower}Service.delete(id);
-        return Result.success(true);
+        return Result.success();
     }
 
     /**
      * 批量删除${classComment}
+     *
+     * @param ids ID列表
+     * @return 成功结果
      */
-    @DeleteMapping("/delete-batch")
-    public Result<Boolean> deleteBatch(@RequestBody List<Long> ids) {
+    @DeleteMapping("/batch")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:delete')")
+    public Result<Void> deleteBatch(@RequestBody @NotEmpty List<Long> ids) {
         ${classNameFirstLower}Service.deleteBatch(ids);
-        return Result.success(true);
+        return Result.success();
     }
 
     /**
      * 获得${classComment}详情
+     *
+     * @param id 记录ID
+     * @return ${classComment}详情
      */
-    @GetMapping("/get/{id}")
-    public Result<${className}RespVO> getById(@PathVariable("id") Long id) {
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:query')")
+    public Result<${className}RespVO> getById(@PathVariable @NotNull Long id) {
         ${className}DO ${classNameFirstLower} = ${classNameFirstLower}Service.getById(id);
         ${className}RespVO respVO = BeanUtil.copyProperties(${classNameFirstLower}, ${className}RespVO.class);
         return Result.success(respVO);
@@ -78,8 +103,12 @@ public class ${className}Controller {
 
     /**
      * 获得${classComment}分页列表
+     *
+     * @param pageReqVO 分页查询参数
+     * @return 分页结果
      */
     @GetMapping("/page")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:query')")
     public Result<PageResult<${className}RespVO>> getPage(@Valid ${className}PageReqVO pageReqVO) {
         PageResult<${className}RespVO> pageResult = ${classNameFirstLower}Service.getPage(pageReqVO);
         return Result.success(pageResult);
@@ -87,8 +116,11 @@ public class ${className}Controller {
 
     /**
      * 导出${classComment} Excel
+     *
+     * @param pageReqVO 查询参数
      */
     @GetMapping("/export")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:export')")
     public void export(@Valid ${className}PageReqVO pageReqVO) {
         List<${className}DO> list = ${classNameFirstLower}Service.getList(pageReqVO);
         

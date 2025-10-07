@@ -239,6 +239,7 @@ const PreviewCode: React.FC = () => {
     const groups: Record<string, { label: string; files: string[]; tree: any[] }> = {
       backend: { label: '后端代码', files: [], tree: [] },
       frontend: { label: '前端代码', files: [], tree: [] },
+      sql: { label: 'SQL脚本', files: [], tree: [] },
     };
 
     Object.keys(codeMap).forEach(fileName => {
@@ -246,6 +247,8 @@ const PreviewCode: React.FC = () => {
         groups.backend.files.push(fileName);
       } else if (fileName.startsWith('frontend/')) {
         groups.frontend.files.push(fileName);
+      } else if (fileName.startsWith('sql/')) {
+        groups.sql.files.push(fileName);
       }
     });
 
@@ -262,9 +265,13 @@ const PreviewCode: React.FC = () => {
     // 对前端文件排序
     groups.frontend.files.sort((a, b) => a.localeCompare(b));
 
+    // 对SQL文件排序
+    groups.sql.files.sort((a, b) => a.localeCompare(b));
+
     // 构建树形结构
     groups.backend.tree = buildTree(groups.backend.files);
     groups.frontend.tree = buildTree(groups.frontend.files);
+    groups.sql.tree = buildTree(groups.sql.files);
 
     return groups;
   }, [codeMap]);

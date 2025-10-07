@@ -1,5 +1,49 @@
-import request from '../utils/request';
-import type { ${className}, ${className}Query, ${className}Form, PageResult } from '../types/${businessName}';
+import request from '../../utils/request';
+
+// ==================== 类型定义 ====================
+
+/**
+ * 分页结果
+ */
+export interface PageResult<T> {
+  list: T[];
+  total: number;
+}
+
+/**
+ * ${classComment}
+ */
+export interface ${className} {
+#foreach($column in $columns)
+  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
+#end
+}
+
+/**
+ * ${classComment}查询参数
+ */
+export interface ${className}Query {
+  pageNum?: number;
+  pageSize?: number;
+#foreach($column in $columns)
+#if(${column.listOperation})
+  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
+#end
+#end
+}
+
+/**
+ * ${classComment}创建/编辑参数
+ */
+export interface ${className}Form {
+#foreach($column in $columns)
+#if(${column.createOperation} && !${column.primaryKey})
+  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
+#end
+#end
+}
+
+// ==================== API 接口 ====================
 
 /**
  * ${classComment}相关API

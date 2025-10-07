@@ -1,0 +1,32 @@
+-- ${classComment}模块菜单权限SQL
+-- 生成时间: ${datetime}
+
+INSERT INTO system_menu 
+    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, create_time, updater, update_time, deleted) 
+VALUES 
+    (0, '${classComment}管理', '', 1, 100, '/${businessName}', 'list', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0);
+
+SET @parent_menu_id = LAST_INSERT_ID();
+
+INSERT INTO system_menu 
+    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, create_time, updater, update_time, deleted) 
+VALUES 
+    (@parent_menu_id, '${classComment}', '${moduleName}:${businessName}:query', 2, 1, '/${businessName}', '', '${moduleName}/${businessName}/index', '${className}', 1, 1, 1, 0, 'admin', NOW(), 'admin', NOW(), 0);
+
+SET @menu_id = LAST_INSERT_ID();
+
+INSERT INTO system_menu 
+    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, create_time, updater, update_time, deleted) 
+VALUES 
+    (@menu_id, '查询${classComment}', '${moduleName}:${businessName}:query', 3, 1, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
+    (@menu_id, '新增${classComment}', '${moduleName}:${businessName}:create', 3, 2, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
+    (@menu_id, '修改${classComment}', '${moduleName}:${businessName}:update', 3, 3, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
+    (@menu_id, '删除${classComment}', '${moduleName}:${businessName}:delete', 3, 4, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
+    (@menu_id, '导入${classComment}', '${moduleName}:${businessName}:import', 3, 5, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
+    (@menu_id, '导出${classComment}', '${moduleName}:${businessName}:export', 3, 6, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0);
+
+INSERT INTO system_role_menu (role_id, menu_id)
+SELECT 1, id FROM system_menu WHERE deleted = 0 AND permission LIKE '${moduleName}:${businessName}:%';
+
+COMMIT;
+

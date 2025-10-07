@@ -216,14 +216,14 @@ public class CodegenServiceImpl implements CodegenService {
                 result.put("frontend/pages/" + businessName + "/" + className + "Form.tsx",
                         velocityTemplateEngine.render("templates/react/Form.tsx.vm", context));
 
-                // API 服务
-                result.put("frontend/services/" + businessName + ".ts",
+                // API 服务 (以 Api 后缀命名，类型定义已合并在其中)
+                result.put("frontend/services/" + businessName + "/" + businessName + "Api.ts",
                         velocityTemplateEngine.render("templates/react/api.ts.vm", context));
-
-                // 类型定义
-                result.put("frontend/types/" + businessName + ".ts",
-                        velocityTemplateEngine.render("templates/react/types.ts.vm", context));
             }
+
+            // SQL脚本 - 菜单和权限
+            result.put("sql/menu_permission_" + businessName + ".sql",
+                    velocityTemplateEngine.render("templates/sql/menu_permission.sql.vm", context));
         } catch (Exception e) {
             log.error("模板渲染失败", e);
             throw new BusinessException("代码生成失败：" + e.getMessage());

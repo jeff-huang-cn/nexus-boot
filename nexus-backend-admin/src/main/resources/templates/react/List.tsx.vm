@@ -12,19 +12,8 @@ import {
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { ${classNameFirstLower}Api } from '../../services/${businessName}';
+import { ${classNameFirstLower}Api, type ${className} } from '../../../services/${businessName}/${businessName}Api';
 import ${className}Form from './${className}Form';
-
-interface ${className} {
-#foreach($column in $columns)
-  ${column.javaField}?: #if(${column.javaType} == "String")string#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")number#elseif(${column.javaType} == "Boolean")boolean#elseif(${column.javaType} == "LocalDateTime")string#else any#end;
-#end
-}
-
-interface PageResult<T> {
-  list: T[];
-  total: number;
-}
 
 const ${className}List: React.FC = () => {
   const [form] = Form.useForm();
