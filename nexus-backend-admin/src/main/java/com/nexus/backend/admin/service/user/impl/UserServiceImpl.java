@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -36,7 +35,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Long create(UserSaveReqVO createReqVO) {
         // 转换为 DO 并插入
         UserDO user = BeanUtil.copyProperties(createReqVO, UserDO.class);
@@ -45,7 +43,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void update(UserSaveReqVO updateReqVO) {
         // 校验存在
         validateExists(updateReqVO.getId());
@@ -55,7 +52,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         // 校验存在
         validateExists(id);
@@ -64,7 +60,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void deleteBatch(List<Long> ids) {
         // 批量删除
         userMapper.deleteBatchIds(ids);
@@ -229,7 +224,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void updateProfile(ProfileUpdateReqVO updateReqVO) {
         // 获取当前登录用户ID
         Long userId = SecurityContextUtils.getLoginUserId();
@@ -255,7 +249,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void updatePassword(PasswordUpdateReqVO updateReqVO) {
         // 获取当前登录用户ID
         Long userId = SecurityContextUtils.getLoginUserId();

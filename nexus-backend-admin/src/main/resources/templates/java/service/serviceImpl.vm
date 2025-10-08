@@ -9,10 +9,12 @@ import ${packageName}.dal.dataobject.${businessName}.${className}DO;
 import ${packageName}.dal.mapper.${businessName}.${className}Mapper;
 import ${packageName}.service.${businessName}.${className}Service;
 import com.nexus.framework.common.result.PageResult;
+#if($table.templateType == 3)
+import com.baomidou.dynamic.datasource.annotation.DSTransactional;
+#end
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -32,7 +34,9 @@ public class ${className}ServiceImpl implements ${className}Service {
     private final ${className}Mapper ${classNameFirstLower}Mapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+#if($table.templateType == 3)
+    @DSTransactional
+#end
     public Long create(${className}SaveReqVO createReqVO) {
         // 转换为 DO 并插入
         ${className}DO ${classNameFirstLower} = BeanUtil.copyProperties(createReqVO, ${className}DO.class);
@@ -42,7 +46,9 @@ public class ${className}ServiceImpl implements ${className}Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+#if($table.templateType == 3)
+    @DSTransactional
+#end
     public void update(${className}SaveReqVO updateReqVO) {
         // 校验存在
         validateExists(updateReqVO.getId());
@@ -53,7 +59,9 @@ public class ${className}ServiceImpl implements ${className}Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+#if($table.templateType == 3)
+    @DSTransactional
+#end
     public void delete(Long id) {
         // 校验存在
         validateExists(id);
@@ -62,7 +70,9 @@ public class ${className}ServiceImpl implements ${className}Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+#if($table.templateType == 3)
+    @DSTransactional
+#end
     public void deleteBatch(List<Long> ids) {
         // 批量删除
         ${classNameFirstLower}Mapper.deleteBatchIds(ids);

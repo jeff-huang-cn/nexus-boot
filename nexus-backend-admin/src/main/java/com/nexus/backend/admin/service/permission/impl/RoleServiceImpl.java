@@ -14,9 +14,9 @@ import com.nexus.backend.admin.dal.mapper.permission.RoleMenuMapper;
 import com.nexus.backend.admin.dal.mapper.permission.UserRoleMapper;
 import com.nexus.backend.admin.service.permission.RoleService;
 import com.nexus.framework.web.exception.BusinessException;
+import com.baomidou.dynamic.datasource.annotation.DSTransactional;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +39,6 @@ public class RoleServiceImpl implements RoleService {
     private UserRoleMapper userRoleMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Long create(RoleSaveReqVO reqVO) {
         // 校验角色编码唯一性
         validateCodeUnique(null, reqVO.getCode());
@@ -55,7 +54,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void update(RoleSaveReqVO reqVO) {
         // 校验角色是否存在
         validateExists(reqVO.getId());
@@ -71,7 +69,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         // 校验角色是否存在
         RoleDO role = validateExists(id);
@@ -115,7 +112,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @DSTransactional
     public void assignMenu(RoleAssignMenuReqVO reqVO) {
         // 校验角色是否存在
         validateExists(reqVO.getRoleId());

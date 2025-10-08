@@ -15,7 +15,6 @@ import com.nexus.backend.admin.service.permission.RoleService;
 import com.nexus.framework.web.exception.BusinessException;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +39,6 @@ public class MenuServiceImpl implements MenuService {
     private RoleService roleService;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Long create(MenuSaveReqVO reqVO) {
         // 转换为 DO
         MenuDO menu = BeanUtil.copyProperties(reqVO, MenuDO.class);
@@ -52,7 +50,6 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void update(MenuSaveReqVO reqVO) {
         // 校验菜单是否存在
         validateExists(reqVO.getId());
@@ -65,7 +62,6 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         // 校验菜单是否存在
         validateExists(id);
