@@ -1,4 +1,4 @@
-package ${packageName}.dal.dataobject.${businessName};
+package ${packageName}.dal.dataobject.${subBusinessName};
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.nexus.framework.mybatis.entity.BaseDO;
@@ -8,34 +8,34 @@ import lombok.ToString;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-#if($hasLocalDateTime)
+#if($subHasLocalDateTime)
 import java.time.LocalDateTime;
 #end
-#if($hasBigDecimal)
+#if($subHasBigDecimal)
 import java.math.BigDecimal;
 #end
 
 /**
- * ${classComment} DO
+ * ${subClassComment} DO（子表）
  *
  * @author ${author}
  * @since ${date}
  */
-@TableName("${tableName}")
+@TableName("${subTableName}")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ${className}DO extends BaseDO {
+public class ${subClassName}DO extends BaseDO {
 
-#foreach ($column in $columns)
-#if(!$baseDOFields.contains(${column.javaField}))## 排除 BaseDO 的字段
+#foreach ($column in $subColumns)
+#if(!$baseDOFields.contains($column.javaField))
     /**
      * ${column.columnComment}
      */
-#if(${column.primaryKey})## 主键
+#if($column.primaryKey)
     @TableId(value = "${column.columnName}", type = IdType.AUTO)
 #else
     @TableField("${column.columnName}")
@@ -45,4 +45,3 @@ public class ${className}DO extends BaseDO {
 #end
 #end
 }
-

@@ -181,44 +181,79 @@ public class CodegenServiceImpl implements CodegenService {
         try {
             String businessName = table.getBusinessName();
             String className = table.getClassName();
+            Integer templateType = table.getTemplateType();
 
-            // 后端代码 - Controller 层
+            // 后端代码 - Controller 层（统一模板）
             result.put("backend/controller/" + businessName + "/" + className + "Controller.java",
                     velocityTemplateEngine.render("templates/java/controller/controller.vm", context));
-            result.put("backend/controller/" + businessName + "/vo/" + className + "PageReqVO.java",
-                    velocityTemplateEngine.render("templates/java/controller/vo/PageReqVO.vm", context));
+
+            // VO 文件（统一模板，内部根据templateType判断）
+            if (templateType == 2) {
+                // 树表：ListReqVO
+                result.put("backend/controller/" + businessName + "/vo/" + className + "ListReqVO.java",
+                        velocityTemplateEngine.render("templates/java/controller/vo/PageReqVO.vm", context));
+            } else {
+                // 单表和主子表：PageReqVO
+                result.put("backend/controller/" + businessName + "/vo/" + className + "PageReqVO.java",
+                        velocityTemplateEngine.render("templates/java/controller/vo/PageReqVO.vm", context));
+            }
             result.put("backend/controller/" + businessName + "/vo/" + className + "SaveReqVO.java",
                     velocityTemplateEngine.render("templates/java/controller/vo/SaveReqVO.vm", context));
             result.put("backend/controller/" + businessName + "/vo/" + className + "RespVO.java",
                     velocityTemplateEngine.render("templates/java/controller/vo/RespVO.vm", context));
 
-            // 后端代码 - Service 层
+            // 后端代码 - Service 层（统一模板）
             result.put("backend/service/" + businessName + "/" + className + "Service.java",
                     velocityTemplateEngine.render("templates/java/service/service.vm", context));
             result.put("backend/service/" + businessName + "/impl/" + className + "ServiceImpl.java",
                     velocityTemplateEngine.render("templates/java/service/serviceImpl.vm", context));
 
-            // 后端代码 - DAL 层
+            // 后端代码 - DAL 层（统一模板）
+            // 主表 DO
             result.put("backend/dal/dataobject/" + businessName + "/" + className + "DO.java",
-                    velocityTemplateEngine.render("templates/java/dal/entity/do.vm", context));
+                    velocityTemplateEngine.render("templates/java/dal/dataobject/do.vm", context));
+
+            // 主子表：额外生成子表 DO
+            if (templateType == 3) {
+                // TODO: 子表DO需要从 subTable 信息中生成
+                // result.put("backend/dal/dataobject/" + businessName + "/" + subClassName +
+                // "DO.java",
+                // velocityTemplateEngine.render("templates/java/dal/dataobject/do_sub.vm",
+                // context));
+            }
+
+            // Mapper（统一模板，内部根据templateType判断）
             result.put("backend/dal/mapper/" + businessName + "/" + className + "Mapper.java",
                     velocityTemplateEngine.render("templates/java/dal/mapper/mapper.vm", context));
 
-            // 后端代码 - 配置文件 (Mapper XML 放在 resources/mapper 目录下)
-            result.put("backend/resources/mapper/" + businessName + "/" + className + "Mapper.xml",
-                    velocityTemplateEngine.render("templates/java/dal/mapper/mapper.xml.vm", context));
+            // 主子表：额外生成子表 Mapper
+            if (templateType == 3) {
+                // TODO: 子表Mapper需要从 subTable 信息中生成
+                // result.put("backend/dal/mapper/" + businessName + "/" + subClassName +
+                // "Mapper.java",
+                // velocityTemplateEngine.render("templates/java/dal/mapper/mapper_sub.vm",
+                // context));
+            }
 
-            // 前端代码 - React
+            // 后端代码 - 配置文件 (Mapper XML 只有CRUD需要)
+            if (templateType == 1) {
+                result.put("backend/resources/mapper/" + businessName + "/" + className + "Mapper.xml",
+                        velocityTemplateEngine.render("templates/java/dal/mapper/mapper.xml.vm", context));
+            }
+
+            // 前端代码 - React（前端保持分开，根据templateType选择不同目录）
             if (table.getFrontType() == 30) {
+                String reactTemplateDir = getReactTemplateDir(templateType);
+
                 // 页面文件 (业务组件直接放在页面目录下)
                 result.put("frontend/pages/" + businessName + "/" + className + "List.tsx",
-                        velocityTemplateEngine.render("templates/react/List.tsx.vm", context));
+                        velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/List.tsx.vm", context));
                 result.put("frontend/pages/" + businessName + "/" + className + "Form.tsx",
-                        velocityTemplateEngine.render("templates/react/Form.tsx.vm", context));
+                        velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/Form.tsx.vm", context));
 
                 // API 服务 (以 Api 后缀命名，类型定义已合并在其中)
                 result.put("frontend/services/" + businessName + "/" + businessName + "Api.ts",
-                        velocityTemplateEngine.render("templates/react/api.ts.vm", context));
+                        velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/api.ts.vm", context));
             }
 
             // SQL脚本 - 菜单和权限
@@ -230,6 +265,28 @@ public class CodegenServiceImpl implements CodegenService {
         }
 
         return result;
+    }
+
+    /**
+     * 根据模板类型获取React模板目录
+     * （前端保持分开：crud/tree/sub，因为前端代码比较复杂）
+     * 
+     * @param templateType 1-单表CRUD 2-树表 3-主子表
+     * @return React模板目录名称
+     */
+    private String getReactTemplateDir(Integer templateType) {
+        if (templateType == null) {
+            templateType = 1; // 默认单表
+        }
+        switch (templateType) {
+            case 2:
+                return "tree";
+            case 3:
+                return "sub";
+            case 1:
+            default:
+                return "crud";
+        }
     }
 
     @Override

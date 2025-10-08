@@ -1,0 +1,90 @@
+import request from '@/utils/request';
+
+/**
+ * ${classComment} API（树表）
+ */
+
+// ==================== 类型定义 ====================
+
+export interface PageResult<T> {
+  list: T[];
+  total: number;
+}
+
+export interface ${className} {
+  id?: number;
+#foreach($column in $columns)
+#if(!$baseDOFields.contains(${column.javaField}) && ${column.javaField} != 'id')
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+}
+
+export interface ${className}Query {
+#foreach($column in $columns)
+#if(${column.listOperation})
+#if(${column.listOperationCondition} == "BETWEEN")
+  ${column.javaField}Start?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+  ${column.javaField}End?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#else
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+#end
+}
+
+export interface ${className}Form {
+  id?: number;
+#foreach($column in $columns)
+#if(${column.createOperation} || ${column.updateOperation})
+#if(${column.javaField} != 'id')
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+#end
+}
+
+// ==================== API 方法 ====================
+
+/**
+ * 获取${classComment}列表（树表不分页）
+ */
+export const getList = (params: ${className}Query) => {
+  return request.get<${className}[]>('/${moduleName}/${businessName}/list', { params });
+};
+
+/**
+ * 获取${classComment}详情
+ */
+export const getById = (id: number) => {
+  return request.get<${className}>(`/${moduleName}/${businessName}/${"$"}{id}`);
+};
+
+/**
+ * 创建${classComment}
+ */
+export const create = (data: ${className}Form) => {
+  return request.post<number>('/${moduleName}/${businessName}', data);
+};
+
+/**
+ * 更新${classComment}
+ */
+export const update = (data: ${className}Form) => {
+  return request.put<void>(`/${moduleName}/${businessName}/${"$"}{data.id}`, data);
+};
+
+/**
+ * 删除${classComment}
+ */
+export const delete${className} = (id: number) => {
+  return request.delete<void>(`/${moduleName}/${businessName}/${"$"}{id}`);
+};
+
+export const ${classNameFirstLower}Api = {
+  getList,
+  getById,
+  create,
+  update,
+  delete: delete${className},
+};

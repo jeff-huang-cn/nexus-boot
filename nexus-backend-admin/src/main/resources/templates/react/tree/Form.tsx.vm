@@ -1,0 +1,195 @@
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, InputNumber, Select, TreeSelect, message } from 'antd';
+import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData } from '@/services/${businessName}/${businessName}Api';
+
+interface Props {
+  visible: boolean;
+  editId?: number;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+/**
+ * ${classComment}表单（树表）
+ */
+const ${className}Form: React.FC<Props> = ({ visible, editId, onClose, onSuccess }) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [treeData, setTreeData] = useState<any[]>([]);
+
+  // 加载树形数据（用于父节点选择）
+  const loadTreeData = async () => {
+    try {
+      const data = await ${classNameFirstLower}Api.getList({});
+      // 构建树形选择器数据
+      const tree = buildTreeSelectData(data);
+      setTreeData([
+        {
+          title: '根节点',
+          value: 0,
+          children: tree,
+        },
+      ]);
+    } catch (error) {
+      // 错误消息已在 request.ts 中统一处理
+    }
+  };
+
+  // 构建树形选择器数据
+  const buildTreeSelectData = (flatData: ${className}[]): any[] => {
+    const map = new Map<number, any>();
+    const tree: any[] = [];
+
+    flatData.forEach((item) => {
+      // 排除当前编辑的节点（防止选择自己为父节点）
+      if (editId && item.id === editId) {
+        return;
+      }
+
+      map.set(item.id!, {
+        title: item.name,
+        value: item.id,
+        children: [],
+      });
+    });
+
+    flatData.forEach((item) => {
+      if (editId && item.id === editId) {
+        return;
+      }
+
+      const node = map.get(item.id!);
+      if (!item.parentId || item.parentId === 0) {
+        tree.push(node);
+      } else {
+        const parent = map.get(item.parentId);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          tree.push(node);
+        }
+      }
+    });
+
+    return tree;
+  };
+
+  // 加载编辑数据
+  useEffect(() => {
+    if (visible) {
+      loadTreeData();
+
+      if (editId) {
+        setLoading(true);
+        ${classNameFirstLower}Api
+          .getById(editId)
+          .then((data) => {
+            form.setFieldsValue(data);
+          })
+          .catch(() => {
+            // 错误消息已在 request.ts 中统一处理
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        form.resetFields();
+        // 设置默认父节点为根节点
+        form.setFieldsValue({ parentId: 0 });
+      }
+    }
+  }, [visible, editId, form]);
+
+  // 提交表单
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      if (editId) {
+        await ${classNameFirstLower}Api.update({ ...values, id: editId });
+        message.success('更新成功');
+      } else {
+        await ${classNameFirstLower}Api.create(values);
+        message.success('创建成功');
+      }
+
+      onSuccess();
+    } catch (error: any) {
+      if (error.errorFields) {
+        // 表单校验失败
+        return;
+      }
+      // 其他错误消息已在 request.ts 中统一处理
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      title={editId ? '编辑${classComment}' : '新增${classComment}'}
+      open={visible}
+      onOk={handleSubmit}
+      onCancel={onClose}
+      confirmLoading={loading}
+      width={600}
+      destroyOnClose
+    >
+      <Form
+        form={form}
+        labelCol={{ span: 6 }}
+        wrapperCol={{ span: 16 }}
+        autoComplete="off"
+      >
+        <Form.Item name="id" hidden>
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          name="parentId"
+          label="父节点"
+          rules={[{ required: true, message: '请选择父节点' }]}
+        >
+          <TreeSelect
+            placeholder="请选择父节点"
+            treeData={treeData}
+            treeDefaultExpandAll
+            allowClear
+          />
+        </Form.Item>
+
+#foreach($column in $columns)
+#if((${column.createOperation} || ${column.updateOperation}) && ${column.javaField} != 'id' && ${column.javaField} != 'parentId')
+        <Form.Item
+          name="${column.javaField}"
+          label="${column.columnComment}"
+#if(!${column.nullable})
+          rules={[{ required: true, message: '请输入${column.columnComment}' }]}
+#end
+        >
+#if(${column.javaType} == "Integer" || ${column.javaType} == "Long")
+          <InputNumber placeholder="请输入${column.columnComment}" style={{ width: '100%' }} />
+#elseif(${column.javaType} == "BigDecimal")
+          <InputNumber placeholder="请输入${column.columnComment}" precision={2} style={{ width: '100%' }} />
+#elseif(${column.htmlType} == "textarea")
+          <Input.TextArea placeholder="请输入${column.columnComment}" rows={4} />
+#elseif(${column.htmlType} == "select")
+          <Select placeholder="请选择${column.columnComment}">
+            {/* TODO: 根据实际情况添加选项 */}
+            <Select.Option value={1}>选项1</Select.Option>
+            <Select.Option value={0}>选项2</Select.Option>
+          </Select>
+#else
+          <Input placeholder="请输入${column.columnComment}" />
+#end
+        </Form.Item>
+
+#end
+#end
+      </Form>
+    </Modal>
+  );
+};
+
+export default ${className}Form;

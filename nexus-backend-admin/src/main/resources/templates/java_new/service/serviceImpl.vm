@@ -195,21 +195,17 @@ public class ${className}ServiceImpl implements ${className}Service {
     /**
      * 构建查询条件
      */
-#if($templateType == 2)
-    private LambdaQueryWrapper<${className}DO> buildQueryWrapper(${className}ListReqVO reqVO) {
-#else
-    private LambdaQueryWrapper<${className}DO> buildQueryWrapper(${className}PageReqVO reqVO) {
-#end
+    private LambdaQueryWrapper<${className}DO> buildQueryWrapper(${className}#if($templateType == 2)List#else Page#endReqVO reqVO) {
         LambdaQueryWrapper<${className}DO> wrapper = new LambdaQueryWrapper<>();
 
 #foreach($column in $columns)
-#if($column.listOperation)
-#if($column.listOperationCondition == "LIKE")
+#if(${column.listOperation})
+#if(${column.listOperationCondition} == "LIKE")
         // ${column.columnComment} - 模糊查询
         if (StringUtils.hasText(reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}())) {
             wrapper.like(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}());
         }
-#elseif($column.listOperationCondition == "BETWEEN")
+#elseif(${column.listOperationCondition} == "BETWEEN")
         // ${column.columnComment} - 范围查询
         if (reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}Start() != null) {
             wrapper.ge(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}Start());
@@ -217,7 +213,7 @@ public class ${className}ServiceImpl implements ${className}Service {
         if (reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}End() != null) {
             wrapper.le(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}End());
         }
-#elseif($column.listOperationCondition == "EQ")
+#elseif(${column.listOperationCondition} == "EQ")
         // ${column.columnComment} - 精确匹配
         if (reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}() != null) {
             wrapper.eq(${className}DO::get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}, reqVO.get${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)}());

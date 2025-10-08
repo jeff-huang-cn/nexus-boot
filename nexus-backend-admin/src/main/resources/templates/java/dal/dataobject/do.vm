@@ -1,0 +1,48 @@
+package ${packageName}.dal.dataobject.${businessName};
+
+import com.baomidou.mybatisplus.annotation.*;
+import com.nexus.framework.mybatis.entity.BaseDO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+#if($hasLocalDateTime)
+import java.time.LocalDateTime;
+#end
+#if($hasBigDecimal)
+import java.math.BigDecimal;
+#end
+
+/**
+ * ${classComment} DO
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@TableName("${tableName}")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ${className}DO extends BaseDO {
+
+#foreach ($column in $columns)
+#if(!$baseDOFields.contains($column.javaField))## 排除 BaseDO 的字段
+    /**
+     * ${column.columnComment}
+     */
+#if($column.primaryKey)## 主键
+    @TableId(value = "${column.columnName}", type = IdType.AUTO)
+#else
+    @TableField("${column.columnName}")
+#end
+    private ${column.javaType} ${column.javaField};
+
+#end
+#end
+}
+

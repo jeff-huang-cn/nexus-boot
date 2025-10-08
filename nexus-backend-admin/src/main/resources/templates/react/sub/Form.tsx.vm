@@ -1,0 +1,307 @@
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, InputNumber, Select, Table, Button, Space, message, Card } from 'antd';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData, type ${subClassName}Form } from '@/services/${businessName}/${businessName}Api';
+
+interface Props {
+  visible: boolean;
+  editId?: number;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+/**
+ * ${classComment}表单（主子表）
+ */
+const ${className}Form: React.FC<Props> = ({ visible, editId, onClose, onSuccess }) => {
+  const [mainForm] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [subList, setSubList] = useState<${subClassName}Form[]>([]);
+  const [subEditingKey, setSubEditingKey] = useState<number | undefined>();
+  const [subForm] = Form.useForm();
+
+  // 加载编辑数据
+  useEffect(() => {
+    if (visible) {
+      if (editId) {
+        setLoading(true);
+        ${classNameFirstLower}Api
+          .getById(editId)
+          .then((data) => {
+            mainForm.setFieldsValue(data);
+            // 加载子表数据
+            if (data.subList) {
+              setSubList(data.subList.map((item, index) => ({
+                ...item,
+                key: Date.now() + index, // 临时key，用于编辑
+              })));
+            }
+          })
+          .catch(() => {
+            // 错误消息已在 request.ts 中统一处理
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        mainForm.resetFields();
+        setSubList([]);
+      }
+    }
+  }, [visible, editId, mainForm]);
+
+  // 提交表单
+  const handleSubmit = async () => {
+    try {
+      // 1. 校验主表
+      const mainValues = await mainForm.validateFields();
+
+      // 2. 校验子表（至少要有一条数据）
+      if (!subList || subList.length === 0) {
+        message.warning('请至少添加一条明细数据');
+        return;
+      }
+
+      setLoading(true);
+
+      // 3. 合并数据
+      const formData: FormData = {
+        ...mainValues,
+        subList: subList.map(item => {
+          // 去除临时 key 字段
+          const { key, ...rest } = item as any;
+          return rest;
+        }),
+      };
+
+      // 4. 提交
+      if (editId) {
+        await ${classNameFirstLower}Api.update({ ...formData, id: editId });
+        message.success('更新成功');
+      } else {
+        await ${classNameFirstLower}Api.create(formData);
+        message.success('创建成功');
+      }
+
+      onSuccess();
+    } catch (error: any) {
+      if (error.errorFields) {
+        // 表单校验失败
+        return;
+      }
+      // 其他错误消息已在 request.ts 中统一处理
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 添加子表行
+  const handleAddSubRow = () => {
+    const newRow: any = {
+      key: Date.now(),
+      id: undefined, // 新增时 id 为 undefined
+#foreach($column in $subColumns)
+#if(${column.createOperation} && ${column.javaField} != 'id' && ${column.javaField} != $mainIdField)
+#if(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")
+      ${column.javaField}: 0,
+#else
+      ${column.javaField}: '',
+#end
+#end
+#end
+    };
+    setSubList([...subList, newRow]);
+    setSubEditingKey(newRow.key);
+  };
+
+  // 删除子表行
+  const handleDeleteSubRow = (key: number) => {
+    setSubList(subList.filter(item => (item as any).key !== key));
+  };
+
+  // 保存子表编辑
+  const handleSaveSubRow = async (key: number) => {
+    try {
+      const row = await subForm.validateFields();
+      const newData = [...subList];
+      const index = newData.findIndex(item => (item as any).key === key);
+
+      if (index > -1) {
+        newData[index] = { ...newData[index], ...row };
+        setSubList(newData);
+        setSubEditingKey(undefined);
+      }
+    } catch (error) {
+      console.error('子表校验失败:', error);
+    }
+  };
+
+  // 取消子表编辑
+  const handleCancelSubEdit = () => {
+    setSubEditingKey(undefined);
+  };
+
+  // 子表列定义
+  const subColumns: any[] = [
+#foreach($column in $subColumns)
+#if(${column.createOperation} && ${column.javaField} != $mainIdField)
+    {
+      title: '${column.columnComment}',
+      dataIndex: '${column.javaField}',
+      key: '${column.javaField}',
+      width: 150,
+      render: (text: any, record: any) => {
+        const editing = (record as any).key === subEditingKey;
+        return editing ? (
+          <Form.Item
+            name="${column.javaField}"
+            style={{ margin: 0 }}
+            rules={[
+#if(!${column.nullable})
+              { required: true, message: '请输入${column.columnComment}' },
+#end
+            ]}
+          >
+#if(${column.javaType} == "Integer" || ${column.javaType} == "Long")
+            <InputNumber placeholder="${column.columnComment}" style={{ width: '100%' }} />
+#elseif(${column.javaType} == "BigDecimal")
+            <InputNumber placeholder="${column.columnComment}" precision={2} style={{ width: '100%' }} />
+#else
+            <Input placeholder="${column.columnComment}" />
+#end
+          </Form.Item>
+        ) : (
+          text
+        );
+      },
+    },
+#end
+#end
+    {
+      title: '操作',
+      key: 'action',
+      width: 150,
+      render: (_: any, record: any) => {
+        const editing = (record as any).key === subEditingKey;
+        return editing ? (
+          <Space>
+            <Button type="link" size="small" onClick={() => handleSaveSubRow((record as any).key)}>
+              保存
+            </Button>
+            <Button type="link" size="small" onClick={handleCancelSubEdit}>
+              取消
+            </Button>
+          </Space>
+        ) : (
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              disabled={subEditingKey !== undefined}
+              onClick={() => {
+                setSubEditingKey((record as any).key);
+                subForm.setFieldsValue(record);
+              }}
+            >
+              编辑
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              danger
+              disabled={subEditingKey !== undefined}
+              onClick={() => handleDeleteSubRow((record as any).key)}
+            >
+              删除
+            </Button>
+          </Space>
+        );
+      },
+    },
+  ];
+
+  return (
+    <Modal
+      title={editId ? '编辑${classComment}' : '新增${classComment}'}
+      open={visible}
+      onOk={handleSubmit}
+      onCancel={onClose}
+      confirmLoading={loading}
+      width={1000}
+      destroyOnClose
+    >
+      {/* 主表表单 */}
+      <Card title="基本信息" size="small" style={{ marginBottom: 16 }}>
+        <Form
+          form={mainForm}
+          labelCol={{ span: 6 }}
+          wrapperCol={{ span: 16 }}
+          autoComplete="off"
+        >
+          <Form.Item name="id" hidden>
+            <Input />
+          </Form.Item>
+
+#foreach($column in $columns)
+#if((${column.createOperation} || ${column.updateOperation}) && ${column.javaField} != 'id')
+          <Form.Item
+            name="${column.javaField}"
+            label="${column.columnComment}"
+#if(!${column.nullable})
+            rules={[{ required: true, message: '请输入${column.columnComment}' }]}
+#end
+          >
+#if(${column.javaType} == "Integer" || ${column.javaType} == "Long")
+            <InputNumber placeholder="请输入${column.columnComment}" style={{ width: '100%' }} />
+#elseif(${column.javaType} == "BigDecimal")
+            <InputNumber placeholder="请输入${column.columnComment}" precision={2} style={{ width: '100%' }} />
+#elseif(${column.htmlType} == "textarea")
+            <Input.TextArea placeholder="请输入${column.columnComment}" rows={4} />
+#elseif(${column.htmlType} == "select")
+            <Select placeholder="请选择${column.columnComment}">
+              {/* TODO: 根据实际情况添加选项 */}
+              <Select.Option value={1}>选项1</Select.Option>
+              <Select.Option value={0}>选项2</Select.Option>
+            </Select>
+#else
+            <Input placeholder="请输入${column.columnComment}" />
+#end
+          </Form.Item>
+
+#end
+#end
+        </Form>
+      </Card>
+
+      {/* 子表编辑区域 */}
+      <Card
+        title="${subClassComment}列表"
+        size="small"
+        extra={
+          <Button
+            type="primary"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={handleAddSubRow}
+            disabled={subEditingKey !== undefined}
+          >
+            添加明细
+          </Button>
+        }
+      >
+        <Form form={subForm} component={false}>
+          <Table
+            dataSource={subList}
+            columns={subColumns}
+            pagination={false}
+            size="small"
+            bordered
+            rowKey={(record: any) => record.key}
+          />
+        </Form>
+      </Card>
+    </Modal>
+  );
+};
+
+export default ${className}Form;

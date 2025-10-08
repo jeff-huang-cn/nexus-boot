@@ -1,0 +1,204 @@
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Space, Modal, message, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import ${className}Form from './${className}Form';
+import { ${classNameFirstLower}Api, type ${className} } from '@/services/${businessName}/${businessName}Api';
+
+/**
+ * ${classComment}管理（树表）
+ */
+const ${className}List: React.FC = () => {
+  const [list, setList] = useState<${className}[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editId, setEditId] = useState<number | undefined>();
+
+  // 加载数据
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const data = await ${classNameFirstLower}Api.getList({});
+      // 构建树形结构
+      setList(buildTree(data));
+    } catch (error) {
+      // 错误消息已在 request.ts 中统一处理
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 构建树形数据
+  const buildTree = (flatData: ${className}[]): ${className}[] => {
+    const map = new Map<number, any>();
+    const tree: any[] = [];
+
+    // 第一遍：构建映射
+    flatData.forEach((item) => {
+      map.set(item.id!, { ...item, children: [] });
+    });
+
+    // 第二遍：构建树形结构
+    flatData.forEach((item) => {
+      const node = map.get(item.id!);
+      if (!item.parentId || item.parentId === 0) {
+        // 根节点
+        tree.push(node);
+      } else {
+        // 子节点
+        const parent = map.get(item.parentId);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          // 如果找不到父节点，作为根节点
+          tree.push(node);
+        }
+      }
+    });
+
+    // 删除空的 children 数组
+    const removeEmptyChildren = (nodes: any[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length === 0) {
+          delete node.children;
+        } else if (node.children) {
+          removeEmptyChildren(node.children);
+        }
+      });
+    };
+    removeEmptyChildren(tree);
+
+    return tree;
+  };
+
+  // 删除
+  const handleDelete = (id: number) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: '删除后不可恢复，确定要删除吗？',
+      onOk: async () => {
+        try {
+          await ${classNameFirstLower}Api.delete(id);
+          message.success('删除成功');
+          loadData();
+        } catch (error: any) {
+          // 错误消息已在 request.ts 中统一处理
+        }
+      },
+    });
+  };
+
+  // 表格列定义
+  const columns: ColumnsType<${className}> = [
+#set($firstColumn = true)
+#foreach($column in $columns)
+#if(${column.listOperationResult})
+#if($firstColumn)
+    {
+      title: '${column.columnComment}',
+      dataIndex: '${column.javaField}',
+      key: '${column.javaField}',
+      width: 200,
+    },
+#set($firstColumn = false)
+#else
+    {
+      title: '${column.columnComment}',
+      dataIndex: '${column.javaField}',
+      key: '${column.javaField}',
+#if(${column.javaType} == "Integer" || ${column.javaType} == "Long")
+      width: 100,
+#elseif(${column.javaType} == "LocalDateTime")
+      width: 180,
+#else
+      width: 150,
+#end
+    },
+#end
+#end
+#end
+    {
+      title: '操作',
+      key: 'action',
+      width: 150,
+      fixed: 'right',
+      render: (_: any, record: ${className}) => (
+        <Space>
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditId(record.id);
+              setModalVisible(true);
+            }}
+          >
+            编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id!)}
+          >
+            删除
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  return (
+    <Card
+      title="${classComment}管理"
+      extra={
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={loadData}>
+            刷新
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditId(undefined);
+              setModalVisible(true);
+            }}
+          >
+            新增
+          </Button>
+        </Space>
+      }
+    >
+      <Table
+        columns={columns}
+        dataSource={list}
+        loading={loading}
+        rowKey="id"
+        pagination={false} // 树表不分页
+        defaultExpandAllRows // 默认展开所有行
+        scroll={{ x: 'max-content' }}
+      />
+
+      <${className}Form
+        visible={modalVisible}
+        editId={editId}
+        onClose={() => {
+          setModalVisible(false);
+          setEditId(undefined);
+        }}
+        onSuccess={() => {
+          setModalVisible(false);
+          setEditId(undefined);
+          loadData();
+        }}
+      />
+    </Card>
+  );
+};
+
+export default ${className}List;

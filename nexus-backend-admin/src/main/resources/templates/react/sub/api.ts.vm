@@ -1,0 +1,130 @@
+import request from '@/utils/request';
+
+/**
+ * ${classComment} API（主子表）
+ */
+
+// ==================== 类型定义 ====================
+
+export interface PageResult<T> {
+  list: T[];
+  total: number;
+}
+
+export interface ${className} {
+  id?: number;
+#foreach($column in $columns)
+#if(!$baseDOFields.contains(${column.javaField}) && ${column.javaField} != 'id')
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+  subList?: ${subClassName}[];
+}
+
+export interface ${subClassName} {
+  id?: number;
+#foreach($column in $subColumns)
+#if(!$baseDOFields.contains(${column.javaField}) && ${column.javaField} != 'id')
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+}
+
+export interface ${className}Query {
+  pageNum?: number;
+  pageSize?: number;
+#foreach($column in $columns)
+#if(${column.listOperation})
+#if(${column.listOperationCondition} == "BETWEEN")
+  ${column.javaField}Start?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+  ${column.javaField}End?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#else
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+#end
+}
+
+export interface ${className}Form {
+  id?: number;
+#foreach($column in $columns)
+#if(${column.createOperation} || ${column.updateOperation})
+#if(${column.javaField} != 'id')
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+#end
+  subList?: ${subClassName}Form[];
+}
+
+export interface ${subClassName}Form {
+  id?: number;
+#foreach($column in $subColumns)
+#if(${column.createOperation} || ${column.updateOperation})
+#if(${column.javaField} != 'id' && ${column.javaField} != $mainIdField)
+  ${column.javaField}?: ${column.javaType.replace("Long", "number").replace("Integer", "number").replace("String", "string").replace("Boolean", "boolean").replace("LocalDateTime", "string").replace("BigDecimal", "number")};
+#end
+#end
+#end
+}
+
+// ==================== API 方法 ====================
+
+/**
+ * 获取${classComment}分页列表
+ */
+export const getPage = (params: ${className}Query) => {
+  return request.get<PageResult<${className}>>('/${moduleName}/${businessName}/page', { params });
+};
+
+/**
+ * 获取${classComment}详情
+ */
+export const getById = (id: number) => {
+  return request.get<${className}>(`/${moduleName}/${businessName}/${"$"}{id}`);
+};
+
+/**
+ * 创建${classComment}（含子表）
+ */
+export const create = (data: ${className}Form) => {
+  return request.post<number>('/${moduleName}/${businessName}', data);
+};
+
+/**
+ * 更新${classComment}（含子表）
+ */
+export const update = (data: ${className}Form) => {
+  return request.put<void>(`/${moduleName}/${businessName}/${"$"}{data.id}`, data);
+};
+
+/**
+ * 删除${classComment}
+ */
+export const delete${className} = (id: number) => {
+  return request.delete<void>(`/${moduleName}/${businessName}/${"$"}{id}`);
+};
+
+/**
+ * 批量删除${classComment}
+ */
+export const deleteBatch = (ids: number[]) => {
+  return request.delete<void>('/${moduleName}/${businessName}/batch', { data: ids });
+};
+
+/**
+ * 获取子表列表
+ */
+export const getSubList = (${mainIdField}: number) => {
+  return request.get<${subClassName}[]>(`/${moduleName}/${businessName}/${"$"}{${mainIdField}}/sub-list`);
+};
+
+export const ${classNameFirstLower}Api = {
+  getPage,
+  getById,
+  create,
+  update,
+  delete: delete${className},
+  deleteBatch,
+  getSubList,
+};

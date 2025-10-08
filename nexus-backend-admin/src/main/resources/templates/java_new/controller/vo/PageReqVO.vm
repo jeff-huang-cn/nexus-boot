@@ -20,23 +20,19 @@ import static com.nexus.framework.common.util.DateUtils.FORMAT_YEAR_MONTH_DAY_HO
  * @author ${author}
  * @since ${date}
  */
-#if($templateType == 2)
-#set($reqType = "List")
-#else
-#set($reqType = "Page")
-#end
-@Schema(description = "${classComment} ${reqType} Request VO")
+@Schema(description = "${classComment}#if($templateType == 2) 列表#else 分页#end Request VO")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class ${className}${reqType}ReqVO extends Base${reqType}ReqVO {
+public class ${className}#if($templateType == 2)List#else Page#endReqVO extends Base#if($templateType == 2)List#else Page#endReqVO {
 
 #foreach ($column in $columns)
-#if ($column.listOperation)
-#if ($column.listOperationCondition == "LIKE")
+#if (${column.listOperation})
+#set ($JavaField = ${column.javaField.substring(0,1).toUpperCase()}${column.javaField.substring(1)})
+#if (${column.listOperationCondition} == "LIKE")
     @Schema(description = "${column.columnComment}", example = "${column.example}")
     private String ${column.javaField};
-#elseif ($column.listOperationCondition == "BETWEEN")
+#elseif(${column.listOperationCondition} == "BETWEEN")
     @Schema(description = "${column.columnComment} - 开始时间", example = "2023-01-01 00:00:00")
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime ${column.javaField}Start;
