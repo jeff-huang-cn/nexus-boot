@@ -211,6 +211,28 @@ public class TenantServiceImpl implements TenantService {
         return wrapper;
     }
 
+    @Override
+    public void assignMenu(Long tenantId, List<Long> menuIds) {
+        // 校验租户是否存在
+        validateExists(tenantId);
+
+        // 转换为JSON字符串
+        String menuIdsJson = null;
+        if (menuIds != null && !menuIds.isEmpty()) {
+            try {
+                menuIdsJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(menuIds);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                throw new BusinessException(500, "菜单ID序列化失败");
+            }
+        }
+
+        // 更新租户菜单
+        TenantDO tenant = new TenantDO();
+        tenant.setId(tenantId);
+        tenant.setMenuIds(menuIdsJson);
+        tenantMapper.updateById(tenant);
+    }
+
     /**
      * 校验租户管理表是否存在
      */

@@ -72,7 +72,8 @@ public class MenuController {
     }
 
     /**
-     * 获取菜单树列表（用于前端导航，过滤掉按钮）
+     * 获取菜单树列表（包含所有类型：目录、菜单、按钮）
+     * 由前端决定显示哪些类型
      */
     @GetMapping("/tree")
     @PreAuthorize("@ss.hasPermission('system:menu:query')")
@@ -80,10 +81,9 @@ public class MenuController {
         // 1. Service 返回 DO 列表
         List<MenuDO> menuList = menuService.getMenuList();
 
-        // 2. Controller 转换为 VO，过滤掉按钮类型（type=3）
-        // 按钮权限用于权限控制，不显示在菜单树中
+        // 2. Controller 转换为 VO（包含所有类型：目录、菜单、按钮）
+        // 由前端决定是否显示按钮权限
         List<MenuRespVO> menuVOList = menuList.stream()
-                .filter(menu -> menu.getType() != 3) // 过滤掉按钮
                 .map(menu -> BeanUtil.copyProperties(menu, MenuRespVO.class))
                 .collect(Collectors.toList());
 

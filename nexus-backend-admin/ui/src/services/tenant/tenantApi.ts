@@ -131,9 +131,16 @@ export const tenantApi = {
   },
 
   /**
-   * 获取菜单树（用于分配菜单）
+   * 获取菜单树（包含所有类型：目录、菜单、按钮）
    */
   getMenuTree: (): Promise<any[]> => {
     return request.get('/system/menu/tree');
+  },
+
+  /**
+   * 分配菜单权限
+   */
+  assignMenu: (data: { tenantId: number; menuIds: number[] }): Promise<void> => {
+    return request.post('/system/tenant/assign-menu', data);
   },
 };

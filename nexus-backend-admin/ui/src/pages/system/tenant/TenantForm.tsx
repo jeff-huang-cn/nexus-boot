@@ -7,9 +7,7 @@ import {
   message,
   InputNumber,
   Select,
-  Radio,
   DatePicker,
-  TreeSelect,
 } from 'antd';
 import dayjs from 'dayjs';
 import { tenantApi, type Tenant } from '../../../services/tenant/tenantApi';
@@ -28,21 +26,16 @@ const TenantForm: React.FC<TenantFormProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = React.useState(false);
   const [dataSources, setDataSources] = React.useState<Array<{ id: number; name: string }>>([]);
-  const [menuTree, setMenuTree] = React.useState<any[]>([]);
 
   useEffect(() => {
-    // 加载数据源列表和菜单树
+    // 加载数据源列表
     const loadData = async () => {
       try {
-        const [dsData, menuData] = await Promise.all([
-          tenantApi.getDataSources(),
-          tenantApi.getMenuTree(),
-        ]);
+        const dsData = await tenantApi.getDataSources();
         setDataSources(dsData);
-        setMenuTree(menuData);
       } catch (error) {
-        message.error('加载数据失败');
-        console.error('加载数据失败:', error);
+        message.error('加载数据源失败');
+        console.error('加载数据源失败:', error);
       }
     };
     loadData();
@@ -50,11 +43,12 @@ const TenantForm: React.FC<TenantFormProps> = ({
 
   useEffect(() => {
     if (initialValues) {
-      // 转换日期字符串为 dayjs 对象，menuIds JSON 字符串为数组
+      // 转换日期字符串为 dayjs 对象
       const formValues = {
         ...initialValues,
-        expireTime: initialValues.expireTime ? dayjs(initialValues.expireTime) : null,
-        menuIds: initialValues.menuIds ? JSON.parse(initialValues.menuIds as any) : [],
+        expireTime: initialValues.expireTime 
+          ? (dayjs.isDayjs(initialValues.expireTime) ? initialValues.expireTime : dayjs(initialValues.expireTime))
+          : null,
       };
       form.setFieldsValue(formValues);
     } else {
@@ -65,11 +59,10 @@ const TenantForm: React.FC<TenantFormProps> = ({
   const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
-      // 转换 dayjs 对象为字符串，menuIds 数组为 JSON 字符串
+      // 转换 dayjs 对象为字符串
       const submitValues = {
         ...values,
         expireTime: values.expireTime ? values.expireTime.format('YYYY-MM-DDTHH:mm:ss') : null,
-        menuIds: values.menuIds ? JSON.stringify(values.menuIds) : null,
       };
 
       if (initialValues?.id) {
@@ -127,21 +120,6 @@ const TenantForm: React.FC<TenantFormProps> = ({
           filterOption={(input, option) =>
             (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
           }
-        />
-      </Form.Item>
-      <Form.Item
-        label="分配菜单"
-        name="menuIds"
-      >
-        <TreeSelect
-          style={{ width: '100%' }}
-          placeholder="请选择分配的菜单"
-          treeData={menuTree}
-          treeCheckable
-          showCheckedStrategy={TreeSelect.SHOW_PARENT}
-          allowClear
-          maxTagCount={5}
-          fieldNames={{ label: 'name', value: 'id', children: 'children' }}
         />
       </Form.Item>
       <Form.Item

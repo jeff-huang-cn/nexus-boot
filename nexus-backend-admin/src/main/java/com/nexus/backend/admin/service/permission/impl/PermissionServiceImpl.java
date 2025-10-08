@@ -51,18 +51,19 @@ public class PermissionServiceImpl implements PermissionService {
             return Collections.emptySet();
         }
 
-        // 2. 查询角色分配的所有菜单ID
+        // 2. 查询角色分配的所有菜单ID（包括目录、菜单、按钮）
         List<Long> menuIds = getRoleMenuIds(roleIds);
         if (CollectionUtils.isEmpty(menuIds)) {
             log.debug("用户 {} 的角色没有分配菜单", userId);
             return Collections.emptySet();
         }
 
-        // 3. 查询菜单，过滤出按钮权限
+        // 3. 从已分配的菜单ID中，过滤出按钮权限
+        // 注意：只有角色明确分配的按钮才有权限，不是父菜单下的所有按钮都有权限
         List<MenuDO> buttons = menuMapper.selectList(
                 new LambdaQueryWrapper<MenuDO>()
                         .select(MenuDO::getPermission)
-                        .in(MenuDO::getParentId, menuIds)
+                        .in(MenuDO::getId, menuIds) // 直接查询已分配的菜单ID
                         .eq(MenuDO::getType, MenuTypeEnum.BUTTON.getValue()) // 类型=按钮
                         .eq(MenuDO::getStatus, CommonStatusEnum.ENABLE.getValue()) // 状态=启用
                         .isNotNull(MenuDO::getPermission) // 权限标识不为空

@@ -2,82 +2,82 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Tree, Spin, message } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import { menuApi } from '../../../services/menu/menuApi';
-import { roleApi } from '../../../services/role/roleApi';
+import { tenantApi } from '../../../services/tenant/tenantApi';
 import type { Menu } from '../../../services/menu/menuApi';
 
 interface AssignMenuModalProps {
   visible: boolean;
-  roleId: number;
+  tenantId: number;
   onCancel: () => void;
   onSuccess: () => void;
-  showButtons?: boolean; // 是否显示按钮权限，默认为 true
+  showButtons?: boolean; // 是否显示按钮权限，默认为 false（租户不需要按钮权限）
 }
 
 // 将菜单列表转换为树形数据
-const menuToTreeData = (menus: Menu[], showButtons: boolean = true): DataNode[] => {
+const menuToTreeData = (menus: Menu[], showButtons: boolean = false): DataNode[] => {
   return menus
     .filter(menu => showButtons || menu.type !== 3) // 如果不显示按钮，过滤掉 type=3
     .map((menu) => {
-      // 根据菜单类型设置标题样式
-      let title: React.ReactNode = menu.name;
-      
-      if (menu.type === 3) {
-        // 按钮权限 - 使用徽章样式突出显示
-        title = (
-          <span>
-            <span style={{ 
-              backgroundColor: '#52c41a', 
-              color: 'white', 
-              padding: '2px 8px', 
-              borderRadius: '4px', 
-              fontSize: '12px',
-              marginRight: '8px',
-              fontWeight: 'bold'
-            }}>
-              按钮
-            </span>
-            {menu.name}
-            <span style={{ color: '#999', fontSize: '12px', marginLeft: '8px' }}>
-              {menu.permission ? `(${menu.permission})` : ''}
-            </span>
+    // 根据菜单类型设置标题样式
+    let title: React.ReactNode = menu.name;
+    
+    if (menu.type === 3) {
+      // 按钮权限 - 使用徽章样式突出显示
+      title = (
+        <span>
+          <span style={{ 
+            backgroundColor: '#52c41a', 
+            color: 'white', 
+            padding: '2px 8px', 
+            borderRadius: '4px', 
+            fontSize: '12px',
+            marginRight: '8px',
+            fontWeight: 'bold'
+          }}>
+            按钮
           </span>
-        );
-      } else if (menu.type === 2) {
-        // 菜单
-        title = (
-          <span>
-            <span style={{ 
-              color: '#1890ff', 
-              marginRight: '6px',
-              fontWeight: 'bold'
-            }}>
-              📄
-            </span>
-            {menu.name}
+          {menu.name}
+          <span style={{ color: '#999', fontSize: '12px', marginLeft: '8px' }}>
+            {menu.permission ? `(${menu.permission})` : ''}
           </span>
-        );
-      } else if (menu.type === 1) {
-        // 目录
-        title = (
-          <span>
-            <span style={{ 
-              color: '#faad14', 
-              marginRight: '6px',
-              fontWeight: 'bold'
-            }}>
-              📁
-            </span>
-            <strong>{menu.name}</strong>
+        </span>
+      );
+    } else if (menu.type === 2) {
+      // 菜单
+      title = (
+        <span>
+          <span style={{ 
+            color: '#1890ff', 
+            marginRight: '6px',
+            fontWeight: 'bold'
+          }}>
+            📄
           </span>
-        );
-      }
+          {menu.name}
+        </span>
+      );
+    } else if (menu.type === 1) {
+      // 目录
+      title = (
+        <span>
+          <span style={{ 
+            color: '#faad14', 
+            marginRight: '6px',
+            fontWeight: 'bold'
+          }}>
+            📁
+          </span>
+          <strong>{menu.name}</strong>
+        </span>
+      );
+    }
 
-      return {
-        key: menu.id!,
-        title,
-        children: menu.children ? menuToTreeData(menu.children, showButtons) : undefined,
-      };
-    });
+    return {
+      key: menu.id!,
+      title,
+      children: menu.children ? menuToTreeData(menu.children, showButtons) : undefined,
+    };
+  });
 };
 
 // 获取所有展开的节点key
@@ -113,10 +113,10 @@ const getParentKeys = (menuId: number, menus: Menu[], parentIds: number[] = []):
 
 const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
   visible,
-  roleId,
+  tenantId,
   onCancel,
   onSuccess,
-  showButtons = true, // 默认显示按钮权限
+  showButtons = false, // 租户默认不显示按钮权限
 }) => {
   const [loading, setLoading] = useState(false);
   const [treeData, setTreeData] = useState<DataNode[]>([]);
@@ -134,8 +134,9 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
       setTreeData(menuToTreeData(tree, showButtons));
       setExpandedKeys(getAllExpandedKeys(tree));
 
-      // 获取角色已分配的菜单ID
-      const menuIds = await menuApi.getMenuIdsByRoleId(roleId) as number[];
+      // 获取租户已分配的菜单ID
+      const tenant = await tenantApi.getById(tenantId);
+      const menuIds = tenant.menuIds ? JSON.parse(tenant.menuIds as any) : [];
       // checkStrictly=true 时需要使用对象格式
       setCheckedKeys({ checked: menuIds, halfChecked: [] } as any);
     } catch (error: any) {
@@ -144,7 +145,7 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [roleId]);
+  }, [tenantId, showButtons]);
 
   useEffect(() => {
     if (visible) {
@@ -156,8 +157,7 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
   const handleCheck = (checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }) => {
     // checkStrictly=true 时，checked 是对象格式 { checked, halfChecked }
     const checkedArray = Array.isArray(checked) ? checked : checked.checked;
-    const previousCheckedSet = new Set(Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked);
-    const newCheckedSet = new Set(checkedArray);
+    const previousCheckedSet = new Set(Array.isArray(checkedKeys) ? checkedKeys : (checkedKeys as any).checked);
     
     // 找出新增的节点（被选中的）
     const addedKeys = checkedArray.filter(key => !previousCheckedSet.has(key));
@@ -183,15 +183,15 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
         ? checkedKeys 
         : (checkedKeys as any).checked || [];
       
-      await roleApi.assignMenu({
-        roleId,
+      await tenantApi.assignMenu({
+        tenantId,
         menuIds: menuIds as number[],
       });
-      message.success('分配权限成功');
+      message.success('分配菜单成功');
       onSuccess();
     } catch (error: any) {
       // 错误已在 request.ts 中统一显示
-      console.error('分配权限失败:', error);
+      console.error('分配菜单失败:', error);
     } finally {
       setLoading(false);
     }

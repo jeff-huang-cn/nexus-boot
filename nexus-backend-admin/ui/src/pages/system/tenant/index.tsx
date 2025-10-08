@@ -15,10 +15,12 @@ import {
   DeleteOutlined, 
   SearchOutlined,
   DownloadOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { tenantApi, type Tenant } from '../../../services/tenant/tenantApi';
 import TenantForm from './TenantForm';
+import AssignMenuModal from './AssignMenuModal';
 import { globalMessage } from '../../../utils/globalMessage';
 
 const Index: React.FC = () => {
@@ -31,6 +33,8 @@ const Index: React.FC = () => {
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Tenant | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [assignMenuVisible, setAssignMenuVisible] = useState(false);
+  const [assigningTenantId, setAssigningTenantId] = useState<number>(0);
 
   const columns: ColumnsType<Tenant> = [
     {
@@ -82,7 +86,7 @@ const Index: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 200,
+      width: 280,
       render: (_, record) => (
         <Space size="middle">
           <Button
@@ -91,6 +95,13 @@ const Index: React.FC = () => {
             onClick={() => handleEdit(record)}
           >
             编辑
+          </Button>
+          <Button
+            type="link"
+            icon={<KeyOutlined />}
+            onClick={() => handleAssignMenu(record)}
+          >
+            分配菜单
           </Button>
           <Popconfirm
             title="确定要删除这条记录吗？"
@@ -157,6 +168,12 @@ const Index: React.FC = () => {
   const handleEdit = (record: Tenant) => {
     setEditingRecord(record);
     setFormVisible(true);
+  };
+
+  // 分配菜单
+  const handleAssignMenu = (record: Tenant) => {
+    setAssigningTenantId(record.id!);
+    setAssignMenuVisible(true);
   };
 
   // 删除
@@ -336,6 +353,16 @@ const Index: React.FC = () => {
           }}
         />
       </Modal>
+
+      <AssignMenuModal
+        tenantId={assigningTenantId}
+        visible={assignMenuVisible}
+        onCancel={() => setAssignMenuVisible(false)}
+        onSuccess={() => {
+          setAssignMenuVisible(false);
+          globalMessage.success('菜单分配成功');
+        }}
+      />
     </div>
   );
 };

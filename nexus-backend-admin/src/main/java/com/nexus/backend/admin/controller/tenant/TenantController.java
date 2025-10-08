@@ -174,4 +174,17 @@ public class TenantController {
         List<DataSourceConfigDO> list = dataSourceConfigService.getList();
         return Result.success(list);
     }
+
+    /**
+     * 分配菜单权限
+     *
+     * @param reqVO 分配请求
+     * @return 成功结果
+     */
+    @PostMapping("/assign-menu")
+    @PreAuthorize("hasAuthority('system:tenant:update')")
+    public Result<Void> assignMenu(@Valid @RequestBody TenantAssignMenuReqVO reqVO) {
+        tenantService.assignMenu(reqVO.getTenantId(), reqVO.getMenuIds());
+        return Result.success();
+    }
 }

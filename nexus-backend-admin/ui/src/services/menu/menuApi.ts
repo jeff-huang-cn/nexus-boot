@@ -82,7 +82,7 @@ export const menuApi = {
   },
 
   /**
-   * 获取菜单树列表（用于前端导航，过滤掉按钮）
+   * 获取菜单树列表（包含所有类型：目录、菜单、按钮）
    */
   getMenuTree: () => {
     return request.get<Menu[]>(`${API_BASE}/tree`);

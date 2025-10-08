@@ -81,5 +81,12 @@ public interface TenantService {
      */
     List<TenantDO> getList(TenantPageReqVO pageReqVO);
 
-}
+    /**
+     * 分配菜单权限
+     *
+     * @param tenantId 租户ID
+     * @param menuIds  菜单ID列表
+     */
+    void assignMenu(Long tenantId, List<Long> menuIds);
 
+}
