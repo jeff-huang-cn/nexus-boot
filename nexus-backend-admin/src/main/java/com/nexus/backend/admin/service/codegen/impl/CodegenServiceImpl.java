@@ -179,6 +179,7 @@ public class CodegenServiceImpl implements CodegenService {
         Map<String, Object> context = TemplateContext.build(table, columns);
 
         try {
+            String moduleName = table.getModuleName();
             String businessName = table.getBusinessName();
             String className = table.getClassName();
             Integer templateType = table.getTemplateType();
@@ -261,14 +262,16 @@ public class CodegenServiceImpl implements CodegenService {
             if (table.getFrontType() == 30) {
                 String reactTemplateDir = getReactTemplateDir(templateType);
 
-                // 页面文件 (业务组件直接放在页面目录下)
-                result.put("frontend/pages/" + businessName + "/" + className + "List.tsx",
+                // 页面文件 (按模块组织：pages/模块名/业务名/)
+                // List 页面命名为 index.tsx（作为路由入口）
+                result.put("frontend/pages/" + moduleName + "/" + businessName + "/index.tsx",
                         velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/List.tsx.vm", context));
-                result.put("frontend/pages/" + businessName + "/" + className + "Form.tsx",
+                // Form 组件命名为 Form.tsx
+                result.put("frontend/pages/" + moduleName + "/" + businessName + "/Form.tsx",
                         velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/Form.tsx.vm", context));
 
-                // API 服务 (以 Api 后缀命名，类型定义已合并在其中)
-                result.put("frontend/services/" + businessName + "/" + businessName + "Api.ts",
+                // API 服务 (按模块组织：services/模块名/)
+                result.put("frontend/services/" + moduleName + "/" + businessName + "Api.ts",
                         velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/api.ts.vm", context));
             }
 

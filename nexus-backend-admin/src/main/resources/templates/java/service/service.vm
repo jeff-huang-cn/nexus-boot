@@ -6,7 +6,7 @@ import ${packageName}.dal.dataobject.${businessName}.${className}DO;
 import ${packageName}.dal.dataobject.${businessName}.${subTable.className}DO;
 #end
 #if($templateType != 2)
-import com.nexus.framework.common.result.PageResult;
+import com.nexus.framework.web.result.PageResult;
 #end
 import jakarta.validation.Valid;
 import java.util.List;

@@ -9,7 +9,7 @@ import com.nexus.framework.mybatis.entity.BasePageQuery;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 
-import static com.nexus.framework.common.util.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
+import static com.nexus.framework.utils.date.DateUtils.DATETIME_PATTERN;
 
 /**
 #if($templateType == 2)
@@ -42,11 +42,11 @@ public class ${className}${reqType}ReqVO {
     private String ${column.javaField};
 #elseif ($column.listOperationCondition == "BETWEEN")
     @Schema(description = "${column.columnComment} - 开始时间", example = "2023-01-01 00:00:00")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
+    @DateTimeFormat(pattern = DATETIME_PATTERN)
     private LocalDateTime ${column.javaField}Start;
 
     @Schema(description = "${column.columnComment} - 结束时间", example = "2023-01-31 23:59:59")
-    @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
+    @DateTimeFormat(pattern = DATETIME_PATTERN)
     private LocalDateTime ${column.javaField}End;
 #else
     @Schema(description = "${column.columnComment}", example = "${column.example}")

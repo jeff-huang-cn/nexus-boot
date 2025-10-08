@@ -10,7 +10,8 @@ import {
   Radio,
   DatePicker,
 } from 'antd';
-import { ${classNameFirstLower}Api, type ${className} } from '../../../services/${businessName}/${businessName}Api';
+import dayjs from 'dayjs';
+import { ${classNameFirstLower}Api, type ${className} } from '../../../services/${moduleName}/${businessName}Api';
 
 interface ${className}FormProps {
   initialValues?: ${className} | null;
@@ -28,7 +29,16 @@ const ${className}Form: React.FC<${className}FormProps> = ({
 
   useEffect(() => {
     if (initialValues) {
-      form.setFieldsValue(initialValues);
+      // 转换日期字符串为 dayjs 对象
+      const formValues = { ...initialValues };
+#foreach($column in $columns)
+#if(${column.createOperation} && !${column.primaryKey} && ${column.htmlType} == "datetime")
+      if (formValues.${column.javaField}) {
+        formValues.${column.javaField} = dayjs(formValues.${column.javaField});
+      }
+#end
+#end
+      form.setFieldsValue(formValues);
     } else {
       form.resetFields();
     }
@@ -37,13 +47,23 @@ const ${className}Form: React.FC<${className}FormProps> = ({
   const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
+      // 转换 dayjs 对象为字符串
+      const submitValues = { ...values };
+#foreach($column in $columns)
+#if(${column.createOperation} && !${column.primaryKey} && ${column.htmlType} == "datetime")
+      if (submitValues.${column.javaField}) {
+        submitValues.${column.javaField} = submitValues.${column.javaField}.format('YYYY-MM-DDTHH:mm:ss');
+      }
+#end
+#end
+
       if (initialValues?.id) {
         // 编辑
-        await ${classNameFirstLower}Api.update(initialValues.id, values);
+        await ${classNameFirstLower}Api.update(initialValues.id, submitValues);
         message.success('修改成功');
       } else {
         // 新增
-        await ${classNameFirstLower}Api.create(values);
+        await ${classNameFirstLower}Api.create(submitValues);
         message.success('创建成功');
       }
       onSuccess?.();

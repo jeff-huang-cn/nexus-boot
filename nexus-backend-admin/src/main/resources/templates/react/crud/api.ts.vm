@@ -53,49 +53,49 @@ export const ${classNameFirstLower}Api = {
    * 分页查询${classComment}列表
    */
   getPage: (params: ${className}Query): Promise<PageResult<${className}>> => {
-    return request.get('/${businessName}/page', { params });
+    return request.get('/${moduleName}/${businessName}/page', { params });
   },
 
   /**
    * 根据ID查询${classComment}
    */
   getById: (id: number): Promise<${className}> => {
-    return request.get(`/${businessName}/${id}`);
+    return request.get(`/${moduleName}/${businessName}/${id}`);
   },
 
   /**
    * 创建${classComment}
    */
   create: (data: ${className}Form): Promise<number> => {
-    return request.post('/${businessName}', data);
+    return request.post('/${moduleName}/${businessName}', data);
   },
 
   /**
    * 更新${classComment}
    */
   update: (id: number, data: ${className}Form): Promise<void> => {
-    return request.put(`/${businessName}/${id}`, data);
+    return request.put(`/${moduleName}/${businessName}/${id}`, data);
   },
 
   /**
    * 删除${classComment}
    */
   delete: (id: number): Promise<void> => {
-    return request.delete(`/${businessName}/${id}`);
+    return request.delete(`/${moduleName}/${businessName}/${id}`);
   },
 
   /**
    * 批量删除${classComment}
    */
   deleteBatch: (ids: number[]): Promise<void> => {
-    return request.delete(`/${businessName}/batch`, { data: ids });
+    return request.delete(`/${moduleName}/${businessName}/batch`, { data: ids });
   },
 
   /**
    * 导出${classComment}
    */
   exportData: (params: ${className}Query): Promise<Blob> => {
-    return request.get('/${businessName}/export', { 
+    return request.get('/${moduleName}/${businessName}/export', { 
       params, 
       responseType: 'blob' 
     });

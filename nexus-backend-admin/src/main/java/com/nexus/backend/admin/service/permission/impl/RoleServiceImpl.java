@@ -63,6 +63,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @DSTransactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         // 校验角色是否存在
         RoleDO role = validateExists(id);
@@ -130,6 +131,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @DSTransactional(rollbackFor = Exception.class)
     public void batchDelete(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return;
@@ -155,7 +157,7 @@ public class RoleServiceImpl implements RoleService {
         // 分批删除，每批1000个ID，避免SQL过长
         List<List<Long>> partitions = com.google.common.collect.Lists.partition(ids, 1000);
         for (List<Long> partition : partitions) {
-            roleMapper.deleteBatchIds(partition); // 使用 MyBatis-Plus 自带方法
+            roleMapper.deleteByIds(partition); // 使用 MyBatis-Plus 自带方法
 
             // 删除角色菜单关联
             roleMenuMapper.delete(new LambdaQueryWrapper<RoleMenuDO>()

@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
         // 分批删除，每批1000个ID，避免SQL过长
         List<List<Long>> partitions = Lists.partition(ids, 1000);
         for (List<Long> partition : partitions) {
-            userMapper.deleteBatchIds(partition);
+            userMapper.deleteByIds(partition);
         }
     }
 

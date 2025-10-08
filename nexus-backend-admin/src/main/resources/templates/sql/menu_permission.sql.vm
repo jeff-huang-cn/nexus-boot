@@ -1,22 +1,43 @@
 -- ${classComment}模块菜单权限SQL
 -- 生成时间: ${datetime}
 
+-- 创建父菜单（如果未指定父菜单，则创建一级菜单）
+#if($table.parentMenuId)
+-- 使用指定的父菜单
+SET @parent_menu_id = ${table.parentMenuId};
+
+-- 获取该父菜单下类型为菜单(type=2)的最大sort值
+SELECT IFNULL(MAX(sort), 0) + 1 INTO @menu_sort 
+FROM system_menu 
+WHERE parent_id = @parent_menu_id AND type = 2 AND deleted = 0;
+#else
+-- 获取顶级菜单(parent_id=0, type=1)的最大sort值
+SELECT IFNULL(MAX(sort), 0) + 1 INTO @parent_sort 
+FROM system_menu 
+WHERE parent_id = 0 AND type = 1 AND deleted = 0;
+
+-- 创建一级菜单
 INSERT INTO system_menu 
-    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, create_time, updater, update_time, deleted) 
+    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, date_created, updater, last_updated, deleted) 
 VALUES 
-    (0, '${classComment}管理', '', 1, 100, '/${businessName}', 'list', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0);
+    (0, '${classComment}管理', '', 1, @parent_sort, '/${businessName}', 'list', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0);
 
 SET @parent_menu_id = LAST_INSERT_ID();
 
+-- 新创建的父菜单下，菜单sort从1开始
+SET @menu_sort = 1;
+#end
+
+-- 创建功能菜单
 INSERT INTO system_menu 
-    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, create_time, updater, update_time, deleted) 
+    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, date_created, updater, last_updated, deleted) 
 VALUES 
-    (@parent_menu_id, '${classComment}', '${moduleName}:${businessName}:query', 2, 1, '/${businessName}', '', '${moduleName}/${businessName}/index', '${className}', 1, 1, 1, 0, 'admin', NOW(), 'admin', NOW(), 0);
+    (@parent_menu_id, '${classComment}', '${moduleName}:${businessName}:query', 2, @menu_sort, '/${businessName}', '', '${moduleName}/${businessName}/index', '${className}', 1, 1, 1, 0, 'admin', NOW(), 'admin', NOW(), 0);
 
 SET @menu_id = LAST_INSERT_ID();
 
 INSERT INTO system_menu 
-    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, create_time, updater, update_time, deleted) 
+    (parent_id, name, permission, type, sort, path, icon, component, component_name, status, visible, keep_alive, always_show, creator, date_created, updater, last_updated, deleted) 
 VALUES 
     (@menu_id, '查询${classComment}', '${moduleName}:${businessName}:query', 3, 1, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
     (@menu_id, '新增${classComment}', '${moduleName}:${businessName}:create', 3, 2, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),

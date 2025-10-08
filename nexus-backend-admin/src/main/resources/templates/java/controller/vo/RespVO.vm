@@ -28,23 +28,32 @@ public class ${className}RespVO {
     @Schema(description = "ID", example = "1")
     @ExcelIgnore
     private Long id;
-    
-    @Schema(description = "创建时间")
-    @ExcelIgnore
-    private String dateCreated;
-    
-    @Schema(description = "更新时间")
-    @ExcelIgnore
-    private String lastUpdated;
 
 #foreach ($column in $columns)
-#if(!$column.primaryKey && $column.listOperationResult)
+#if(!$column.primaryKey && $column.listOperationResult && $column.javaField != "creator" && $column.javaField != "dateCreated" && $column.javaField != "updater" && $column.javaField != "lastUpdated")
     @Schema(description = "${column.columnComment}", example = "${column.example}")
     @ExcelProperty("${column.columnComment}")
     private ${column.javaType} ${column.javaField};
 
 #end
 #end
+    
+    @Schema(description = "创建人")
+    @ExcelIgnore
+    private String creator;
+    
+    @Schema(description = "创建时间")
+    @ExcelIgnore
+    private LocalDateTime dateCreated;
+    
+    @Schema(description = "更新人")
+    @ExcelIgnore
+    private String updater;
+    
+    @Schema(description = "更新时间")
+    @ExcelIgnore
+    private LocalDateTime lastUpdated;
+
 #if($templateType == 3)
     @Schema(description = "${subTable.classComment}列表")
     private List<${subTable.className}DO> ${subTable.classNameFirstLower}s;

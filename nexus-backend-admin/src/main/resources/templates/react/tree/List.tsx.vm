@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, message, Card } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import ${className}Form from './${className}Form';
-import { ${classNameFirstLower}Api, type ${className} } from '@/services/${businessName}/${businessName}Api';
+import ${className}Form from './Form';
+import { ${classNameFirstLower}Api, type ${className} } from '@/services/${moduleName}/${businessName}Api';
 
 /**
  * ${classComment}管理（树表）

@@ -33,6 +33,7 @@ export interface CodegenTable {
   modulePackageName: string;
   businessPackageName: string;
   classPrefix: string;
+  parentMenuId?: number;
   datasourceConfigId: number;
   dateCreated?: string;
   lastUpdated?: string;
@@ -226,7 +227,7 @@ export const codegenApi = {
   generateCode: (id: number): Promise<Blob> => {
     return request.post(`/codegen/generate/${id}`, {}, {
       responseType: 'blob',
-    }).then(response => response.data);
+    });
   },
 
   /**

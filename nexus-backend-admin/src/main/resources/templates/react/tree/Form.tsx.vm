@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, TreeSelect, message } from 'antd';
-import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData } from '@/services/${businessName}/${businessName}Api';
+import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData } from '@/services/${moduleName}/${businessName}Api';
 
 interface Props {
   visible: boolean;

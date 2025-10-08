@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 #if($templateType != 2)
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nexus.framework.common.result.PageResult;
+import com.nexus.framework.web.result.PageResult;
 #end
 #if($templateType == 3)
 import com.baomidou.dynamic.datasource.annotation.DSTransactional;
@@ -187,7 +187,7 @@ public class ${className}ServiceImpl implements ${className}Service {
         // 分批删除，每批1000个ID，避免锁表时间过长
         List<List<Long>> partitions = Lists.partition(ids, 1000);
         for (List<Long> partition : partitions) {
-            ${classNameFirstLower}Mapper.deleteBatchByIds(partition);
+            ${classNameFirstLower}Mapper.deleteByIds(partition);
         }
 
 #if($templateType == 3)

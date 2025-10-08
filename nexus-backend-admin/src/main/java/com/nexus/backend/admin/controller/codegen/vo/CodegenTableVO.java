@@ -96,6 +96,11 @@ public class CodegenTableVO {
     private String classPrefix;
 
     /**
+     * 父菜单编号
+     */
+    private Long parentMenuId;
+
+    /**
      * 数据源配置编号
      */
     private Long datasourceConfigId;

@@ -110,6 +110,12 @@ public class CodegenTableDO extends BaseUpdateDO {
     private String classPrefix;
 
     /**
+     * 父菜单编号
+     */
+    @TableField("parent_menu_id")
+    private Long parentMenuId;
+
+    /**
      * 主表编号（主子表专用）
      */
     @TableField("master_table_id")

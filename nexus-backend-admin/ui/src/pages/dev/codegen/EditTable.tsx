@@ -20,6 +20,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate, useParams } from 'react-router-dom';
 import { codegenApi, CodegenTable, CodegenColumn } from '../../../services/codegen/codegenApi';
+import { menuApi, type Menu } from '../../../services/menu/menuApi';
 import { globalMessage } from '../../../utils/globalMessage';
 
 const { Option } = Select;
@@ -36,6 +37,7 @@ const EditTable: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [tableData, setTableData] = useState<CodegenTable | null>(null);
   const [columns, setColumns] = useState<CodegenColumn[]>([]);
+  const [menuList, setMenuList] = useState<Menu[]>([]);
 
   // 字段表格列配置
   const columnTableColumns: ColumnsType<CodegenColumn> = [
@@ -253,11 +255,40 @@ const EditTable: React.FC = () => {
     setColumns(newColumns);
   };
 
+  // 加载菜单列表（用于父菜单选择）
+  const loadMenuList = useCallback(async () => {
+    try {
+      const menus = await menuApi.getFullMenuTree();
+      setMenuList(menus || []);
+    } catch (error) {
+      console.error('加载菜单列表失败:', error);
+    }
+  }, []);
+
+  // 扁平化菜单树（用于Select选项）
+  const flattenMenuTree = (menus: Menu[], level = 0): Array<{ value: number; label: string; level: number }> => {
+    const result: Array<{ value: number; label: string; level: number }> = [];
+    menus.forEach(menu => {
+      // 只显示目录和菜单，不显示按钮
+      if (menu.type && menu.type !== 3) {
+        result.push({
+          value: menu.id!,
+          label: menu.name || '',
+          level
+        });
+        if (menu.children && menu.children.length > 0) {
+          result.push(...flattenMenuTree(menu.children, level + 1));
+        }
+      }
+    });
+    return result;
+  };
 
   // 初始化加载
   useEffect(() => {
     loadTableDetail();
-  }, [params.id, loadTableDetail]);
+    loadMenuList();
+  }, [params.id, loadTableDetail, loadMenuList]);
 
   // 不再需要useEffect来设置表单值，initialValues会自动处理
 
@@ -364,11 +395,12 @@ const EditTable: React.FC = () => {
                 author: tableData.author,
                 frontType: tableData.frontType || 30,
                 templateType: tableData.templateType || 1,
+                parentMenuId: tableData.parentMenuId,
                 remark: tableData.remark
               }}
             >
             <Row gutter={16}>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="表名"
                   name="tableName"
@@ -376,7 +408,7 @@ const EditTable: React.FC = () => {
                   <Input disabled />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="表描述"
                   name="tableComment"
@@ -385,7 +417,7 @@ const EditTable: React.FC = () => {
                   <Input placeholder="请输入表描述" />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="实体类名"
                   name="className"
@@ -394,10 +426,7 @@ const EditTable: React.FC = () => {
                   <Input placeholder="自动生成，如：UserInfo" />
                 </Form.Item>
               </Col>
-            </Row>
-            
-            <Row gutter={16}>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="模块名"
                   name="moduleName"
@@ -406,7 +435,10 @@ const EditTable: React.FC = () => {
                   <Input placeholder="自动生成，如：user" />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+            </Row>
+            
+            <Row gutter={16}>
+              <Col span={6}>
                 <Form.Item
                   label="业务名"
                   name="businessName"
@@ -415,7 +447,7 @@ const EditTable: React.FC = () => {
                   <Input placeholder="自动生成，如：userInfo" />
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="包名"
                   name="packageName"
@@ -424,10 +456,7 @@ const EditTable: React.FC = () => {
                   <Input placeholder="自动生成，如：com.beckend.admin.modules.user" />
                 </Form.Item>
               </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="前端类型"
                   name="frontType"
@@ -438,7 +467,7 @@ const EditTable: React.FC = () => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="模板类型"
                   name="templateType"
@@ -451,7 +480,10 @@ const EditTable: React.FC = () => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={8}>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={6}>
                 <Form.Item
                   label="作者"
                   name="author"
@@ -459,17 +491,36 @@ const EditTable: React.FC = () => {
                   <Input placeholder="默认：beckend" />
                 </Form.Item>
               </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={24}>
+              <Col span={6}>
+                <Form.Item
+                  label="上级菜单"
+                  name="parentMenuId"
+                  tooltip="选择菜单将放在哪个菜单下，不选则作为一级菜单"
+                >
+                  <Select 
+                    placeholder="请选择上级菜单（可不选）"
+                    allowClear
+                    showSearch
+                    filterOption={(input, option) =>
+                      String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                  >
+                    {flattenMenuTree(menuList).map(menu => (
+                      <Option key={menu.value} value={menu.value} label={menu.label}>
+                        {'　'.repeat(menu.level)}{menu.label}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
                 <Form.Item
                   label="备注"
                   name="remark"
                 >
                   <TextArea 
                     placeholder="请输入备注"
-                    rows={3}
+                    rows={1}
                   />
                 </Form.Item>
               </Col>

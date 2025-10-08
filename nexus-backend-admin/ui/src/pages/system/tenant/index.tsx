@@ -17,36 +17,68 @@ import {
   DownloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { ${classNameFirstLower}Api, type ${className} } from '../../../services/${moduleName}/${businessName}Api';
-import ${className}Form from './Form';
-import { globalMessage } from '../../../../utils/globalMessage';
+import { tenantApi, type Tenant } from '../../../services/tenant/tenantApi';
+import TenantForm from './TenantForm';
+import { globalMessage } from '../../../utils/globalMessage';
 
-const ${className}List: React.FC = () => {
+const Index: React.FC = () => {
   const [form] = Form.useForm();
-  const [data, setData] = useState<${className}[]>([]);
+  const [data, setData] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
   const [formVisible, setFormVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<${className} | null>(null);
-#if($templateType == 1 || $templateType == 3)
+  const [editingRecord, setEditingRecord] = useState<Tenant | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-#end
 
-  const columns: ColumnsType<${className}> = [
-#foreach($column in $columns)
-#if(${column.listOperationResult})
+  const columns: ColumnsType<Tenant> = [
     {
-      title: '${column.columnComment}',
-      dataIndex: '${column.javaField}',
-      key: '${column.javaField}',
-#if(${column.javaField} == "dateCreated" || ${column.javaField} == "lastUpdated")
-      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
-#end
+      title: '租户ID',
+      dataIndex: 'id',
+      key: 'id',
     },
-#end
-#end
+    {
+      title: '租户名称',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: '租户编码',
+      dataIndex: 'code',
+      key: 'code',
+    },
+    {
+      title: '数据源ID',
+      dataIndex: 'datasourceId',
+      key: 'datasourceId',
+    },
+    {
+      title: '用户数量',
+      dataIndex: 'maxUsers',
+      key: 'maxUsers',
+    },
+    {
+      title: '过期时间',
+      dataIndex: 'expireTime',
+      key: 'expireTime',
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+    },
+    {
+      title: '创建人',
+      dataIndex: 'creator',
+      key: 'creator',
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'dateCreated',
+      key: 'dateCreated',
+      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
+    },
     {
       title: '操作',
       key: 'action',
@@ -86,7 +118,7 @@ const ${className}List: React.FC = () => {
         ...params,
       };
       
-      const result = await ${classNameFirstLower}Api.getPage(searchParams);
+      const result = await tenantApi.getPage(searchParams);
       setData(result.list);
       setTotal(result.total);
       setCurrent(searchParams.pageNum);
@@ -122,7 +154,7 @@ const ${className}List: React.FC = () => {
   };
 
   // 编辑
-  const handleEdit = (record: ${className}) => {
+  const handleEdit = (record: Tenant) => {
     setEditingRecord(record);
     setFormVisible(true);
   };
@@ -130,14 +162,13 @@ const ${className}List: React.FC = () => {
   // 删除
   const handleDelete = async (id: number) => {
     try {
-      await ${classNameFirstLower}Api.delete(id);
+      await tenantApi.delete(id);
       globalMessage.success('删除成功');
       loadData();
     } catch (error) {
       globalMessage.error('删除失败');
     }
   };
-#if($templateType == 1 || $templateType == 3)
 
   // 批量删除
   const handleBatchDelete = async () => {
@@ -147,8 +178,8 @@ const ${className}List: React.FC = () => {
     }
     
     try {
-      await ${classNameFirstLower}Api.deleteBatch(selectedRowKeys as number[]);
-      globalMessage.success(`成功删除 \${selectedRowKeys.length} 条数据`);
+      await tenantApi.deleteBatch(selectedRowKeys as number[]);
+      globalMessage.success(`成功删除 ${selectedRowKeys.length} 条数据`);
       setSelectedRowKeys([]);
       loadData();
     } catch (error) {
@@ -156,7 +187,6 @@ const ${className}List: React.FC = () => {
     }
   };
 
-#if($templateType == 1)
 
   // 导出
   const handleExport = async () => {
@@ -165,11 +195,11 @@ const ${className}List: React.FC = () => {
         ...form.getFieldsValue(),
       };
       
-      const blob = await ${classNameFirstLower}Api.exportData(searchParams);
+      const blob = await tenantApi.exportData(searchParams);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${classComment}_\${new Date().getTime()}.xlsx`;
+      link.download = `租户管理表_${new Date().getTime()}.xlsx`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -180,7 +210,6 @@ const ${className}List: React.FC = () => {
       globalMessage.error('导出失败');
     }
   };
-#end
 
   // 行选择配置
   const rowSelection = {
@@ -189,7 +218,6 @@ const ${className}List: React.FC = () => {
       setSelectedRowKeys(newSelectedRowKeys);
     },
   };
-#end
 
   // 表单保存成功
   const handleFormSuccess = () => {
@@ -207,16 +235,18 @@ const ${className}List: React.FC = () => {
           onFinish={handleSearch}
           style={{ marginBottom: 16 }}
         >
-#foreach($column in $columns)
-#if(${column.listOperation})
           <Form.Item
-            label="${column.columnComment}"
-            name="${column.javaField}"
+            label="租户名称"
+            name="name"
           >
-            <Input placeholder="请输入${column.columnComment}" style={{ width: 200 }} />
+            <Input placeholder="请输入租户名称" style={{ width: 200 }} />
           </Form.Item>
-#end
-#end
+          <Form.Item
+            label="租户编码"
+            name="code"
+          >
+            <Input placeholder="请输入租户编码（" style={{ width: 200 }} />
+          </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
@@ -234,7 +264,6 @@ const ${className}List: React.FC = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               新增
             </Button>
-#if($templateType == 1 || $templateType == 3)
             <Popconfirm
               title="确定要删除选中的数据吗？"
               onConfirm={handleBatchDelete}
@@ -248,8 +277,6 @@ const ${className}List: React.FC = () => {
                 批量删除
               </Button>
             </Popconfirm>
-#end
-#if($templateType == 1)
             <Button 
               icon={<DownloadOutlined />} 
               onClick={handleExport}
@@ -260,7 +287,6 @@ const ${className}List: React.FC = () => {
             >
               导出
             </Button>
-#end
           </Space>
         </div>
 
@@ -269,16 +295,14 @@ const ${className}List: React.FC = () => {
           dataSource={data}
           loading={loading}
           rowKey="id"
-#if($templateType == 1 || $templateType == 3)
           rowSelection={rowSelection}
-#end
           pagination={{
             current,
             pageSize: size,
             total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 \${total} 条记录`,
+            showTotal: (total) => `共 ${total} 条记录`,
             onChange: (page, pageSize) => {
               setCurrent(page);
               setSize(pageSize || 10);
@@ -288,7 +312,7 @@ const ${className}List: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑${classComment}' : '新增${classComment}'}
+        title={editingRecord ? '编辑租户管理表' : '新增租户管理表'}
         open={formVisible}
         onCancel={() => {
           setFormVisible(false);
@@ -303,7 +327,7 @@ const ${className}List: React.FC = () => {
           paddingRight: '8px' 
         }}
       >
-        <${className}Form
+        <TenantForm
           initialValues={editingRecord}
           onSuccess={handleFormSuccess}
           onCancel={() => {
@@ -316,4 +340,4 @@ const ${className}List: React.FC = () => {
   );
 };
 
-export default ${className}List;
+export default Index;
