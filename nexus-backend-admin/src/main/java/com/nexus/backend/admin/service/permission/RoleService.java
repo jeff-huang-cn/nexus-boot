@@ -1,9 +1,13 @@
 package com.nexus.backend.admin.service.permission;
 
 import com.nexus.backend.admin.controller.permission.vo.role.RoleAssignMenuReqVO;
+import com.nexus.backend.admin.controller.permission.vo.role.RoleRespVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleSaveReqVO;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -34,6 +38,27 @@ public interface RoleService {
      * @param id 角色ID
      */
     void delete(Long id);
+
+    /**
+     * 批量创建角色
+     *
+     * @param createReqVOs 创建信息列表
+     */
+    void batchCreate(List<RoleSaveReqVO> createReqVOs);
+
+    /**
+     * 批量更新角色
+     *
+     * @param updateReqVOs 更新信息列表
+     */
+    void batchUpdate(List<RoleSaveReqVO> updateReqVOs);
+
+    /**
+     * 批量删除角色
+     *
+     * @param ids 角色ID列表
+     */
+    void batchDelete(List<Long> ids);
 
     /**
      * 获取角色详情

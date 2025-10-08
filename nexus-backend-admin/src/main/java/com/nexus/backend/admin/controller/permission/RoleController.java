@@ -1,19 +1,22 @@
 package com.nexus.backend.admin.controller.permission;
 
-import cn.hutool.core.bean.BeanUtil;
-import com.nexus.framework.web.result.Result;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleAssignMenuReqVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleRespVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleSaveReqVO;
+import com.nexus.backend.admin.convert.RoleConvert;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 import com.nexus.backend.admin.service.permission.RoleService;
+import com.nexus.framework.excel.ExcelUtils;
+import com.nexus.framework.web.result.Result;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 角色管理接口
@@ -65,7 +68,7 @@ public class RoleController {
     @PreAuthorize("hasAuthority('system:role:query')")
     public Result<RoleRespVO> getById(@PathVariable Long id) {
         RoleDO role = roleService.getById(id);
-        RoleRespVO vo = BeanUtil.copyProperties(role, RoleRespVO.class);
+        RoleRespVO vo = RoleConvert.INSTANCE.toRespVO(role);
         return Result.success(vo);
     }
 
@@ -76,9 +79,7 @@ public class RoleController {
     @PreAuthorize("hasAuthority('system:role:query')")
     public Result<List<RoleRespVO>> getList() {
         List<RoleDO> roleList = roleService.getList();
-        List<RoleRespVO> voList = roleList.stream()
-                .map(role -> BeanUtil.copyProperties(role, RoleRespVO.class))
-                .collect(Collectors.toList());
+        List<RoleRespVO> voList = RoleConvert.INSTANCE.toRespVOList(roleList);
         return Result.success(voList);
     }
 
@@ -90,6 +91,32 @@ public class RoleController {
     public Result<Void> assignMenu(@Valid @RequestBody RoleAssignMenuReqVO reqVO) {
         roleService.assignMenu(reqVO);
         return Result.success();
+    }
+
+    /**
+     * 批量删除角色
+     */
+    @DeleteMapping("/batch")
+    @PreAuthorize("hasAuthority('system:role:delete')")
+    public Result<Void> deleteBatch(@RequestBody List<Long> ids) {
+        roleService.batchDelete(ids);
+        return Result.success();
+    }
+
+    /**
+     * 导出角色 Excel
+     */
+    @GetMapping("/export")
+    @PreAuthorize("hasAuthority('system:role:export')")
+    public void export(HttpServletResponse response) throws IOException {
+        // 查询数据
+        List<RoleDO> list = roleService.getList();
+
+        // 使用 MapStruct 转换为 VO
+        List<RoleRespVO> voList = RoleConvert.INSTANCE.toRespVOList(list);
+
+        // 使用 ExcelUtils 导出
+        ExcelUtils.export(response, voList, RoleRespVO.class, "角色数据", "角色数据");
     }
 
 }

@@ -1,5 +1,6 @@
 package ${packageName}.controller.${businessName}.vo;
 
+import com.alibaba.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 #if($templateType == 3)
 import jakarta.validation.Valid;
@@ -8,9 +9,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 #if($hasLocalDateTime)
 import java.time.LocalDateTime;
 #end
@@ -29,9 +27,7 @@ import java.util.List;
  */
 @Schema(description = "${classComment} 新增/修改 Request VO")
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class ${className}SaveReqVO extends BaseSaveReqVO {
+public class ${className}SaveReqVO {
 
     @Schema(description = "ID", example = "1")
     private Long id;
@@ -39,6 +35,7 @@ public class ${className}SaveReqVO extends BaseSaveReqVO {
 #foreach ($column in $columns)
 #if(!$column.primaryKey && ($column.createOperation || $column.updateOperation))
     @Schema(description = "${column.columnComment}"#if(!$column.nullable), requiredMode = Schema.RequiredMode.REQUIRED#end, example = "${column.example}")
+    @ExcelProperty("${column.columnComment}")
 #if(!$column.nullable)
 #if($column.javaType == "String")
     @NotBlank(message = "${column.columnComment}不能为空")

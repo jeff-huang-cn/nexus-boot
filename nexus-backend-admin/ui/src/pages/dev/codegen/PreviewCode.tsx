@@ -3,7 +3,6 @@ import {
   Card,
   Button,
   Space,
-  message,
   Tabs,
   Typography,
   Alert,
@@ -23,6 +22,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { codegenApi } from '../../../services/codegen/codegenApi';
+import { globalMessage } from '../../../utils/globalMessage';
 
 const { TabPane } = Tabs;
 const { Text } = Typography;
@@ -290,9 +290,9 @@ const PreviewCode: React.FC = () => {
       // 使用一个简单的函数引用，避免依赖问题
       const copyHandler = (code: string, fileName: string) => {
         navigator.clipboard.writeText(code).then(() => {
-          message.success(`已复制 ${fileName} 的代码`);
+          globalMessage.success(`已复制 ${fileName} 的代码`);
         }).catch(() => {
-          message.error('复制失败');
+          globalMessage.error('复制失败');
         });
       };
 
@@ -404,7 +404,7 @@ const PreviewCode: React.FC = () => {
         preloadTimeoutRef.current = null;
       }
     } catch (error) {
-      message.error('加载代码预览失败');
+      globalMessage.error('加载代码预览失败');
       console.error('加载代码预览失败:', error);
     } finally {
       setLoading(false);
@@ -456,9 +456,9 @@ const PreviewCode: React.FC = () => {
   const handleCopy = useCallback(async (code: string, fileName: string) => {
     try {
       await navigator.clipboard.writeText(code);
-      message.success(`已复制 ${fileName} 的代码`);
+      globalMessage.success(`已复制 ${fileName} 的代码`);
     } catch (error) {
-      message.error('复制失败');
+      globalMessage.error('复制失败');
     }
   }, []);
 
@@ -480,9 +480,9 @@ const PreviewCode: React.FC = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      message.success('代码下载成功');
+      globalMessage.success('代码下载成功');
     } catch (error) {
-      message.error('代码下载失败');
+      globalMessage.error('代码下载失败');
       console.error('代码下载失败:', error);
     }
   };

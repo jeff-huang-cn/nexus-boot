@@ -21,9 +21,8 @@ VALUES
     (@menu_id, '查询${classComment}', '${moduleName}:${businessName}:query', 3, 1, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
     (@menu_id, '新增${classComment}', '${moduleName}:${businessName}:create', 3, 2, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
     (@menu_id, '修改${classComment}', '${moduleName}:${businessName}:update', 3, 3, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
-    (@menu_id, '删除${classComment}', '${moduleName}:${businessName}:delete', 3, 4, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
-    (@menu_id, '导入${classComment}', '${moduleName}:${businessName}:import', 3, 5, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0),
-    (@menu_id, '导出${classComment}', '${moduleName}:${businessName}:export', 3, 6, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0);
+    (@menu_id, '删除${classComment}', '${moduleName}:${businessName}:delete', 3, 4, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0)#if($templateType == 1),
+    (@menu_id, '导出${classComment}', '${moduleName}:${businessName}:export', 3, 5, '', '', '', '', 1, 1, 0, 0, 'admin', NOW(), 'admin', NOW(), 0)#end;
 
 INSERT INTO system_role_menu (role_id, menu_id)
 SELECT 1, id FROM system_menu WHERE deleted = 0 AND permission LIKE '${moduleName}:${businessName}:%';

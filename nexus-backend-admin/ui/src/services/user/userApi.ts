@@ -129,7 +129,26 @@ export const userApi = {
    * 批量删除用户信息表
    */
   deleteBatch: (ids: number[]): Promise<void> => {
-    return request.delete(`${API_BASE}/delete-batch`, { data: { ids } });
+    return request.delete(`${API_BASE}/batch`, { data: ids });
+  },
+
+  /**
+   * 导出用户
+   */
+  exportData: (params: UserQuery): Promise<Blob> => {
+    return request.get(`${API_BASE}/export`, { 
+      params, 
+      responseType: 'blob' 
+    });
+  },
+
+  /**
+   * 导入用户
+   */
+  importData: (formData: FormData): Promise<void> => {
+    return request.post(`${API_BASE}/import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
   },
 };
 

@@ -43,11 +43,25 @@ public interface ${className}Service {
 #if($templateType == 1 || $templateType == 3)
 
     /**
+     * 批量创建${classComment}
+     *
+     * @param createReqVOs 创建信息列表
+     */
+    void batchCreate(List<${className}SaveReqVO> createReqVOs);
+
+    /**
+     * 批量更新${classComment}
+     *
+     * @param updateReqVOs 更新信息列表
+     */
+    void batchUpdate(List<${className}SaveReqVO> updateReqVOs);
+
+    /**
      * 批量删除${classComment}
      *
      * @param ids 编号列表
      */
-    void deleteBatch(List<Long> ids);
+    void batchDelete(List<Long> ids);
 #end
 
     /**
@@ -74,7 +88,11 @@ public interface ${className}Service {
      * @return ${classComment}列表
      */
     List<${className}DO> getList(${className}PageReqVO pageReqVO);
-#elseif($templateType == 2)
+#end
+#if($templateType == 1)
+
+#end
+#if($templateType == 2)
 
     /**
      * 获得${classComment}列表（树形结构）

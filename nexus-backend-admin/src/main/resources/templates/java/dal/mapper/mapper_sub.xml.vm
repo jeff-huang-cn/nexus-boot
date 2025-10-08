@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="${packageName}.dal.mapper.${businessName}.${className}Mapper">
+<mapper namespace="${packageName}.dal.mapper.${businessName}.${subTable.className}Mapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="${packageName}.dal.dataobject.${businessName}.${className}DO">
-#foreach($column in $columns)
+    <resultMap id="BaseResultMap" type="${packageName}.dal.dataobject.${businessName}.${subTable.className}DO">
+#foreach($column in $subColumns)
 #if($column.javaField != "dateCreated" && $column.javaField != "lastUpdated" && $column.javaField != "creator" && $column.javaField != "updater" && $column.javaField != "deleted" && $column.javaField != "tenantId")
         <result column="${column.columnName}" property="${column.javaField}" />
 #end
@@ -13,9 +13,9 @@
 
     <!-- 批量插入 -->
     <insert id="insertBatch" parameterType="java.util.List">
-        INSERT INTO ${tableName} (
+        INSERT INTO ${subTable.tableName} (
 #set($insertColumns = [])
-#foreach($column in $columns)
+#foreach($column in $subColumns)
 #if(!$column.primaryKey)
 #set($added = $insertColumns.add($column))
 #end
@@ -32,29 +32,6 @@
             )
         </foreach>
     </insert>
-
-    <!-- 批量更新 -->
-    <update id="updateBatch" parameterType="java.util.List">
-        <foreach collection="list" item="item" separator=";">
-            UPDATE ${tableName}
-            <set>
-#set($updateColumns = [])
-#foreach($column in $columns)
-#if(!$column.primaryKey)
-#set($added = $updateColumns.add($column))
-#end
-#end
-#foreach($column in $updateColumns)
-                ${column.columnName} = #{item.${column.javaField}}#if($foreach.hasNext),#end
-#end
-            </set>
-#if($hasDeletedColumn)
-            WHERE id = #{item.id} AND deleted = 0
-#else
-            WHERE id = #{item.id}
-#end
-        </foreach>
-    </update>
 
 </mapper>
 

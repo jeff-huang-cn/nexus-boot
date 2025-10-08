@@ -6,7 +6,6 @@ import {
   Select,
   Button,
   Space,
-  message,
   Table,
   Checkbox,
   Row,
@@ -21,6 +20,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate, useParams } from 'react-router-dom';
 import { codegenApi, CodegenTable, CodegenColumn } from '../../../services/codegen/codegenApi';
+import { globalMessage } from '../../../utils/globalMessage';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -239,7 +239,7 @@ const EditTable: React.FC = () => {
       setTableData(detail);
       setColumns(detail.columns || []);
     } catch (error) {
-      message.error('加载表配置失败');
+      globalMessage.error('加载表配置失败');
       console.error('加载表配置失败:', error);
     } finally {
       setLoading(false);
@@ -277,9 +277,9 @@ const EditTable: React.FC = () => {
       };
 
       await codegenApi.updateTableConfig(Number(params.id), updateData);
-      message.success('保存成功');
+      globalMessage.success('保存配置成功');
     } catch (error) {
-      message.error('保存失败');
+      globalMessage.error('保存配置失败');
       console.error('保存失败:', error);
     } finally {
       setSaving(false);
@@ -292,10 +292,10 @@ const EditTable: React.FC = () => {
     
     try {
       await codegenApi.syncTable(Number(params.id));
-      message.success('同步成功');
+      globalMessage.success('同步表结构成功');
       loadTableDetail(); // 重新加载数据
     } catch (error) {
-      message.error('同步失败');
+      globalMessage.error('同步表结构失败');
       console.error('同步失败:', error);
     }
   };

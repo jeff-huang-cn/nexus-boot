@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nexus.backend.admin.dal.mapper.user.UserMapper">
+
+    <!-- 批量插入 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO system_user (
+            username,
+            password,
+            nickname,
+            remark,
+            dept_id,
+            post_ids,
+            email,
+            mobile,
+            sex,
+            avatar,
+            status,
+            login_ip,
+            login_date,
+            creator,
+            date_created,
+            updater,
+            last_updated,
+            tenant_id
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.username},
+                #{item.password},
+                #{item.nickname},
+                #{item.remark},
+                #{item.deptId},
+                #{item.postIds},
+                #{item.email},
+                #{item.mobile},
+                #{item.sex},
+                #{item.avatar},
+                #{item.status},
+                #{item.loginIp},
+                #{item.loginDate},
+                #{item.creator},
+                #{item.dateCreated},
+                #{item.updater},
+                #{item.lastUpdated},
+                #{item.tenantId}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量更新 -->
+    <update id="updateBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE system_user
+            <set>
+                username = #{item.username},
+                password = #{item.password},
+                nickname = #{item.nickname},
+                remark = #{item.remark},
+                dept_id = #{item.deptId},
+                post_ids = #{item.postIds},
+                email = #{item.email},
+                mobile = #{item.mobile},
+                sex = #{item.sex},
+                avatar = #{item.avatar},
+                status = #{item.status},
+                login_ip = #{item.loginIp},
+                login_date = #{item.loginDate},
+                updater = #{item.updater},
+                last_updated = #{item.lastUpdated}
+            </set>
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+</mapper>
+

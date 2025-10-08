@@ -86,9 +86,9 @@ request.interceptors.response.use(
     // 对响应数据做点什么
     const { data } = response;
     
-    // 如果是下载文件的响应，直接返回
+    // 如果是下载文件的响应，直接返回blob数据
     if (response.config.responseType === 'blob') {
-      return response;
+      return response.data;
     }
     
     // 检查业务状态码
@@ -97,10 +97,10 @@ request.interceptors.response.use(
     } else {
       // 业务错误 - 提取错误信息并显示
       const errorMsg = data.message || data.msg || data.error || '请求失败';
-      console.error('❌ 业务错误:', { code: data.code, message: errorMsg, fullData: data });
-      console.log('🔴 准备调用 globalMessage.error (业务错误):', errorMsg);
+      console.error('业务错误:', { code: data.code, message: errorMsg, fullData: data });
+      console.log('准备调用 globalMessage.error (业务错误):', errorMsg);
       globalMessage.error(errorMsg);
-      console.log('🔴 globalMessage.error 已调用 (业务错误)');
+      console.log('globalMessage.error 已调用 (业务错误)');
       
       return Promise.reject(new Error(errorMsg));
     }
@@ -137,10 +137,10 @@ request.interceptors.response.use(
         case 401:
           errorMessage = extractErrorMessage(responseData, '认证失败，请重新登录');
           // 可选：自动跳转登录（生产环境建议启用）
-          // removeToken();
-          // if (window.location.pathname !== '/login') {
-          //   setTimeout(() => window.location.href = '/login', 500);
-          // }
+          removeToken();
+          if (window.location.pathname !== '/login') {
+            setTimeout(() => window.location.href = '/login', 500);
+          }
           break;
         case 403:
           errorMessage = extractErrorMessage(responseData, '无权限访问');
@@ -156,23 +156,23 @@ request.interceptors.response.use(
       }
       
       // 统一显示HTTP错误
-      console.error('❌ HTTP错误:', errorMessage);
-      console.log('🔴 准备调用 globalMessage.error:', errorMessage);
+      console.error('HTTP错误:', errorMessage);
+      console.log('准备调用 globalMessage.error:', errorMessage);
       globalMessage.error(errorMessage);
-      console.log('🔴 globalMessage.error 已调用');
+      console.log('globalMessage.error 已调用');
       
       return Promise.reject(new Error(errorMessage));
       
     } else if (error.request) {
       // 请求已发出但没有收到响应
       errorMessage = '网络连接超时，请检查网络';
-      console.error('❌ 网络错误:', errorMessage);
+      console.error('网络错误:', errorMessage);
       globalMessage.error(errorMessage);
       return Promise.reject(new Error(errorMessage));
     } else {
       // 其他错误
       errorMessage = error.message || '请求失败';
-      console.error('❌ 其他错误:', errorMessage);
+      console.error('其他错误:', errorMessage);
       globalMessage.error(errorMessage);
       return Promise.reject(new Error(errorMessage));
     }

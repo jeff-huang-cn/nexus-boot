@@ -6,7 +6,6 @@ import {
   Space,
   Input,
   Form,
-  message,
   Alert,
   Select,
 } from 'antd';
@@ -20,6 +19,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import { databaseApi, DatabaseTable, DataSourceConfig } from '../../../services/datasources/databaseApi';
 import { codegenApi } from '../../../services/codegen/codegenApi';
+import { globalMessage } from '../../../utils/globalMessage';
 
 /**
  * 导入数据库表页面
@@ -93,7 +93,7 @@ const ImportTable: React.FC = () => {
       setData(response || []);
     } catch (error) {
       console.error('加载表数据失败:', error);
-      message.error('加载表数据失败');
+      globalMessage.error('加载表数据失败');
       setData([]);
     } finally {
       setLoading(false);
@@ -113,7 +113,7 @@ const ImportTable: React.FC = () => {
         // }
       } catch (error) {
         console.error('加载数据源失败:', error);
-        message.error('加载数据源失败');
+        globalMessage.error('加载数据源失败');
       }
     };
 
@@ -139,12 +139,12 @@ const ImportTable: React.FC = () => {
   // 导入选中的表
   const handleImport = async () => {
     if (selectedRows.length === 0) {
-      message.warning('请选择要导入的表');
+      globalMessage.warning('请选择要导入的表');
       return;
     }
 
     if (!currentDataSourceId) {
-      message.error('请先选择数据源');
+      globalMessage.error('请先选择数据源');
       return;
     }
 
@@ -156,12 +156,12 @@ const ImportTable: React.FC = () => {
       };
 
       await codegenApi.importTables(importData);
-      message.success(`成功导入 ${selectedRows.length} 个表，已自动设置合理的默认配置`);
+      globalMessage.success(`成功导入 ${selectedRows.length} 个表，已自动设置合理的默认配置`);
       
       // 导入成功后跳转到表列表页面
       navigate('/dev/codegen');
     } catch (error) {
-      message.error('导入表失败');
+      globalMessage.error('导入表失败');
       console.error('导入表失败:', error);
     } finally {
       setImporting(false);

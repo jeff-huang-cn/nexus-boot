@@ -1,10 +1,9 @@
 package ${packageName}.controller.${businessName}.vo;
 
+import com.alibaba.excel.annotation.ExcelIgnore;
+import com.alibaba.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 #if($hasLocalDateTime)
 import java.time.LocalDateTime;
 #end
@@ -24,16 +23,24 @@ import ${packageName}.dal.dataobject.${businessName}.${subTable.className}DO;
  */
 @Schema(description = "${classComment} Response VO")
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class ${className}RespVO extends BaseRespVO {
+public class ${className}RespVO {
 
     @Schema(description = "ID", example = "1")
+    @ExcelIgnore
     private Long id;
+    
+    @Schema(description = "创建时间")
+    @ExcelIgnore
+    private String dateCreated;
+    
+    @Schema(description = "更新时间")
+    @ExcelIgnore
+    private String lastUpdated;
 
 #foreach ($column in $columns)
 #if(!$column.primaryKey && $column.listOperationResult)
     @Schema(description = "${column.columnComment}", example = "${column.example}")
+    @ExcelProperty("${column.columnComment}")
     private ${column.javaType} ${column.javaField};
 
 #end

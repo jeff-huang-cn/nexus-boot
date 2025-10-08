@@ -88,6 +88,16 @@ export const ${classNameFirstLower}Api = {
    * 批量删除${classComment}
    */
   deleteBatch: (ids: number[]): Promise<void> => {
-    return request.delete(`/${businessName}/batch`, { data: { ids } });
+    return request.delete(`/${businessName}/batch`, { data: ids });
+  },
+
+  /**
+   * 导出${classComment}
+   */
+  exportData: (params: ${className}Query): Promise<Blob> => {
+    return request.get('/${businessName}/export', { 
+      params, 
+      responseType: 'blob' 
+    });
   },
 };

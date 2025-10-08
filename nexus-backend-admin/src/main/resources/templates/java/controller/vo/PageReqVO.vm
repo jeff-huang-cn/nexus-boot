@@ -2,10 +2,11 @@ package ${packageName}.controller.${businessName}.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+#if($templateType != 2)
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import com.nexus.framework.mybatis.entity.BasePageQuery;
+#end
 import org.springframework.format.annotation.DateTimeFormat;
-
 import java.time.LocalDateTime;
 
 import static com.nexus.framework.common.util.DateUtils.FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND;
@@ -27,9 +28,12 @@ import static com.nexus.framework.common.util.DateUtils.FORMAT_YEAR_MONTH_DAY_HO
 #end
 @Schema(description = "${classComment} ${reqType} Request VO")
 @Data
+#if($templateType != 2)
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class ${className}${reqType}ReqVO extends Base${reqType}ReqVO {
+public class ${className}${reqType}ReqVO extends BasePageQuery {
+#else
+public class ${className}${reqType}ReqVO {
+#end
 
 #foreach ($column in $columns)
 #if ($column.listOperation)

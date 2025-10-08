@@ -9,7 +9,7 @@ import java.io.Serial;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class TenantBaseEntity extends BaseDO {
+public class TenantBaseDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = -2866430410247320282L;
 

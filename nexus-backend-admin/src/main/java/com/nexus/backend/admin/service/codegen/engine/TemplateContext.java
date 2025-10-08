@@ -67,8 +67,14 @@ public class TemplateContext {
         context.put("frontType", table.getFrontType());
         context.put("isReact", table.getFrontType() == 30);
 
+        // 模板类型：1-单表CRUD，2-树表，3-主子表
+        context.put("templateType", table.getTemplateType());
+
         // BaseDO 字段列表（用于DO模板排除这些字段）
         context.put("baseDOFields", getBaseDOFields());
+
+        // 软删除标识：判断表是否包含deleted字段
+        context.put("hasDeletedColumn", hasDeletedColumn(columns));
 
         return context;
     }
@@ -170,6 +176,14 @@ public class TemplateContext {
     private static boolean hasLocalDateTimeColumn(List<CodegenColumnDO> columns) {
         return columns.stream()
                 .anyMatch(column -> "LocalDateTime".equals(column.getJavaType()));
+    }
+
+    /**
+     * 是否包含deleted字段（用于判断是否支持软删除）
+     */
+    private static boolean hasDeletedColumn(List<CodegenColumnDO> columns) {
+        return columns.stream()
+                .anyMatch(column -> "deleted".equalsIgnoreCase(column.getColumnName()));
     }
 
 }

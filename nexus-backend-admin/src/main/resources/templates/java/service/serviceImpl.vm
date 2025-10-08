@@ -1,6 +1,5 @@
 package ${packageName}.service.${businessName}.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 #if($templateType != 2)
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -12,6 +11,7 @@ import com.baomidou.dynamic.datasource.annotation.DSTransactional;
 #end
 import com.nexus.framework.web.exception.BusinessException;
 import ${packageName}.controller.${businessName}.vo.*;
+import ${packageName}.convert.${className}Convert;
 import ${packageName}.dal.dataobject.${businessName}.${className}DO;
 #if($templateType == 3)
 import ${packageName}.dal.dataobject.${businessName}.${subTable.className}DO;
@@ -19,6 +19,9 @@ import ${packageName}.dal.mapper.${businessName}.${subTable.className}Mapper;
 #end
 import ${packageName}.dal.mapper.${businessName}.${className}Mapper;
 import ${packageName}.service.${businessName}.${className}Service;
+#if($templateType == 1 || $templateType == 3)
+import com.google.common.collect.Lists;
+#end
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +32,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 #end
-import java.util.stream.Collectors;
 
 /**
  * ${classComment} Service 实现类
@@ -61,16 +63,13 @@ public class ${className}ServiceImpl implements ${className}Service {
         // 校验父节点和名称唯一性
         validateParentAndNameUnique(null, createReqVO.getParentId(), createReqVO.getName());
 #end
-
         // 转换为 DO 并插入
-        ${className}DO ${classNameFirstLower} = BeanUtil.copyProperties(createReqVO, ${className}DO.class);
+        ${className}DO ${classNameFirstLower} = ${className}Convert.INSTANCE.toDO(createReqVO);
         ${classNameFirstLower}Mapper.insert(${classNameFirstLower});
-
 #if($templateType == 3)
         // 插入子表
         createSubList(${classNameFirstLower}.getId(), createReqVO.get${subTable.className}s());
 #end
-
         return ${classNameFirstLower}.getId();
     }
 
@@ -81,16 +80,13 @@ public class ${className}ServiceImpl implements ${className}Service {
     public void update(${className}SaveReqVO updateReqVO) {
         // 校验存在
         validateExists(updateReqVO.getId());
-
 #if($templateType == 2)
         // 校验父节点和名称唯一性
         validateParentAndNameUnique(updateReqVO.getId(), updateReqVO.getParentId(), updateReqVO.getName());
 #end
-
         // 更新主表
-        ${className}DO update${className} = BeanUtil.copyProperties(updateReqVO, ${className}DO.class);
+        ${className}DO update${className} = ${className}Convert.INSTANCE.toDO(updateReqVO);
         ${classNameFirstLower}Mapper.updateById(update${className});
-
 #if($templateType == 3)
         // 更新子表
         updateSubList(updateReqVO.getId(), updateReqVO.get${subTable.className}s());
@@ -104,7 +100,6 @@ public class ${className}ServiceImpl implements ${className}Service {
     public void delete(Long id) {
         // 校验存在
         validateExists(id);
-
 #if($templateType == 2)
         // 校验是否有子节点
         Long childCount = ${classNameFirstLower}Mapper.selectCount(
@@ -114,10 +109,8 @@ public class ${className}ServiceImpl implements ${className}Service {
             throw new BusinessException(400, "存在子节点，无法删除");
         }
 #end
-
         // 删除主表
         ${classNameFirstLower}Mapper.deleteById(id);
-
 #if($templateType == 3)
         // 删除子表
         ${subTable.classNameFirstLower}Mapper.deleteBy${subJoinColumn.javaField.substring(0,1).toUpperCase()}${subJoinColumn.javaField.substring(1)}(id);
@@ -129,13 +122,79 @@ public class ${className}ServiceImpl implements ${className}Service {
 #if($templateType == 3)
     @DSTransactional(rollbackFor = Exception.class)
 #end
-    public void deleteBatch(List<Long> ids) {
-        // 批量删除主表
-        ${classNameFirstLower}Mapper.deleteBatchIds(ids);
+    public void batchCreate(List<${className}SaveReqVO> createReqVOs) {
+        if (createReqVOs == null || createReqVOs.isEmpty()) {
+            return;
+        }
+        
+        // 转换为 DO 列表
+        List<${className}DO> doList = createReqVOs.stream()
+                .map(${className}Convert.INSTANCE::toDO)
+                .collect(Collectors.toList());
+        // 分批插入，每批100条，避免锁表时间过长
+        List<List<${className}DO>> partitions = Lists.partition(doList, 100);
+        for (List<${className}DO> partition : partitions) {
+            ${classNameFirstLower}Mapper.insertBatch(partition);
+        }
 
 #if($templateType == 3)
-        // 批量删除子表
-        ids.forEach(id -> ${subTable.classNameFirstLower}Mapper.deleteBy${subJoinColumn.javaField.substring(0,1).toUpperCase()}${subJoinColumn.javaField.substring(1)}(id));
+        // 批量插入子表
+        for (int i = 0; i < createReqVOs.size(); i++) {
+            ${className}SaveReqVO reqVO = createReqVOs.get(i);
+            ${className}DO ${classNameFirstLower} = doList.get(i);
+            createSubList(${classNameFirstLower}.getId(), reqVO.get${subTable.className}s());
+        }
+#end
+    }
+
+    @Override
+#if($templateType == 3)
+    @DSTransactional(rollbackFor = Exception.class)
+#end
+    public void batchUpdate(List<${className}SaveReqVO> updateReqVOs) {
+        if (updateReqVOs == null || updateReqVOs.isEmpty()) {
+            return;
+        }
+
+        // 转换为 DO 列表
+        List<${className}DO> doList = updateReqVOs.stream()
+                .map(${className}Convert.INSTANCE::toDO)
+                .collect(Collectors.toList());
+
+        // 分批更新，每批100条，避免锁表时间过长
+        List<List<${className}DO>> partitions = Lists.partition(doList, 100);
+        for (List<${className}DO> partition : partitions) {
+            ${classNameFirstLower}Mapper.updateBatch(partition);
+        }
+
+#if($templateType == 3)
+        // 批量更新子表
+        for (${className}SaveReqVO reqVO : updateReqVOs) {
+            updateSubList(reqVO.getId(), reqVO.get${subTable.className}s());
+        }
+#end
+    }
+
+    @Override
+#if($templateType == 3)
+    @DSTransactional(rollbackFor = Exception.class)
+#end
+    public void batchDelete(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        // 分批删除，每批1000个ID，避免锁表时间过长
+        List<List<Long>> partitions = Lists.partition(ids, 1000);
+        for (List<Long> partition : partitions) {
+            ${classNameFirstLower}Mapper.deleteBatchByIds(partition);
+        }
+
+#if($templateType == 3)
+        // 批量删除子表（分批处理）
+        for (List<Long> partition : partitions) {
+            partition.forEach(id -> ${subTable.classNameFirstLower}Mapper.deleteBy${subJoinColumn.javaField.substring(0,1).toUpperCase()}${subJoinColumn.javaField.substring(1)}(id));
+        }
 #end
     }
 #end
@@ -160,9 +219,7 @@ public class ${className}ServiceImpl implements ${className}Service {
         IPage<${className}DO> result = ${classNameFirstLower}Mapper.selectPage(page, wrapper);
 
         // 转换为 VO
-        List<${className}RespVO> list = result.getRecords().stream()
-                .map(item -> BeanUtil.copyProperties(item, ${className}RespVO.class))
-                .collect(Collectors.toList());
+        List<${className}RespVO> list = ${className}Convert.INSTANCE.toRespVOList(result.getRecords());
 
         return new PageResult<>(list, result.getTotal());
     }
@@ -175,7 +232,11 @@ public class ${className}ServiceImpl implements ${className}Service {
         // 查询列表
         return ${classNameFirstLower}Mapper.selectList(wrapper);
     }
-#elseif($templateType == 2)
+#end
+#if($templateType == 1)
+
+#end
+#if($templateType == 2)
 
     @Override
     public List<${className}RespVO> getList(${className}ListReqVO listReqVO) {
@@ -186,9 +247,7 @@ public class ${className}ServiceImpl implements ${className}Service {
         List<${className}DO> list = ${classNameFirstLower}Mapper.selectList(wrapper);
 
         // 转换为 VO
-        return list.stream()
-                .map(item -> BeanUtil.copyProperties(item, ${className}RespVO.class))
-                .collect(Collectors.toList());
+        return ${className}Convert.INSTANCE.toRespVOList(list);
     }
 #end
 

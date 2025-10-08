@@ -8,15 +8,22 @@ import {
   Input,
   InputNumber,
   Select,
-  message,
   Popconfirm,
   Tag,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined, SearchOutlined } from '@ant-design/icons';
+import { 
+  PlusOutlined, 
+  EditOutlined, 
+  DeleteOutlined, 
+  SafetyOutlined, 
+  SearchOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons';
 import { roleApi } from '../../../services/role/roleApi';
 import type { Role, RoleForm } from '../../../services/role/roleApi';
 import AssignMenuModal from './AssignMenuModal';
 import { useMenu } from '../../../contexts/MenuContext';
+import { globalMessage } from '../../../utils/globalMessage';
 
 const RolePage: React.FC = () => {
   const [dataSource, setDataSource] = useState<Role[]>([]);
@@ -26,6 +33,7 @@ const RolePage: React.FC = () => {
   const [assignMenuVisible, setAssignMenuVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Role | null>(null);
   const [currentRoleId, setCurrentRoleId] = useState<number | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [searchForm] = Form.useForm();
   const [form] = Form.useForm();
   const { permissions } = useMenu();
@@ -201,12 +209,53 @@ const RolePage: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await roleApi.delete(id);
-      message.success('删除成功');
+      globalMessage.success('删除成功');
       loadData();
     } catch (error: any) {
       // 错误已在 request.ts 中统一显示
       console.error('删除角色失败:', error);
     }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      globalMessage.warning('请选择要删除的数据');
+      return;
+    }
+    
+    try {
+      await roleApi.deleteBatch(selectedRowKeys as number[]);
+      globalMessage.success(`成功删除 ${selectedRowKeys.length} 条数据`);
+      setSelectedRowKeys([]);
+      loadData();
+    } catch (error) {
+      globalMessage.error('批量删除失败');
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const blob = await roleApi.exportData();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `角色数据_${new Date().getTime()}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      globalMessage.success('导出成功');
+    } catch (error) {
+      globalMessage.error('导出失败');
+    }
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedRowKeys: React.Key[]) => {
+      setSelectedRowKeys(newSelectedRowKeys);
+    },
   };
 
   // 分配菜单
@@ -221,10 +270,10 @@ const RolePage: React.FC = () => {
       const values = await form.validateFields();
       if (editingRecord?.id) {
         await roleApi.update(editingRecord.id, values);
-        message.success('更新成功');
+        globalMessage.success('更新成功');
       } else {
         await roleApi.create(values);
-        message.success('创建成功');
+        globalMessage.success('创建成功');
       }
       setFormVisible(false);
       loadData();
@@ -260,14 +309,43 @@ const RolePage: React.FC = () => {
         </Form.Item>
       </Form>
 
-      {/* 新增按钮 */}
-      {hasPermission('system:role:create') && (
-        <div style={{ marginBottom: 16 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增角色
-          </Button>
-        </div>
-      )}
+      {/* 操作按钮 */}
+      <div style={{ marginBottom: 16 }}>
+        <Space>
+          {hasPermission('system:role:create') && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+              新增
+            </Button>
+          )}
+          {hasPermission('system:role:delete') && (
+            <Popconfirm
+              title="确定要删除选中的数据吗？"
+              onConfirm={handleBatchDelete}
+              disabled={selectedRowKeys.length === 0}
+            >
+              <Button 
+                danger 
+                icon={<DeleteOutlined />}
+                disabled={selectedRowKeys.length === 0}
+              >
+                批量删除
+              </Button>
+            </Popconfirm>
+          )}
+          {hasPermission('system:role:export') && (
+            <Button 
+              icon={<DownloadOutlined />} 
+              onClick={handleExport}
+              style={{ 
+                borderColor: '#52c41a', 
+                color: '#52c41a',
+              }}
+            >
+              导出
+            </Button>
+          )}
+        </Space>
+      </div>
 
       {/* 数据表格 */}
       <Table
@@ -275,6 +353,7 @@ const RolePage: React.FC = () => {
         dataSource={filteredData}
         loading={loading}
         rowKey="id"
+        rowSelection={rowSelection}
         pagination={{
           showSizeChanger: true,
           showQuickJumper: true,
@@ -334,7 +413,7 @@ const RolePage: React.FC = () => {
           onCancel={() => setAssignMenuVisible(false)}
           onSuccess={() => {
             setAssignMenuVisible(false);
-            message.success('分配权限成功');
+            globalMessage.success('分配权限成功');
           }}
         />
       )}

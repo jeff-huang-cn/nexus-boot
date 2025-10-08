@@ -86,6 +86,23 @@ export const roleApi = {
   assignMenu: (data: RoleAssignMenuForm) => {
     return request.post(`${API_BASE}/assign-menu`, data);
   },
+
+  /**
+   * 批量删除角色
+   */
+  deleteBatch: (ids: number[]) => {
+    return request.delete(`${API_BASE}/batch`, { data: ids });
+  },
+
+  /**
+   * 导出角色
+   */
+  exportData: (params?: any) => {
+    return request.get(`${API_BASE}/export`, { 
+      params, 
+      responseType: 'blob' 
+    });
+  },
 };
 
 export default roleApi;

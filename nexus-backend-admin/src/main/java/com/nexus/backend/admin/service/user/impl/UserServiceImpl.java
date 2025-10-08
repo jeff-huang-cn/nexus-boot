@@ -1,10 +1,11 @@
 package com.nexus.backend.admin.service.user.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.collect.Lists;
 import com.nexus.backend.admin.controller.user.vo.*;
+import com.nexus.backend.admin.convert.UserConvert;
 import com.nexus.backend.admin.dal.dataobject.user.UserDO;
 import com.nexus.backend.admin.dal.mapper.user.UserMapper;
 import com.nexus.backend.admin.service.user.UserService;
@@ -37,7 +38,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Long create(UserSaveReqVO createReqVO) {
         // 转换为 DO 并插入
-        UserDO user = BeanUtil.copyProperties(createReqVO, UserDO.class);
+        UserDO user = UserConvert.INSTANCE.toDO(createReqVO);
         userMapper.insert(user);
         return user.getId();
     }
@@ -47,7 +48,7 @@ public class UserServiceImpl implements UserService {
         // 校验存在
         validateExists(updateReqVO.getId());
         // 更新
-        UserDO updateUser = BeanUtil.copyProperties(updateReqVO, UserDO.class);
+        UserDO updateUser = UserConvert.INSTANCE.toDO(updateReqVO);
         userMapper.updateById(updateUser);
     }
 
@@ -60,9 +61,52 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteBatch(List<Long> ids) {
-        // 批量删除
-        userMapper.deleteBatchIds(ids);
+    public void batchCreate(List<UserSaveReqVO> createReqVOs) {
+        if (createReqVOs == null || createReqVOs.isEmpty()) {
+            return;
+        }
+
+        // 转换为 DO 列表
+        List<UserDO> doList = createReqVOs.stream()
+                .map(UserConvert.INSTANCE::toDO)
+                .collect(Collectors.toList());
+
+        // 分批插入，每批100条，避免锁表时间过长
+        List<List<UserDO>> partitions = Lists.partition(doList, 100);
+        for (List<UserDO> partition : partitions) {
+            userMapper.insertBatch(partition);
+        }
+    }
+
+    @Override
+    public void batchUpdate(List<UserSaveReqVO> updateReqVOs) {
+        if (updateReqVOs == null || updateReqVOs.isEmpty()) {
+            return;
+        }
+
+        // 转换为 DO 列表
+        List<UserDO> doList = updateReqVOs.stream()
+                .map(UserConvert.INSTANCE::toDO)
+                .collect(Collectors.toList());
+
+        // 分批更新，每批100条，避免锁表时间过长
+        List<List<UserDO>> partitions = Lists.partition(doList, 100);
+        for (List<UserDO> partition : partitions) {
+            userMapper.updateBatch(partition);
+        }
+    }
+
+    @Override
+    public void batchDelete(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        // 分批删除，每批1000个ID，避免SQL过长
+        List<List<Long>> partitions = Lists.partition(ids, 1000);
+        for (List<Long> partition : partitions) {
+            userMapper.deleteBatchIds(partition);
+        }
     }
 
     @Override
@@ -84,9 +128,7 @@ public class UserServiceImpl implements UserService {
         IPage<UserDO> result = userMapper.selectPage(page, wrapper);
 
         // 转换为 VO
-        List<UserRespVO> list = result.getRecords().stream()
-                .map(item -> BeanUtil.copyProperties(item, UserRespVO.class))
-                .collect(Collectors.toList());
+        List<UserRespVO> list = UserConvert.INSTANCE.toRespVOList(result.getRecords());
 
         return new PageResult<>(list, result.getTotal());
     }
@@ -284,4 +326,5 @@ public class UserServiceImpl implements UserService {
 
         log.info("用户修改密码成功，userId: {}", userId);
     }
+
 }

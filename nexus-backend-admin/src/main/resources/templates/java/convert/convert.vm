@@ -1,0 +1,37 @@
+package ${packageName}.convert;
+
+import ${packageName}.controller.${businessName}.vo.${className}RespVO;
+import ${packageName}.controller.${businessName}.vo.${className}SaveReqVO;
+import ${packageName}.dal.dataobject.${businessName}.${className}DO;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+
+import java.util.List;
+
+/**
+ * ${classComment}转换器
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Mapper
+public interface ${className}Convert {
+
+    ${className}Convert INSTANCE = Mappers.getMapper(${className}Convert.class);
+
+    /**
+     * DO 转 RespVO
+     */
+    ${className}RespVO toRespVO(${className}DO ${classNameFirstLower}DO);
+
+    /**
+     * DO列表 转 RespVO列表
+     */
+    List<${className}RespVO> toRespVOList(List<${className}DO> ${classNameFirstLower}DOList);
+
+    /**
+     * SaveReqVO 转 DO
+     */
+    ${className}DO toDO(${className}SaveReqVO saveReqVO);
+}
+

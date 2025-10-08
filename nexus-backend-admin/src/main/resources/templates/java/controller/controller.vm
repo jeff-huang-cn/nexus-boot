@@ -1,9 +1,12 @@
 package ${packageName}.controller.${businessName};
 
-import cn.hutool.core.bean.BeanUtil;
 import com.nexus.framework.web.result.Result;
 #if($templateType != 2)
 import com.nexus.framework.web.result.PageResult;
+#end
+#if($templateType == 1)
+import com.nexus.framework.excel.ExcelUtils;
+import ${packageName}.convert.${className}Convert;
 #end
 import ${packageName}.controller.${businessName}.vo.*;
 import ${packageName}.dal.dataobject.${businessName}.${className}DO;
@@ -11,17 +14,18 @@ import ${packageName}.dal.dataobject.${businessName}.${className}DO;
 import ${packageName}.dal.dataobject.${businessName}.${subTable.className}DO;
 #end
 import ${packageName}.service.${businessName}.${className}Service;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.validation.annotation.Validated;
-
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * ${classComment} 控制器
@@ -82,6 +86,32 @@ public class ${className}Controller {
 #if($templateType == 1 || $templateType == 3)
 
     /**
+     * 批量创建${classComment}
+     *
+     * @param createReqVOs 创建信息列表
+     * @return 成功结果
+     */
+    @PostMapping("/batch")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:create')")
+    public Result<Void> batchCreate(@RequestBody @Valid @NotEmpty List<${className}SaveReqVO> createReqVOs) {
+        ${classNameFirstLower}Service.batchCreate(createReqVOs);
+        return Result.success();
+    }
+
+    /**
+     * 批量更新${classComment}
+     *
+     * @param updateReqVOs 更新信息列表
+     * @return 成功结果
+     */
+    @PutMapping("/batch")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:update')")
+    public Result<Void> batchUpdate(@RequestBody @Valid @NotEmpty List<${className}SaveReqVO> updateReqVOs) {
+        ${classNameFirstLower}Service.batchUpdate(updateReqVOs);
+        return Result.success();
+    }
+
+    /**
      * 批量删除${classComment}
      *
      * @param ids ID列表
@@ -89,8 +119,8 @@ public class ${className}Controller {
      */
     @DeleteMapping("/batch")
     @PreAuthorize("hasAuthority('${moduleName}:${businessName}:delete')")
-    public Result<Void> deleteBatch(@RequestBody @NotEmpty List<Long> ids) {
-        ${classNameFirstLower}Service.deleteBatch(ids);
+    public Result<Void> batchDelete(@RequestBody @NotEmpty List<Long> ids) {
+        ${classNameFirstLower}Service.batchDelete(ids);
         return Result.success();
     }
 #end
@@ -105,7 +135,7 @@ public class ${className}Controller {
     @PreAuthorize("hasAuthority('${moduleName}:${businessName}:query')")
     public Result<${className}RespVO> getById(@PathVariable @NotNull Long id) {
         ${className}DO ${classNameFirstLower} = ${classNameFirstLower}Service.getById(id);
-        ${className}RespVO respVO = BeanUtil.copyProperties(${classNameFirstLower}, ${className}RespVO.class);
+        ${className}RespVO respVO = ${className}Convert.INSTANCE.toRespVO(${classNameFirstLower});
 #if($templateType == 3)
         // 获取子表数据
         List<${subTable.className}DO> subList = ${classNameFirstLower}Service.get${subTable.className}ListBy${subJoinColumn.javaField.substring(0,1).toUpperCase()}${subJoinColumn.javaField.substring(1)}(id);
@@ -127,6 +157,8 @@ public class ${className}Controller {
         PageResult<${className}RespVO> pageResult = ${classNameFirstLower}Service.getPage(pageReqVO);
         return Result.success(pageResult);
     }
+#end
+#if($templateType == 1)
 
     /**
      * 导出${classComment} Excel
@@ -135,17 +167,18 @@ public class ${className}Controller {
      */
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('${moduleName}:${businessName}:export')")
-    public void export(@Valid ${className}PageReqVO pageReqVO) {
+    public void export(@Valid ${className}PageReqVO pageReqVO, HttpServletResponse response) throws IOException {
+        // 查询数据
         List<${className}DO> list = ${classNameFirstLower}Service.getList(pageReqVO);
 
-        // 转换为 VO
-        List<${className}RespVO> voList = list.stream()
-                .map(item -> BeanUtil.copyProperties(item, ${className}RespVO.class))
-                .collect(Collectors.toList());
+        // 使用 MapStruct 转换为 VO
+        List<${className}RespVO> voList = ${className}Convert.INSTANCE.toRespVOList(list);
 
-        // TODO: 实现 Excel 导出逻辑
+        // 使用 ExcelUtils 导出
+        ExcelUtils.export(response, voList, ${className}RespVO.class, "${classComment}数据", "${classComment}数据");
     }
-#elseif($templateType == 2)
+#end
+#if($templateType == 2)
 
     /**
      * 获得${classComment}列表（树形结构）

@@ -164,29 +164,24 @@ public class CodegenUtils {
     }
 
     /**
-     * 智能推导模块名：从业务名提取主要部分
-     * 参考yudao项目模块划分规则
+     * 智能推导模块名：从表名提取第一个下划线之前的部分
+     * 例如：system_tenant -> system, infra_config -> infra
      *
-     * @param businessName 业务名
+     * @param tableName 表名
      * @return 模块名
      */
-    public static String getModuleName(String businessName) {
-        if (!StringUtils.hasText(businessName)) {
+    public static String getModuleName(String tableName) {
+        if (!StringUtils.hasText(tableName)) {
             return "system";
         }
 
-        String lowerBusinessName = businessName.toLowerCase();
-
-        // 如果业务名包含常见的模块词汇，提取前面部分作为模块名
-        String[] modulePatterns = { "config", "info", "data", "record", "log", "detail" };
-        for (String pattern : modulePatterns) {
-            if (lowerBusinessName.contains(pattern)) {
-                return lowerBusinessName.replace(pattern, "");
-            }
+        int underscoreIndex = tableName.indexOf("_");
+        if (underscoreIndex > 0) {
+            return tableName.substring(0, underscoreIndex).toLowerCase();
         }
 
-        // 默认返回业务名本身作为模块名
-        return lowerBusinessName;
+        // 没有下划线，默认返回system
+        return "system";
     }
 
     /**
@@ -282,8 +277,8 @@ public class CodegenUtils {
                         : className + "信息表");
         codegenTableDO.setDatasourceConfigId(datasourceConfigId);
 
-        // 智能推导模块名：从业务名提取主要部分
-        String moduleName = getModuleName(businessName);
+        // 智能推导模块名：从表名提取第一个下划线之前的部分
+        String moduleName = getModuleName(tableName);
 
         // 设置生成信息
         codegenTableDO.setClassName(className);
@@ -358,12 +353,25 @@ public class CodegenUtils {
             codegenColumnDO.setUpdateOperation(true);
         }
 
-        if ("password".equals(columnName) || "deleted".equals(columnName)) {
-            // 密码和删除标志不显示在列表中
+        // 列表查询条件：只有主要字段才默认作为查询条件
+        // 主键、审计字段、密码、删除标志、租户ID等不作为查询条件
+        if (codegenColumnDO.getPrimaryKey() || "password".equals(columnName) || "deleted".equals(columnName) ||
+                "date_created".equals(columnName) || "last_updated".equals(columnName) ||
+                "creator".equals(columnName) || "updater".equals(columnName) || "tenant_id".equals(columnName)) {
             codegenColumnDO.setListOperation(false);
+        } else {
+            // 其他字段根据类型判断：只有name、code、status等常见查询字段默认为true
+            boolean isCommonQueryField = columnName.contains("name") || columnName.contains("code") ||
+                    columnName.contains("status") || columnName.contains("type");
+            codegenColumnDO.setListOperation(isCommonQueryField);
+        }
+
+        // 列表显示字段：审计字段（创建人、创建时间、更新人、更新时间）默认不显示
+        if ("password".equals(columnName) || "deleted".equals(columnName) || "tenant_id".equals(columnName) ||
+                "date_created".equals(columnName) || "last_updated".equals(columnName) ||
+                "creator".equals(columnName) || "updater".equals(columnName)) {
             codegenColumnDO.setListOperationResult(false);
         } else {
-            codegenColumnDO.setListOperation(true);
             codegenColumnDO.setListOperationResult(true);
         }
 

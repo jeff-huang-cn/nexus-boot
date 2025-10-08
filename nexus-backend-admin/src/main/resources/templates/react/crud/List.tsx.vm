@@ -6,14 +6,20 @@ import {
   Input,
   Form,
   Card,
-  message,
   Modal,
   Popconfirm,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { 
+  PlusOutlined, 
+  EditOutlined, 
+  DeleteOutlined, 
+  SearchOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { ${classNameFirstLower}Api, type ${className} } from '../../../services/${businessName}/${businessName}Api';
 import ${className}Form from './${className}Form';
+import { globalMessage } from '../../../utils/globalMessage';
 
 const ${className}List: React.FC = () => {
   const [form] = Form.useForm();
@@ -24,6 +30,9 @@ const ${className}List: React.FC = () => {
   const [size, setSize] = useState(10);
   const [formVisible, setFormVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<${className} | null>(null);
+#if($templateType == 1 || $templateType == 3)
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+#end
 
   const columns: ColumnsType<${className}> = [
 #foreach($column in $columns)
@@ -83,7 +92,7 @@ const ${className}List: React.FC = () => {
       setCurrent(searchParams.pageNum);
       setSize(searchParams.pageSize);
     } catch (error) {
-      message.error('加载数据失败');
+      globalMessage.error('加载数据失败');
     } finally {
       setLoading(false);
     }
@@ -122,12 +131,65 @@ const ${className}List: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await ${classNameFirstLower}Api.delete(id);
-      message.success('删除成功');
+      globalMessage.success('删除成功');
       loadData();
     } catch (error) {
-      message.error('删除失败');
+      globalMessage.error('删除失败');
     }
   };
+#if($templateType == 1 || $templateType == 3)
+
+  // 批量删除
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      globalMessage.warning('请选择要删除的数据');
+      return;
+    }
+    
+    try {
+      await ${classNameFirstLower}Api.deleteBatch(selectedRowKeys as number[]);
+      globalMessage.success(`成功删除 $${'{'}selectedRowKeys.length${'}'} 条数据`);
+      setSelectedRowKeys([]);
+      loadData();
+    } catch (error) {
+      globalMessage.error('批量删除失败');
+    }
+  };
+
+#if($templateType == 1)
+
+  // 导出
+  const handleExport = async () => {
+    try {
+      const searchParams = {
+        ...form.getFieldsValue(),
+      };
+      
+      const blob = await ${classNameFirstLower}Api.exportData(searchParams);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${classComment}_$${'{'}new Date().getTime()${'}'}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      globalMessage.success('导出成功');
+    } catch (error) {
+      globalMessage.error('导出失败');
+    }
+  };
+#end
+
+  // 行选择配置
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedRowKeys: React.Key[]) => {
+      setSelectedRowKeys(newSelectedRowKeys);
+    },
+  };
+#end
 
   // 表单保存成功
   const handleFormSuccess = () => {
@@ -168,9 +230,38 @@ const ${className}List: React.FC = () => {
         </Form>
 
         <div style={{ marginBottom: 16 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增${classComment}
-          </Button>
+          <Space>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+              新增
+            </Button>
+#if($templateType == 1 || $templateType == 3)
+            <Popconfirm
+              title="确定要删除选中的数据吗？"
+              onConfirm={handleBatchDelete}
+              disabled={selectedRowKeys.length === 0}
+            >
+              <Button 
+                danger 
+                icon={<DeleteOutlined />}
+                disabled={selectedRowKeys.length === 0}
+              >
+                批量删除
+              </Button>
+            </Popconfirm>
+#end
+#if($templateType == 1)
+            <Button 
+              icon={<DownloadOutlined />} 
+              onClick={handleExport}
+              style={{ 
+                borderColor: '#52c41a', 
+                color: '#52c41a',
+              }}
+            >
+              导出
+            </Button>
+#end
+          </Space>
         </div>
 
         <Table
@@ -178,6 +269,9 @@ const ${className}List: React.FC = () => {
           dataSource={data}
           loading={loading}
           rowKey="id"
+#if($templateType == 1 || $templateType == 3)
+          rowSelection={rowSelection}
+#end
           pagination={{
             current,
             pageSize: size,

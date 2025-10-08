@@ -6,15 +6,23 @@ import {
   Input,
   Form,
   Card,
-  message,
   Popconfirm,
   Modal,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { 
+  PlusOutlined, 
+  EditOutlined, 
+  DeleteOutlined, 
+  SearchOutlined,
+  DownloadOutlined,
+  UploadOutlined,
+} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { userApi } from '../../../services/user/userApi';
 import UserForm from './UserForm';
+import ImportModal from '../../../components/ImportModal';
 import { useMenu } from '../../../contexts/MenuContext';
+import { globalMessage } from '../../../utils/globalMessage';
 
 interface User {
   id?: number;
@@ -39,7 +47,9 @@ const UserList: React.FC = () => {
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
   const [modalVisible, setModalVisible] = useState(false);
+  const [importVisible, setImportVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<User | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const { permissions } = useMenu();
 
   // 权限检查函数
@@ -174,12 +184,66 @@ const UserList: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await userApi.delete(id);
-      message.success('删除成功');
+      globalMessage.success('删除成功');
       loadData();
     } catch (error: any) {
       // 错误已在 request.ts 中统一显示
       console.error('删除用户失败:', error);
     }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      globalMessage.warning('请选择要删除的数据');
+      return;
+    }
+    
+    try {
+      await userApi.deleteBatch(selectedRowKeys as number[]);
+      globalMessage.success(`成功删除 ${selectedRowKeys.length} 条数据`);
+      setSelectedRowKeys([]);
+      loadData();
+    } catch (error) {
+      globalMessage.error('批量删除失败');
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const searchParams = {
+        ...form.getFieldsValue(),
+      };
+      
+      const blob = await userApi.exportData(searchParams);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `用户数据_${new Date().getTime()}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      globalMessage.success('导出成功');
+    } catch (error) {
+      globalMessage.error('导出失败');
+    }
+  };
+
+  const handleImport = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    await userApi.importData(formData);
+    loadData();
+    return true;
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedRowKeys: React.Key[]) => {
+      setSelectedRowKeys(newSelectedRowKeys);
+    },
   };
 
   return (
@@ -207,19 +271,61 @@ const UserList: React.FC = () => {
           </Form.Item>
         </Form>
 
-        {hasPermission('system:user:create') && (
-          <div style={{ marginBottom: 16 }}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-              新增用户
-            </Button>
-          </div>
-        )}
+        <div style={{ marginBottom: 16 }}>
+          <Space>
+            {hasPermission('system:user:create') && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                新增
+              </Button>
+            )}
+            {hasPermission('system:user:delete') && (
+              <Popconfirm
+                title="确定要删除选中的数据吗？"
+                onConfirm={handleBatchDelete}
+                disabled={selectedRowKeys.length === 0}
+              >
+                <Button 
+                  danger 
+                  icon={<DeleteOutlined />}
+                  disabled={selectedRowKeys.length === 0}
+                >
+                  批量删除
+                </Button>
+              </Popconfirm>
+            )}
+            {hasPermission('system:user:export') && (
+              <Button 
+                icon={<DownloadOutlined />} 
+                onClick={handleExport}
+                style={{ 
+                  borderColor: '#52c41a', 
+                  color: '#52c41a',
+                }}
+              >
+                导出
+              </Button>
+            )}
+            {hasPermission('system:user:import') && (
+              <Button 
+                icon={<UploadOutlined />}
+                onClick={() => setImportVisible(true)}
+                style={{ 
+                  borderColor: '#1890ff', 
+                  color: '#1890ff',
+                }}
+              >
+                导入
+              </Button>
+            )}
+          </Space>
+        </div>
 
         <Table
           columns={columns}
           dataSource={data}
           loading={loading}
           rowKey="id"
+          rowSelection={rowSelection}
           pagination={{
             current,
             pageSize: size,
@@ -255,6 +361,14 @@ const UserList: React.FC = () => {
           }}
         />
       </Modal>
+
+      <ImportModal
+        visible={importVisible}
+        title="用户数据导入"
+        templateUrl="/system/user/export-template"
+        onImport={handleImport}
+        onCancel={() => setImportVisible(false)}
+      />
     </div>
   );
 };

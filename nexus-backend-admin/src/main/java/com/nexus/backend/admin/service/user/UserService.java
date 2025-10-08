@@ -4,6 +4,7 @@ import com.nexus.backend.admin.controller.user.vo.*;
 import com.nexus.backend.admin.dal.dataobject.user.UserDO;
 import com.nexus.framework.web.result.PageResult;
 import jakarta.validation.Valid;
+
 import java.util.List;
 
 /**
@@ -37,11 +38,25 @@ public interface UserService {
     void delete(Long id);
 
     /**
-     * 批量删除用户信息表
+     * 批量创建用户
+     *
+     * @param createReqVOs 创建信息列表
+     */
+    void batchCreate(List<UserSaveReqVO> createReqVOs);
+
+    /**
+     * 批量更新用户
+     *
+     * @param updateReqVOs 更新信息列表
+     */
+    void batchUpdate(List<UserSaveReqVO> updateReqVOs);
+
+    /**
+     * 批量删除用户
      *
      * @param ids 编号列表
      */
-    void deleteBatch(List<Long> ids);
+    void batchDelete(List<Long> ids);
 
     /**
      * 获得用户信息表详情

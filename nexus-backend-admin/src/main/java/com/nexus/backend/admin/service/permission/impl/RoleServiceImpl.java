@@ -1,11 +1,12 @@
 package com.nexus.backend.admin.service.permission.impl;
 
-import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.dynamic.datasource.annotation.DSTransactional;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleAssignMenuReqVO;
 import com.nexus.backend.admin.controller.permission.vo.role.RoleSaveReqVO;
+import com.nexus.backend.admin.convert.RoleConvert;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleDO;
 import com.nexus.backend.admin.dal.dataobject.permission.RoleMenuDO;
 import com.nexus.backend.admin.dal.dataobject.permission.UserRoleDO;
@@ -14,7 +15,6 @@ import com.nexus.backend.admin.dal.mapper.permission.RoleMenuMapper;
 import com.nexus.backend.admin.dal.mapper.permission.UserRoleMapper;
 import com.nexus.backend.admin.service.permission.RoleService;
 import com.nexus.framework.web.exception.BusinessException;
-import com.baomidou.dynamic.datasource.annotation.DSTransactional;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
@@ -42,14 +42,11 @@ public class RoleServiceImpl implements RoleService {
     public Long create(RoleSaveReqVO reqVO) {
         // 校验角色编码唯一性
         validateCodeUnique(null, reqVO.getCode());
-
         // 转换为 DO
-        RoleDO role = BeanUtil.copyProperties(reqVO, RoleDO.class);
+        RoleDO role = RoleConvert.INSTANCE.toDO(reqVO);
         role.setType(2); // 自定义角色
-
         // 插入数据库
         roleMapper.insert(role);
-
         return role.getId();
     }
 
@@ -57,13 +54,10 @@ public class RoleServiceImpl implements RoleService {
     public void update(RoleSaveReqVO reqVO) {
         // 校验角色是否存在
         validateExists(reqVO.getId());
-
         // 校验角色编码唯一性
         validateCodeUnique(reqVO.getId(), reqVO.getCode());
-
         // 转换为 DO
-        RoleDO role = BeanUtil.copyProperties(reqVO, RoleDO.class);
-
+        RoleDO role = RoleConvert.INSTANCE.toDO(reqVO);
         // 更新数据库
         roleMapper.updateById(role);
     }
@@ -93,6 +87,80 @@ public class RoleServiceImpl implements RoleService {
         roleMenuMapper.delete(
                 new LambdaQueryWrapper<RoleMenuDO>()
                         .eq(RoleMenuDO::getRoleId, id));
+    }
+
+    @Override
+    public void batchCreate(List<RoleSaveReqVO> createReqVOs) {
+        if (createReqVOs == null || createReqVOs.isEmpty()) {
+            return;
+        }
+
+        // 转换为 DO 列表
+        List<RoleDO> doList = createReqVOs.stream()
+                .map(reqVO -> {
+                    RoleDO role = RoleConvert.INSTANCE.toDO(reqVO);
+                    role.setType(2); // 自定义角色
+                    return role;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        // 分批插入，每批100条，避免锁表时间过长
+        List<List<RoleDO>> partitions = com.google.common.collect.Lists.partition(doList, 100);
+        for (List<RoleDO> partition : partitions) {
+            roleMapper.insertBatch(partition);
+        }
+    }
+
+    @Override
+    public void batchUpdate(List<RoleSaveReqVO> updateReqVOs) {
+        if (updateReqVOs == null || updateReqVOs.isEmpty()) {
+            return;
+        }
+
+        // 转换为 DO 列表
+        List<RoleDO> doList = updateReqVOs.stream()
+                .map(RoleConvert.INSTANCE::toDO)
+                .collect(java.util.stream.Collectors.toList());
+
+        // 分批更新，每批100条，避免锁表时间过长
+        List<List<RoleDO>> partitions = com.google.common.collect.Lists.partition(doList, 100);
+        for (List<RoleDO> partition : partitions) {
+            roleMapper.updateBatch(partition);
+        }
+    }
+
+    @Override
+    public void batchDelete(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        // 校验系统角色
+        List<RoleDO> roles = roleMapper.selectBatchIds(ids);
+        boolean hasSystemRole = roles.stream().anyMatch(role -> role.getType().equals(1));
+        if (hasSystemRole) {
+            throw new BusinessException(400, "系统内置角色，无法删除");
+        }
+
+        // 校验是否有用户关联
+        for (Long roleId : ids) {
+            Long userCount = userRoleMapper.selectCount(
+                    new LambdaQueryWrapper<UserRoleDO>()
+                            .eq(UserRoleDO::getRoleId, roleId));
+            if (userCount > 0) {
+                throw new BusinessException(400, "角色已分配给用户，无法删除");
+            }
+        }
+
+        // 分批删除，每批1000个ID，避免SQL过长
+        List<List<Long>> partitions = com.google.common.collect.Lists.partition(ids, 1000);
+        for (List<Long> partition : partitions) {
+            roleMapper.deleteBatchIds(partition); // 使用 MyBatis-Plus 自带方法
+
+            // 删除角色菜单关联
+            roleMenuMapper.delete(new LambdaQueryWrapper<RoleMenuDO>()
+                    .in(RoleMenuDO::getRoleId, partition));
+        }
     }
 
     @Override
@@ -131,7 +199,7 @@ public class RoleServiceImpl implements RoleService {
                         roleMenu.setMenuId(menuId);
                         return roleMenu;
                     })
-                    .collect(Collectors.toList());
+                    .toList();
 
             roleMenuList.forEach(roleMenuMapper::insert);
         }

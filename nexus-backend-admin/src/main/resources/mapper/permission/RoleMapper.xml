@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nexus.backend.admin.dal.mapper.permission.RoleMapper">
+
+    <!-- 批量插入 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO system_role (
+            name,
+            code,
+            sort,
+            status,
+            type,
+            remark,
+            creator,
+            date_created,
+            updater,
+            last_updated
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.name},
+                #{item.code},
+                #{item.sort},
+                #{item.status},
+                #{item.type},
+                #{item.remark},
+                #{item.creator},
+                #{item.dateCreated},
+                #{item.updater},
+                #{item.lastUpdated}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量更新 -->
+    <update id="updateBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE system_role
+            <set>
+                name = #{item.name},
+                code = #{item.code},
+                sort = #{item.sort},
+                status = #{item.status},
+                type = #{item.type},
+                remark = #{item.remark},
+                updater = #{item.updater},
+                last_updated = #{item.lastUpdated}
+            </set>
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+</mapper>
+

@@ -187,6 +187,12 @@ public class CodegenServiceImpl implements CodegenService {
             result.put("backend/controller/" + businessName + "/" + className + "Controller.java",
                     velocityTemplateEngine.render("templates/java/controller/controller.vm", context));
 
+            // Convert 转换器（仅单表生成）
+            if (templateType == 1) {
+                result.put("backend/convert/" + className + "Convert.java",
+                        velocityTemplateEngine.render("templates/java/convert/convert.vm", context));
+            }
+
             // VO 文件（统一模板，内部根据templateType判断）
             if (templateType == 2) {
                 // 树表：ListReqVO
@@ -235,10 +241,20 @@ public class CodegenServiceImpl implements CodegenService {
                 // context));
             }
 
-            // 后端代码 - 配置文件 (Mapper XML 只有CRUD需要)
-            if (templateType == 1) {
+            // 后端代码 - 配置文件 (Mapper XML：单表和主子表都需要)
+            if (templateType == 1 || templateType == 3) {
+                // 主表XML
                 result.put("backend/resources/mapper/" + businessName + "/" + className + "Mapper.xml",
                         velocityTemplateEngine.render("templates/java/dal/mapper/mapper.xml.vm", context));
+
+                // 主子表：额外生成子表XML
+                if (templateType == 3) {
+                    // TODO: 子表XML需要从 subTable 信息中生成
+                    // result.put("backend/resources/mapper/" + businessName + "/" + subClassName +
+                    // "Mapper.xml",
+                    // velocityTemplateEngine.render("templates/java/dal/mapper/mapper_sub.xml.vm",
+                    // context));
+                }
             }
 
             // 前端代码 - React（前端保持分开，根据templateType选择不同目录）

@@ -6,7 +6,6 @@ import {
   Space,
   Input,
   Form,
-  message,
   Modal,
   Popconfirm,
   Tag,
@@ -25,6 +24,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import { codegenApi, CodegenTable, PageResult } from '../../../services/codegen/codegenApi';
+import { globalMessage } from '../../../utils/globalMessage';
 
 /**
  * 代码生成表列表页面
@@ -183,7 +183,7 @@ const CodegenTableList: React.FC = () => {
       setTotal(result.total);
       setCurrent(result.current);
     } catch (error) {
-      message.error('加载数据失败');
+      globalMessage.error('加载数据失败');
       console.error('加载数据失败:', error);
     } finally {
       setLoading(false);
@@ -227,10 +227,10 @@ const CodegenTableList: React.FC = () => {
   const handleSync = async (id: number) => {
     try {
       await codegenApi.syncTable(id);
-      message.success('同步成功');
+      globalMessage.success('同步表结构成功');
       loadData();
     } catch (error) {
-      message.error('同步失败');
+      globalMessage.error('同步表结构失败');
       console.error('同步失败:', error);
     }
   };
@@ -255,9 +255,9 @@ const CodegenTableList: React.FC = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      message.success('代码生成成功');
+      globalMessage.success('代码生成成功');
     } catch (error) {
-      message.error('代码生成失败');
+      globalMessage.error('代码生成失败');
       console.error('代码生成失败:', error);
     }
   };
@@ -266,10 +266,10 @@ const CodegenTableList: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await codegenApi.deleteTable(id);
-      message.success('删除成功');
+      globalMessage.success('删除表配置成功');
       loadData();
     } catch (error) {
-      message.error('删除失败');
+      globalMessage.error('删除表配置失败');
       console.error('删除失败:', error);
     }
   };
