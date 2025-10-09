@@ -87,7 +87,7 @@ public class RoleController {
      * 分配菜单
      */
     @PostMapping("/assign-menu")
-    @PreAuthorize("hasAuthority('system:role:assign')")
+    @PreAuthorize("hasAuthority('system:role:assign-menu')")
     public Result<Void> assignMenu(@Valid @RequestBody RoleAssignMenuReqVO reqVO) {
         roleService.assignMenu(reqVO);
         return Result.success();
