@@ -270,8 +270,8 @@ public class CodegenServiceImpl implements CodegenService {
                 result.put("frontend/pages/" + moduleName + "/" + businessName + "/Form.tsx",
                         velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/Form.tsx.vm", context));
 
-                // API 服务 (按模块组织：services/模块名/)
-                result.put("frontend/services/" + moduleName + "/" + businessName + "Api.ts",
+                // API 服务 (按模块组织：services/模块名/业务名/)
+                result.put("frontend/services/" + moduleName + "/" + businessName + "/" + businessName + "Api.ts",
                         velocityTemplateEngine.render("templates/react/" + reactTemplateDir + "/api.ts.vm", context));
             }
 

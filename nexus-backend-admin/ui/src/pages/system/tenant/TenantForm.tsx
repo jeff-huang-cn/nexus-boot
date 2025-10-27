@@ -10,7 +10,7 @@ import {
   DatePicker,
 } from 'antd';
 import dayjs from 'dayjs';
-import { tenantApi, type Tenant } from '../../../services/tenant/tenantApi';
+import { tenantApi, type Tenant } from '../../../services/system/tenant/tenantApi';
 
 interface TenantFormProps {
   initialValues?: Tenant | null;

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Tree, Spin, message } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import { menuApi } from '../../../services/menu/menuApi';
-import { roleApi } from '../../../services/role/roleApi';
-import type { Menu } from '../../../services/menu/menuApi';
+import { menuApi } from '../../../services/system/menu/menuApi';
+import { roleApi } from '../../../services/system/role/roleApi';
+import type { Menu } from '../../../services/system/menu/menuApi';
 
 interface AssignMenuModalProps {
   visible: boolean;

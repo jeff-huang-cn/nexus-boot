@@ -3,7 +3,7 @@
  * 用于处理菜单数据、生成路由、权限过滤等
  */
 
-import type { Menu } from '../services/menu/menuApi';
+import type { Menu } from '../services/system/menu/menuApi';
 
 /**
  * 路由配置接口

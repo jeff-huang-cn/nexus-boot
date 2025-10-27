@@ -15,78 +15,73 @@ import {
   DeleteOutlined, 
   SearchOutlined,
   DownloadOutlined,
-  KeyOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { tenantApi, type Tenant } from '../../../services/system/tenant/tenantApi';
-import TenantForm from './TenantForm';
-import AssignMenuModal from './AssignMenuModal';
+import { deptApi, type Dept } from '../../../services/system/dept/deptApi';
+import DeptForm from './Form';
 import { globalMessage } from '../../../utils/globalMessage';
 
-const Index: React.FC = () => {
+const DeptList: React.FC = () => {
   const [form] = Form.useForm();
-  const [data, setData] = useState<Tenant[]>([]);
+  const [data, setData] = useState<Dept[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
   const [formVisible, setFormVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<Tenant | null>(null);
+  const [editingRecord, setEditingRecord] = useState<Dept | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [assignMenuVisible, setAssignMenuVisible] = useState(false);
-  const [assigningTenantId, setAssigningTenantId] = useState<number>(0);
 
-  const columns: ColumnsType<Tenant> = [
+  const columns: ColumnsType<Dept> = [
     {
-      title: '租户ID',
+      title: '部门ID',
       dataIndex: 'id',
       key: 'id',
     },
     {
-      title: '租户名称',
+      title: '部门名称',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: '租户编码',
+      title: '部门编码',
       dataIndex: 'code',
       key: 'code',
     },
     {
-      title: '数据源ID',
-      dataIndex: 'datasourceId',
-      key: 'datasourceId',
+      title: '父部门ID（0表示根部门）',
+      dataIndex: 'parentId',
+      key: 'parentId',
     },
     {
-      title: '用户数量',
-      dataIndex: 'maxUsers',
-      key: 'maxUsers',
+      title: '显示顺序',
+      dataIndex: 'sort',
+      key: 'sort',
     },
     {
-      title: '过期时间',
-      dataIndex: 'expireTime',
-      key: 'expireTime',
+      title: '负责人ID',
+      dataIndex: 'leaderUserId',
+      key: 'leaderUserId',
     },
     {
-      title: '状态',
+      title: '联系电话',
+      dataIndex: 'phone',
+      key: 'phone',
+    },
+    {
+      title: '邮箱',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: '状态：0-禁用 1-启用',
       dataIndex: 'status',
       key: 'status',
     },
     {
-      title: '创建人',
-      dataIndex: 'creator',
-      key: 'creator',
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'dateCreated',
-      key: 'dateCreated',
-      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
-    },
-    {
       title: '操作',
       key: 'action',
-      width: 280,
+      width: 200,
       render: (_, record) => (
         <Space size="middle">
           <Button
@@ -95,13 +90,6 @@ const Index: React.FC = () => {
             onClick={() => handleEdit(record)}
           >
             编辑
-          </Button>
-          <Button
-            type="link"
-            icon={<KeyOutlined />}
-            onClick={() => handleAssignMenu(record)}
-          >
-            分配菜单
           </Button>
           <Popconfirm
             title="确定要删除这条记录吗？"
@@ -129,7 +117,7 @@ const Index: React.FC = () => {
         ...params,
       };
       
-      const result = await tenantApi.getPage(searchParams);
+      const result = await deptApi.getPage(searchParams);
       setData(result.list);
       setTotal(result.total);
       setCurrent(searchParams.pageNum);
@@ -165,21 +153,15 @@ const Index: React.FC = () => {
   };
 
   // 编辑
-  const handleEdit = (record: Tenant) => {
+  const handleEdit = (record: Dept) => {
     setEditingRecord(record);
     setFormVisible(true);
-  };
-
-  // 分配菜单
-  const handleAssignMenu = (record: Tenant) => {
-    setAssigningTenantId(record.id!);
-    setAssignMenuVisible(true);
   };
 
   // 删除
   const handleDelete = async (id: number) => {
     try {
-      await tenantApi.delete(id);
+      await deptApi.delete(id);
       globalMessage.success('删除成功');
       loadData();
     } catch (error) {
@@ -195,8 +177,8 @@ const Index: React.FC = () => {
     }
     
     try {
-      await tenantApi.deleteBatch(selectedRowKeys as number[]);
-      globalMessage.success(`成功删除 ${selectedRowKeys.length} 条数据`);
+      await deptApi.deleteBatch(selectedRowKeys as number[]);
+      globalMessage.success(`成功删除 \${selectedRowKeys.length} 条数据`);
       setSelectedRowKeys([]);
       loadData();
     } catch (error) {
@@ -212,11 +194,11 @@ const Index: React.FC = () => {
         ...form.getFieldsValue(),
       };
       
-      const blob = await tenantApi.exportData(searchParams);
+      const blob = await deptApi.exportData(searchParams);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `租户管理表_${new Date().getTime()}.xlsx`;
+      link.download = '部门管理表_' + new Date().getTime() + '.xlsx';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -253,16 +235,22 @@ const Index: React.FC = () => {
           style={{ marginBottom: 16 }}
         >
           <Form.Item
-            label="租户名称"
+            label="部门名称"
             name="name"
           >
-            <Input placeholder="请输入租户名称" style={{ width: 200 }} />
+            <Input placeholder="请输入部门名称" style={{ width: 200 }} />
           </Form.Item>
           <Form.Item
-            label="租户编码"
+            label="部门编码"
             name="code"
           >
-            <Input placeholder="请输入租户编码（" style={{ width: 200 }} />
+            <Input placeholder="请输入部门编码" style={{ width: 200 }} />
+          </Form.Item>
+          <Form.Item
+            label="状态：0-禁用 1-启用"
+            name="status"
+          >
+            <Input placeholder="请输入状态：0-禁用 1-启用" style={{ width: 200 }} />
           </Form.Item>
           <Form.Item>
             <Space>
@@ -319,7 +307,7 @@ const Index: React.FC = () => {
             total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: (total) => `共 \${total} 条记录`,
             onChange: (page, pageSize) => {
               setCurrent(page);
               setSize(pageSize || 10);
@@ -329,7 +317,7 @@ const Index: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑租户管理表' : '新增租户管理表'}
+        title={editingRecord ? '编辑部门管理表' : '新增部门管理表'}
         open={formVisible}
         onCancel={() => {
           setFormVisible(false);
@@ -344,7 +332,7 @@ const Index: React.FC = () => {
           paddingRight: '8px' 
         }}
       >
-        <TenantForm
+        <DeptForm
           initialValues={editingRecord}
           onSuccess={handleFormSuccess}
           onCancel={() => {
@@ -353,18 +341,8 @@ const Index: React.FC = () => {
           }}
         />
       </Modal>
-
-      <AssignMenuModal
-        tenantId={assigningTenantId}
-        visible={assignMenuVisible}
-        onCancel={() => setAssignMenuVisible(false)}
-        onSuccess={() => {
-          setAssignMenuVisible(false);
-          globalMessage.success('菜单分配成功');
-        }}
-      />
     </div>
   );
 };
 
-export default Index;
+export default DeptList;

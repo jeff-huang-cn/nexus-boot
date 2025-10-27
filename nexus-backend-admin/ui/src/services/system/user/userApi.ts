@@ -1,4 +1,4 @@
-import request from '../../utils/request';
+import request from '../../../utils/request';
 
 // ==================== 类型定义 ====================
 

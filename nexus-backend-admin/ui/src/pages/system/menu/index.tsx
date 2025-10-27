@@ -14,8 +14,8 @@ import {
   TreeSelect,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
-import { menuApi } from '../../../services/menu/menuApi';
-import type { Menu, MenuForm } from '../../../services/menu/menuApi';
+import { menuApi } from '../../../services/system/menu/menuApi';
+import type { Menu, MenuForm } from '../../../services/system/menu/menuApi';
 import { useMenu as useMenuContext } from '../../../contexts/MenuContext';
 
 const MenuPage: React.FC = () => {

@@ -18,7 +18,7 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { userApi } from '../../../services/user/userApi';
+import { userApi } from '../../../services/system/user/userApi';
 import UserForm from './UserForm';
 import ImportModal from '../../../components/ImportModal';
 import { useMenu } from '../../../contexts/MenuContext';

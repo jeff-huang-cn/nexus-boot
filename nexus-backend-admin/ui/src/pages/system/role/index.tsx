@@ -19,8 +19,8 @@ import {
   SearchOutlined,
   DownloadOutlined,
 } from '@ant-design/icons';
-import { roleApi } from '../../../services/role/roleApi';
-import type { Role, RoleForm } from '../../../services/role/roleApi';
+import { roleApi } from '../../../services/system/role/roleApi';
+import type { Role, RoleForm } from '../../../services/system/role/roleApi';
 import AssignMenuModal from './AssignMenuModal';
 import { useMenu } from '../../../contexts/MenuContext';
 import { globalMessage } from '../../../utils/globalMessage';
