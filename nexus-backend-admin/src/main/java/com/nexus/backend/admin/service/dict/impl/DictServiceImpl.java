@@ -1,22 +1,19 @@
 package com.nexus.backend.admin.service.dict.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nexus.backend.admin.controller.dict.vo.DictPageReqVO;
-import com.nexus.backend.admin.controller.dict.vo.DictRespVO;
-import com.nexus.backend.admin.controller.dict.vo.DictSaveReqVO;
+import com.nexus.backend.admin.controller.dict.vo.*;
 import com.nexus.backend.admin.convert.DictConvert;
 import com.nexus.backend.admin.dal.dataobject.dict.DictDO;
 import com.nexus.backend.admin.dal.mapper.dict.DictMapper;
 import com.nexus.backend.admin.service.dict.DictService;
 import com.nexus.framework.web.exception.BusinessException;
-import com.nexus.framework.web.result.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 字典服务实现
@@ -34,137 +31,131 @@ public class DictServiceImpl implements DictService {
         List<DictDO> dictList = dictMapper.selectList(
                 new LambdaQueryWrapper<DictDO>()
                         .eq(DictDO::getDictType, dictType)
-                        .eq(DictDO::getStatus, 1) // 只查询启用的
                         .orderByAsc(DictDO::getSort));
 
         return DictConvert.INSTANCE.toRespVOList(dictList);
     }
 
     @Override
-    public List<DictRespVO> getAllDict() {
+    public List<DictTypeGroupRespVO> getDictTypeGroups() {
+        // 查询所有字典数据
+        List<DictDO> allDict = dictMapper.selectList(
+                new LambdaQueryWrapper<DictDO>()
+                        .orderByAsc(DictDO::getDictType, DictDO::getSort)
+        );
+
+        // 按 dict_type 分组
+        Map<String, List<DictDO>> groupedMap = allDict.stream()
+                .collect(Collectors.groupingBy(DictDO::getDictType));
+
+        // 构建返回列表
+        List<DictTypeGroupRespVO> result = new ArrayList<>();
+        for (Map.Entry<String, List<DictDO>> entry : groupedMap.entrySet()) {
+            String dictType = entry.getKey();
+            List<DictDO> items = entry.getValue();
+
+            DictTypeGroupRespVO groupVO = new DictTypeGroupRespVO();
+            groupVO.setDictType(dictType);
+            groupVO.setItemCount(items.size());
+
+            // 取第一个字典项的状态
+            if (!items.isEmpty()) {
+                groupVO.setStatus(items.get(0).getStatus());
+            }
+
+            // 取前3个字典项的标签作为示例
+            String sampleLabels = items.stream()
+                    .limit(3)
+                    .map(DictDO::getDictLabel)
+                    .collect(Collectors.joining(", "));
+            groupVO.setSampleLabels(sampleLabels);
+
+            result.add(groupVO);
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void batchSaveDictType(DictTypeBatchSaveReqVO batchSaveReqVO) {
+        String dictType = batchSaveReqVO.getDictType();
+        List<DictItemSaveVO> items = batchSaveReqVO.getItems();
+
+        // 1. 查询该字典类型下的所有现有记录
+        List<DictDO> existingList = dictMapper.selectList(
+                new LambdaQueryWrapper<DictDO>()
+                        .eq(DictDO::getDictType, dictType)
+        );
+
+        // 构建 ID -> DO 的映射，方便后续查找
+        Map<Long, DictDO> existingMap = existingList.stream()
+                .collect(Collectors.toMap(DictDO::getId, Function.identity()));
+
+        // 2. 处理新提交的数据
+        Set<Long> processedIds = new HashSet<>();
+
+        for (DictItemSaveVO item : items) {
+            if (item.getId() != null && existingMap.containsKey(item.getId())) {
+                // 更新已存在的记录
+                DictDO updateDO = new DictDO();
+                updateDO.setId(item.getId());
+                updateDO.setDictType(dictType);
+                updateDO.setDictLabel(item.getDictLabel());
+                updateDO.setDictValue(item.getDictValue());
+                updateDO.setSort(item.getSort());
+                updateDO.setStatus(item.getStatus());
+                updateDO.setColorType(item.getColorType());
+                updateDO.setCssClass(item.getCssClass());
+                updateDO.setRemark(item.getRemark());
+
+                dictMapper.updateById(updateDO);
+                processedIds.add(item.getId());
+            } else {
+                // 新增记录
+                DictDO insertDO = new DictDO();
+                insertDO.setDictType(dictType);
+                insertDO.setDictLabel(item.getDictLabel());
+                insertDO.setDictValue(item.getDictValue());
+                insertDO.setSort(item.getSort());
+                insertDO.setStatus(item.getStatus() != null ? item.getStatus() : 1);
+                insertDO.setColorType(item.getColorType());
+                insertDO.setCssClass(item.getCssClass());
+                insertDO.setRemark(item.getRemark());
+
+                dictMapper.insert(insertDO);
+            }
+        }
+
+        // 3. 删除不在新列表中的记录
+        List<Long> deleteIds = existingMap.keySet().stream()
+                .filter(id -> !processedIds.contains(id))
+                .collect(Collectors.toList());
+
+        if (!deleteIds.isEmpty()) {
+            dictMapper.deleteBatchIds(deleteIds);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteDictType(String dictType) {
+        // 查询该字典类型下的所有记录
         List<DictDO> dictList = dictMapper.selectList(
                 new LambdaQueryWrapper<DictDO>()
-                        .eq(DictDO::getStatus, 1) // 只查询启用的
-                        .orderByAsc(DictDO::getDictType, DictDO::getSort));
+                        .eq(DictDO::getDictType, dictType)
+        );
 
-        return DictConvert.INSTANCE.toRespVOList(dictList);
-    }
-
-    @Override
-    public PageResult<DictRespVO> getPage(DictPageReqVO pageReqVO) {
-        // 构建查询条件
-        LambdaQueryWrapper<DictDO> wrapper = new LambdaQueryWrapper<>();
-
-        // 字典类型 - 精确查询
-        if (StringUtils.hasText(pageReqVO.getDictType())) {
-            wrapper.eq(DictDO::getDictType, pageReqVO.getDictType());
-        }
-
-        // 字典标签 - 模糊查询
-        if (StringUtils.hasText(pageReqVO.getDictLabel())) {
-            wrapper.like(DictDO::getDictLabel, pageReqVO.getDictLabel());
-        }
-
-        // 字典值 - 模糊查询
-        if (StringUtils.hasText(pageReqVO.getDictValue())) {
-            wrapper.like(DictDO::getDictValue, pageReqVO.getDictValue());
-        }
-
-        // 状态 - 精确查询
-        if (pageReqVO.getStatus() != null) {
-            wrapper.eq(DictDO::getStatus, pageReqVO.getStatus());
-        }
-
-        // 排序：按字典类型、排序号
-        wrapper.orderByAsc(DictDO::getDictType, DictDO::getSort);
-
-        // 分页查询
-        IPage<DictDO> page = new Page<>(pageReqVO.getPageNum(), pageReqVO.getPageSize());
-        IPage<DictDO> result = dictMapper.selectPage(page, wrapper);
-
-        // 转换为 VO
-        List<DictRespVO> list = DictConvert.INSTANCE.toRespVOList(result.getRecords());
-
-        return new PageResult<>(list, result.getTotal());
-    }
-
-    @Override
-    public DictRespVO getById(Long id) {
-        DictDO dictDO = dictMapper.selectById(id);
-        if (dictDO == null) {
-            throw new BusinessException(404, "字典不存在");
-        }
-        return DictConvert.INSTANCE.toRespVO(dictDO);
-    }
-
-    @Override
-    public Long create(DictSaveReqVO saveReqVO) {
-        // 校验字典类型和值的唯一性
-        validateDictUnique(null, saveReqVO.getDictType(), saveReqVO.getDictValue());
-
-        // 转换为 DO 并插入
-        DictDO dictDO = DictConvert.INSTANCE.toDO(saveReqVO);
-        dictMapper.insert(dictDO);
-        return dictDO.getId();
-    }
-
-    @Override
-    public void update(DictSaveReqVO saveReqVO) {
-        // 校验存在
-        validateExists(saveReqVO.getId());
-
-        // 校验字典类型和值的唯一性
-        validateDictUnique(saveReqVO.getId(), saveReqVO.getDictType(), saveReqVO.getDictValue());
-
-        // 更新
-        DictDO dictDO = DictConvert.INSTANCE.toDO(saveReqVO);
-        dictMapper.updateById(dictDO);
-    }
-
-    @Override
-    public void delete(Long id) {
-        // 校验存在
-        validateExists(id);
-
-        // 删除
-        dictMapper.deleteById(id);
-    }
-
-    @Override
-    public void deleteBatch(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return;
+        if (dictList.isEmpty()) {
+            throw new BusinessException(404, "该字典类型不存在");
         }
 
         // 批量删除
+        List<Long> ids = dictList.stream()
+                .map(DictDO::getId)
+                .collect(Collectors.toList());
+
         dictMapper.deleteBatchIds(ids);
-    }
-
-    /**
-     * 校验字典是否存在
-     */
-    private void validateExists(Long id) {
-        if (dictMapper.selectById(id) == null) {
-            throw new BusinessException(404, "字典不存在");
-        }
-    }
-
-    /**
-     * 校验字典类型和值的唯一性
-     */
-    private void validateDictUnique(Long id, String dictType, String dictValue) {
-        LambdaQueryWrapper<DictDO> wrapper = new LambdaQueryWrapper<DictDO>()
-                .eq(DictDO::getDictType, dictType)
-                .eq(DictDO::getDictValue, dictValue);
-
-        if (id != null) {
-            wrapper.ne(DictDO::getId, id);
-        }
-
-        Long count = dictMapper.selectCount(wrapper);
-        if (count > 0) {
-            throw new BusinessException(400, "该字典类型下已存在相同的字典值");
-        }
     }
 
 }

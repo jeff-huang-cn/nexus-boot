@@ -3,14 +3,6 @@ import request from '../../../utils/request';
 // ==================== 类型定义 ====================
 
 /**
- * 分页结果
- */
-export interface PageResult<T> {
-  list: T[];
-  total: number;
-}
-
-/**
  * 数据字典
  */
 export interface Dict {
@@ -28,22 +20,20 @@ export interface Dict {
 }
 
 /**
- * 数据字典查询参数
+ * 字典类型分组
  */
-export interface DictQuery {
-  pageNum?: number;
-  pageSize?: number;
-  dictType?: string;
-  dictLabel?: string;
-  dictValue?: string;
+export interface DictTypeGroup {
+  dictType: string;
+  itemCount: number;
   status?: number;
+  sampleLabels?: string;
 }
 
 /**
- * 数据字典创建/编辑参数
+ * 字典项保存
  */
-export interface DictForm {
-  dictType: string;
+export interface DictItemSave {
+  id?: number;
   dictLabel: string;
   dictValue: string;
   sort?: number;
@@ -53,6 +43,14 @@ export interface DictForm {
   remark?: string;
 }
 
+/**
+ * 字典类型批量保存
+ */
+export interface DictTypeBatchSave {
+  dictType: string;
+  items: DictItemSave[];
+}
+
 // ==================== API 接口 ====================
 
 /**
@@ -60,58 +58,30 @@ export interface DictForm {
  */
 export const dictApi = {
   /**
-   * 分页查询数据字典列表
-   */
-  getPage: (params: DictQuery): Promise<PageResult<Dict>> => {
-    return request.get('/system/dict/page', { params });
-  },
-
-  /**
-   * 根据ID查询数据字典
-   */
-  getById: (id: number): Promise<Dict> => {
-    return request.get(`/system/dict/${id}`);
-  },
-
-  /**
-   * 根据字典类型获取字典列表
+   * 根据字典类型获取字典列表（用于编辑时加载）
    */
   getListByType: (dictType: string): Promise<Dict[]> => {
     return request.get(`/system/dict/type/${dictType}`);
   },
 
   /**
-   * 获取所有字典数据（用于前端缓存）
+   * 获取字典类型分组列表
    */
-  getAllDict: (): Promise<Dict[]> => {
-    return request.get('/system/dict/all');
+  getDictTypeGroups: (): Promise<DictTypeGroup[]> => {
+    return request.get('/system/dict/type-groups');
   },
 
   /**
-   * 创建数据字典
+   * 批量保存字典类型下的所有字典项
    */
-  create: (data: DictForm): Promise<number> => {
-    return request.post('/system/dict', data);
+  batchSaveDictType: (data: DictTypeBatchSave): Promise<void> => {
+    return request.post('/system/dict/type/batch-save', data);
   },
 
   /**
-   * 更新数据字典
+   * 删除字典类型及其所有字典项
    */
-  update: (id: number, data: DictForm): Promise<void> => {
-    return request.put(`/system/dict/${id}`, data);
-  },
-
-  /**
-   * 删除数据字典
-   */
-  delete: (id: number): Promise<void> => {
-    return request.delete(`/system/dict/${id}`);
-  },
-
-  /**
-   * 批量删除数据字典
-   */
-  deleteBatch: (ids: number[]): Promise<void> => {
-    return request.delete(`/system/dict/batch`, { data: ids });
+  deleteDictType: (dictType: string): Promise<void> => {
+    return request.delete(`/system/dict/type/${dictType}`);
   },
 };
