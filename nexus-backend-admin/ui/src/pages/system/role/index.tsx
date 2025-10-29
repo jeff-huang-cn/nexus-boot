@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Button,
-  Table,
-  Space,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Popconfirm,
-  Tag,
+    Button,
+    Table,
+    Space,
+    Modal,
+    Form,
+    Input,
+    InputNumber,
+    Select,
+    Popconfirm,
+    Tag, Card,
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -283,7 +283,7 @@ const RolePage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <Card>
       {/* 搜索表单 */}
       <Form
         form={searchForm}
@@ -417,7 +417,7 @@ const RolePage: React.FC = () => {
           }}
         />
       )}
-    </div>
+    </Card>
   );
 };
 

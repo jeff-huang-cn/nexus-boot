@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, message, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Modal, message, Form, Input, Popconfirm, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import ${className}Form from './Form';
 import { ${classNameFirstLower}Api, type ${className} } from '@/services/${moduleName}/${businessName}/${businessName}Api';
+import { useMenu as useMenuContext } from '@/contexts/MenuContext';
 
 /**
  * ${classComment}管理（树表）
  */
 const ${className}List: React.FC = () => {
-  const [list, setList] = useState<${className}[]>([]);
+  const [dataSource, setDataSource] = useState<${className}[]>([]);
+  const [filteredData, setFilteredData] = useState<${className}[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | undefined>();
   const [parentId, setParentId] = useState<number | undefined>();
+  const [searchForm] = Form.useForm();
+  const { permissions } = useMenuContext();
+
+  // 权限检查函数
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
 
   // 加载数据
   const loadData = async () => {
@@ -21,13 +30,19 @@ const ${className}List: React.FC = () => {
     try {
       const data = await ${classNameFirstLower}Api.getList({});
       // 构建树形结构
-      setList(buildTree(data));
+      const treeData = buildTree(data);
+      setDataSource(treeData);
+      setFilteredData(treeData);
     } catch (error) {
       // 错误消息已在 request.ts 中统一处理
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // 构建树形数据
   const buildTree = (flatData: ${className}[]): ${className}[] => {
@@ -72,21 +87,93 @@ const ${className}List: React.FC = () => {
     return tree;
   };
 
-  // 删除
-  const handleDelete = (id: number) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: '删除后不可恢复，确定要删除吗？',
-      onOk: async () => {
-        try {
-          await ${classNameFirstLower}Api.delete(id);
-          message.success('删除成功');
-          loadData();
-        } catch (error: any) {
-          // 错误消息已在 request.ts 中统一处理
+  // 搜索
+  const handleSearch = () => {
+    const values = searchForm.getFieldsValue();
+#set($hasQueryConditions = false)
+#foreach($column in $columns)
+#if(${column.listOperation})
+#set($hasQueryConditions = true)
+#end
+#end
+#if($hasQueryConditions)
+
+    // 如果没有查询值，显示全部数据
+    const hasSearchValue = Object.values(values).some(v => v !== undefined && v !== '');
+    if (!hasSearchValue) {
+      setFilteredData(dataSource);
+      return;
+    }
+
+    // 递归过滤树形数据
+    const filterTree = (items: ${className}[]): ${className}[] => {
+      return items.reduce((acc: ${className}[], item) => {
+        let matches = true;
+
+        // 根据查询条件过滤
+#foreach($column in $columns)
+#if(${column.listOperation})
+        if (values.${column.javaField} && item.${column.javaField}) {
+          matches = matches && item.${column.javaField}.toString().toLowerCase().includes(values.${column.javaField}.toLowerCase());
         }
-      },
-    });
+#end
+#end
+
+        const children = item.children ? filterTree(item.children) : [];
+
+        // 如果当前节点匹配或子节点有匹配，则保留
+        if (matches || children.length > 0) {
+          acc.push({
+            ...item,
+            children: children.length > 0 ? children : item.children,
+          });
+        }
+        return acc;
+      }, []);
+    };
+
+    setFilteredData(filterTree(dataSource));
+#else
+    setFilteredData(dataSource);
+#end
+  };
+
+  // 重置
+  const handleReset = () => {
+    searchForm.resetFields();
+    setFilteredData(dataSource);
+  };
+
+  // 新增（根节点）
+  const handleAddRoot = () => {
+    setEditId(undefined);
+    setParentId(0);
+    setModalVisible(true);
+  };
+
+  // 新增（子节点）
+  const handleAdd = (record: ${className}) => {
+    setEditId(undefined);
+    setParentId(record.id);
+    setModalVisible(true);
+  };
+
+  // 编辑
+  const handleEdit = (record: ${className}) => {
+    setEditId(record.id);
+    setParentId(undefined);
+    setModalVisible(true);
+  };
+
+  // 删除
+  const handleDelete = async (id: number) => {
+    try {
+      await ${classNameFirstLower}Api.delete(id);
+      message.success('删除成功');
+      loadData();
+    } catch (error: any) {
+      // 错误消息已在 request.ts 中统一处理
+    }
   };
 
   // 表格列定义
@@ -121,83 +208,107 @@ const ${className}List: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 200,
-      fixed: 'right',
+      width: 250,
+      fixed: 'right' as const,
       render: (_: any, record: ${className}) => (
-        <Space>
-          <Button
-            type="link"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditId(undefined);
-              setParentId(record.id);
-              setModalVisible(true);
-            }}
-          >
-            添加子节点
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditId(record.id);
-              setParentId(undefined);
-              setModalVisible(true);
-            }}
-          >
-            编辑
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id!)}
-          >
-            删除
-          </Button>
+        <Space size="small">
+          {hasPermission('${moduleName}:${businessName}:create') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => handleAdd(record)}
+            >
+              新增
+            </Button>
+          )}
+          {hasPermission('${moduleName}:${businessName}:update') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            >
+              编辑
+            </Button>
+          )}
+          {hasPermission('${moduleName}:${businessName}:delete') && (
+            <Popconfirm
+              title="确定删除吗？"
+              onConfirm={() => handleDelete(record.id!)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
   ];
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   return (
-    <Card
-      title="${classComment}管理"
-      extra={
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={loadData}>
-            刷新
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditId(undefined);
-              setParentId(0); // 顶级节点
-              setModalVisible(true);
-            }}
-          >
-            新增
-          </Button>
-        </Space>
-      }
-    >
-      <Table
-        columns={columns}
-        dataSource={list}
-        loading={loading}
-        rowKey="id"
-        pagination={false} // 树表不分页
-        defaultExpandAllRows // 默认展开所有行
-        scroll={{ x: 'max-content' }}
-      />
+    <div>
+      <Card>
+#set($hasQueryConditions = false)
+#foreach($column in $columns)
+#if(${column.listOperation})
+#set($hasQueryConditions = true)
+#end
+#end
+#if($hasQueryConditions)
+        {/* 搜索表单 */}
+        <Form
+          form={searchForm}
+          layout="inline"
+          onFinish={handleSearch}
+          style={{ marginBottom: 16 }}
+        >
+#foreach($column in $columns)
+#if(${column.listOperation})
+          <Form.Item label="${column.columnComment}" name="${column.javaField}">
+            <Input placeholder="请输入${column.columnComment}" style={{ width: 200 }} />
+          </Form.Item>
+#end
+#end
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                查询
+              </Button>
+              <Button onClick={handleReset}>
+                重置
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+
+#end
+        {/* 新增按钮 */}
+        {hasPermission('${moduleName}:${businessName}:create') && (
+          <div style={{ marginBottom: 16 }}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+              新增
+            </Button>
+          </div>
+        )}
+
+        {/* 数据表格 */}
+        <Table
+          key={filteredData.length}
+          columns={columns}
+          dataSource={filteredData}
+          loading={loading}
+          rowKey="id"
+          pagination={false}
+          scroll={{ x: 'max-content' }}
+          expandable={{
+            defaultExpandAllRows: true,
+          }}
+        />
+      </Card>
 
       <${className}Form
         visible={modalVisible}
@@ -215,7 +326,7 @@ const ${className}List: React.FC = () => {
           loadData();
         }}
       />
-    </Card>
+    </div>
   );
 };
 

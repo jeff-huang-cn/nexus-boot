@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, message, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Modal, message, Form, Input, Popconfirm, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import DeptForm from './Form';
 import { deptApi, type Dept } from '@/services/system/dept/deptApi';
+import { useMenu as useMenuContext } from '@/contexts/MenuContext';
 
 /**
  * 部门管理表管理（树表）
  */
 const DeptList: React.FC = () => {
-  const [list, setList] = useState<Dept[]>([]);
+  const [dataSource, setDataSource] = useState<Dept[]>([]);
+  const [filteredData, setFilteredData] = useState<Dept[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | undefined>();
   const [parentId, setParentId] = useState<number | undefined>();
+  const [searchForm] = Form.useForm();
+  const { permissions } = useMenuContext();
+
+  // 权限检查函数
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
 
   // 加载数据
   const loadData = async () => {
@@ -21,13 +30,19 @@ const DeptList: React.FC = () => {
     try {
       const data = await deptApi.getList({});
       // 构建树形结构
-      setList(buildTree(data));
+      const treeData = buildTree(data);
+      setDataSource(treeData);
+      setFilteredData(treeData);
     } catch (error) {
       // 错误消息已在 request.ts 中统一处理
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // 构建树形数据
   const buildTree = (flatData: Dept[]): Dept[] => {
@@ -72,21 +87,48 @@ const DeptList: React.FC = () => {
     return tree;
   };
 
+  // 搜索
+  const handleSearch = () => {
+    const values = searchForm.getFieldsValue();
+    setFilteredData(dataSource);
+  };
+
+  // 重置
+  const handleReset = () => {
+    searchForm.resetFields();
+    setFilteredData(dataSource);
+  };
+
+  // 新增（根节点）
+  const handleAddRoot = () => {
+    setEditId(undefined);
+    setParentId(0);
+    setModalVisible(true);
+  };
+
+  // 新增（子节点）
+  const handleAdd = (record: Dept) => {
+    setEditId(undefined);
+    setParentId(record.id);
+    setModalVisible(true);
+  };
+
+  // 编辑
+  const handleEdit = (record: Dept) => {
+    setEditId(record.id);
+    setParentId(undefined);
+    setModalVisible(true);
+  };
+
   // 删除
-  const handleDelete = (id: number) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: '删除后不可恢复，确定要删除吗？',
-      onOk: async () => {
-        try {
-          await deptApi.delete(id);
-          message.success('删除成功');
-          loadData();
-        } catch (error: any) {
-          // 错误消息已在 request.ts 中统一处理
-        }
-      },
-    });
+  const handleDelete = async (id: number) => {
+    try {
+      await deptApi.delete(id);
+      message.success('删除成功');
+      loadData();
+    } catch (error: any) {
+      // 错误消息已在 request.ts 中统一处理
+    }
   };
 
   // 表格列定义
@@ -148,83 +190,73 @@ const DeptList: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 200,
-      fixed: 'right',
+      width: 250,
+      fixed: 'right' as const,
       render: (_: any, record: Dept) => (
-        <Space>
-          <Button
-            type="link"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditId(undefined);
-              setParentId(record.id);
-              setModalVisible(true);
-            }}
-          >
-            添加子节点
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditId(record.id);
-              setParentId(undefined);
-              setModalVisible(true);
-            }}
-          >
-            编辑
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id!)}
-          >
-            删除
-          </Button>
+        <Space size="small">
+          {hasPermission('system:dept:create') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => handleAdd(record)}
+            >
+              新增
+            </Button>
+          )}
+          {hasPermission('system:dept:update') && (
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            >
+              编辑
+            </Button>
+          )}
+          {hasPermission('system:dept:delete') && (
+            <Popconfirm
+              title="确定删除吗？"
+              onConfirm={() => handleDelete(record.id!)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
   ];
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   return (
-    <Card
-      title="部门管理表管理"
-      extra={
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={loadData}>
-            刷新
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditId(undefined);
-              setParentId(0); // 顶级节点
-              setModalVisible(true);
-            }}
-          >
-            新增
-          </Button>
-        </Space>
-      }
-    >
-      <Table
-        columns={columns}
-        dataSource={list}
-        loading={loading}
-        rowKey="id"
-        pagination={false} // 树表不分页
-        defaultExpandAllRows // 默认展开所有行
-        scroll={{ x: 'max-content' }}
-      />
+    <div>
+      <Card>
+        {/* 新增按钮 */}
+        {hasPermission('system:dept:create') && (
+          <div style={{ marginBottom: 16 }}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+              新增
+            </Button>
+          </div>
+        )}
+
+        {/* 数据表格 */}
+        <Table
+          key={filteredData.length}
+          columns={columns}
+          dataSource={filteredData}
+          loading={loading}
+          rowKey="id"
+          pagination={false}
+          scroll={{ x: 'max-content' }}
+          expandable={{
+            defaultExpandAllRows: true,
+          }}
+        />
+      </Card>
 
       <DeptForm
         visible={modalVisible}
@@ -242,7 +274,7 @@ const DeptList: React.FC = () => {
           loadData();
         }}
       />
-    </Card>
+    </div>
   );
 };
 

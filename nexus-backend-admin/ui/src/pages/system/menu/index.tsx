@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Button,
-  Table,
-  Space,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  message,
-  Popconfirm,
-  Tag,
-  TreeSelect,
+    Button,
+    Table,
+    Space,
+    Modal,
+    Form,
+    Input,
+    InputNumber,
+    Select,
+    message,
+    Popconfirm,
+    Tag,
+    TreeSelect, Card,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { menuApi } from '../../../services/system/menu/menuApi';
@@ -277,7 +277,7 @@ const MenuPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <Card>
       {/* 搜索表单 */}
       <Form
         form={searchForm}
@@ -311,6 +311,7 @@ const MenuPage: React.FC = () => {
 
       {/* 数据表格 */}
       <Table
+        key={filteredData.length}
         columns={columns}
         dataSource={filteredData}
         loading={loading}
@@ -413,7 +414,7 @@ const MenuPage: React.FC = () => {
           )}
         </Form>
       </Modal>
-    </div>
+    </Card>
   );
 };
 
