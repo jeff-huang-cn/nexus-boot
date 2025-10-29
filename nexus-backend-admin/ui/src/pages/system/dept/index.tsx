@@ -1,347 +1,248 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  Button,
-  Space,
-  Input,
-  Form,
-  Card,
-  Modal,
-  Popconfirm,
-} from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
-  SearchOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons';
+import { Table, Button, Space, Modal, message, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { deptApi, type Dept } from '../../../services/system/dept/deptApi';
 import DeptForm from './Form';
-import { globalMessage } from '../../../utils/globalMessage';
+import { deptApi, type Dept } from '@/services/system/dept/deptApi';
 
+/**
+ * 部门管理表管理（树表）
+ */
 const DeptList: React.FC = () => {
-  const [form] = Form.useForm();
-  const [data, setData] = useState<Dept[]>([]);
+  const [list, setList] = useState<Dept[]>([]);
   const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [current, setCurrent] = useState(1);
-  const [size, setSize] = useState(10);
-  const [formVisible, setFormVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<Dept | null>(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  const columns: ColumnsType<Dept> = [
-    {
-      title: '部门ID',
-      dataIndex: 'id',
-      key: 'id',
-    },
-    {
-      title: '部门名称',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: '部门编码',
-      dataIndex: 'code',
-      key: 'code',
-    },
-    {
-      title: '父部门ID（0表示根部门）',
-      dataIndex: 'parentId',
-      key: 'parentId',
-    },
-    {
-      title: '显示顺序',
-      dataIndex: 'sort',
-      key: 'sort',
-    },
-    {
-      title: '负责人ID',
-      dataIndex: 'leaderUserId',
-      key: 'leaderUserId',
-    },
-    {
-      title: '联系电话',
-      dataIndex: 'phone',
-      key: 'phone',
-    },
-    {
-      title: '邮箱',
-      dataIndex: 'email',
-      key: 'email',
-    },
-    {
-      title: '状态：0-禁用 1-启用',
-      dataIndex: 'status',
-      key: 'status',
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 200,
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这条记录吗？"
-            onConfirm={() => handleDelete(record.id!)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editId, setEditId] = useState<number | undefined>();
+  const [parentId, setParentId] = useState<number | undefined>();
 
   // 加载数据
-  const loadData = async (params?: any) => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const searchParams = {
-        pageNum: current,
-        pageSize: size,
-        ...form.getFieldsValue(),
-        ...params,
-      };
-      
-      const result = await deptApi.getPage(searchParams);
-      setData(result.list);
-      setTotal(result.total);
-      setCurrent(searchParams.pageNum);
-      setSize(searchParams.pageSize);
+      const data = await deptApi.getList({});
+      // 构建树形结构
+      setList(buildTree(data));
     } catch (error) {
-      globalMessage.error('加载数据失败');
+      // 错误消息已在 request.ts 中统一处理
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, [current, size]);
+  // 构建树形数据
+  const buildTree = (flatData: Dept[]): Dept[] => {
+    const map = new Map<number, any>();
+    const tree: any[] = [];
 
-  // 搜索
-  const handleSearch = () => {
-    setCurrent(1);
-    loadData({ pageNum: 1 });
-  };
+    // 第一遍：构建映射
+    flatData.forEach((item) => {
+      map.set(item.id!, { ...item, children: [] });
+    });
 
-  // 重置
-  const handleReset = () => {
-    form.resetFields();
-    setCurrent(1);
-    loadData({ pageNum: 1 });
-  };
+    // 第二遍：构建树形结构
+    flatData.forEach((item) => {
+      const node = map.get(item.id!);
+      if (!item.parentId || item.parentId === 0) {
+        // 根节点
+        tree.push(node);
+      } else {
+        // 子节点
+        const parent = map.get(item.parentId);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          // 如果找不到父节点，作为根节点
+          tree.push(node);
+        }
+      }
+    });
 
-  // 新增
-  const handleAdd = () => {
-    setEditingRecord(null);
-    setFormVisible(true);
-  };
+    // 删除空的 children 数组
+    const removeEmptyChildren = (nodes: any[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length === 0) {
+          delete node.children;
+        } else if (node.children) {
+          removeEmptyChildren(node.children);
+        }
+      });
+    };
+    removeEmptyChildren(tree);
 
-  // 编辑
-  const handleEdit = (record: Dept) => {
-    setEditingRecord(record);
-    setFormVisible(true);
+    return tree;
   };
 
   // 删除
-  const handleDelete = async (id: number) => {
-    try {
-      await deptApi.delete(id);
-      globalMessage.success('删除成功');
-      loadData();
-    } catch (error) {
-      globalMessage.error('删除失败');
-    }
+  const handleDelete = (id: number) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: '删除后不可恢复，确定要删除吗？',
+      onOk: async () => {
+        try {
+          await deptApi.delete(id);
+          message.success('删除成功');
+          loadData();
+        } catch (error: any) {
+          // 错误消息已在 request.ts 中统一处理
+        }
+      },
+    });
   };
 
-  // 批量删除
-  const handleBatchDelete = async () => {
-    if (selectedRowKeys.length === 0) {
-      globalMessage.warning('请选择要删除的数据');
-      return;
-    }
-    
-    try {
-      await deptApi.deleteBatch(selectedRowKeys as number[]);
-      globalMessage.success(`成功删除 \${selectedRowKeys.length} 条数据`);
-      setSelectedRowKeys([]);
-      loadData();
-    } catch (error) {
-      globalMessage.error('批量删除失败');
-    }
-  };
-
-
-  // 导出
-  const handleExport = async () => {
-    try {
-      const searchParams = {
-        ...form.getFieldsValue(),
-      };
-      
-      const blob = await deptApi.exportData(searchParams);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = '部门管理表_' + new Date().getTime() + '.xlsx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      globalMessage.success('导出成功');
-    } catch (error) {
-      globalMessage.error('导出失败');
-    }
-  };
-
-  // 行选择配置
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedRowKeys);
+  // 表格列定义
+  const columns: ColumnsType<Dept> = [
+    {
+      title: '部门ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 200,
     },
-  };
+    {
+      title: '部门名称',
+      dataIndex: 'name',
+      key: 'name',
+      width: 150,
+    },
+    {
+      title: '部门编码',
+      dataIndex: 'code',
+      key: 'code',
+      width: 150,
+    },
+    {
+      title: '父部门ID（0表示根部门）',
+      dataIndex: 'parentId',
+      key: 'parentId',
+      width: 100,
+    },
+    {
+      title: '显示顺序',
+      dataIndex: 'sort',
+      key: 'sort',
+      width: 100,
+    },
+    {
+      title: '负责人ID',
+      dataIndex: 'leaderUserId',
+      key: 'leaderUserId',
+      width: 100,
+    },
+    {
+      title: '联系电话',
+      dataIndex: 'phone',
+      key: 'phone',
+      width: 150,
+    },
+    {
+      title: '邮箱',
+      dataIndex: 'email',
+      key: 'email',
+      width: 150,
+    },
+    {
+      title: '状态：0-禁用 1-启用',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 200,
+      fixed: 'right',
+      render: (_: any, record: Dept) => (
+        <Space>
+          <Button
+            type="link"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditId(undefined);
+              setParentId(record.id);
+              setModalVisible(true);
+            }}
+          >
+            添加子节点
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditId(record.id);
+              setParentId(undefined);
+              setModalVisible(true);
+            }}
+          >
+            编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id!)}
+          >
+            删除
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
-  // 表单保存成功
-  const handleFormSuccess = () => {
-    setFormVisible(false);
-    setEditingRecord(null);
+  useEffect(() => {
     loadData();
-  };
+  }, []);
 
   return (
-    <div>
-      <Card>
-        <Form
-          form={form}
-          layout="inline"
-          onFinish={handleSearch}
-          style={{ marginBottom: 16 }}
-        >
-          <Form.Item
-            label="部门名称"
-            name="name"
+    <Card
+      title="部门管理表管理"
+      extra={
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={loadData}>
+            刷新
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditId(undefined);
+              setParentId(0); // 顶级节点
+              setModalVisible(true);
+            }}
           >
-            <Input placeholder="请输入部门名称" style={{ width: 200 }} />
-          </Form.Item>
-          <Form.Item
-            label="部门编码"
-            name="code"
-          >
-            <Input placeholder="请输入部门编码" style={{ width: 200 }} />
-          </Form.Item>
-          <Form.Item
-            label="状态：0-禁用 1-启用"
-            name="status"
-          >
-            <Input placeholder="请输入状态：0-禁用 1-启用" style={{ width: 200 }} />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                查询
-              </Button>
-              <Button onClick={handleReset}>
-                重置
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
+            新增
+          </Button>
+        </Space>
+      }
+    >
+      <Table
+        columns={columns}
+        dataSource={list}
+        loading={loading}
+        rowKey="id"
+        pagination={false} // 树表不分页
+        defaultExpandAllRows // 默认展开所有行
+        scroll={{ x: 'max-content' }}
+      />
 
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-              新增
-            </Button>
-            <Popconfirm
-              title="确定要删除选中的数据吗？"
-              onConfirm={handleBatchDelete}
-              disabled={selectedRowKeys.length === 0}
-            >
-              <Button 
-                danger 
-                icon={<DeleteOutlined />}
-                disabled={selectedRowKeys.length === 0}
-              >
-                批量删除
-              </Button>
-            </Popconfirm>
-            <Button 
-              icon={<DownloadOutlined />} 
-              onClick={handleExport}
-              style={{ 
-                borderColor: '#52c41a', 
-                color: '#52c41a',
-              }}
-            >
-              导出
-            </Button>
-          </Space>
-        </div>
-
-        <Table
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          rowKey="id"
-          rowSelection={rowSelection}
-          pagination={{
-            current,
-            pageSize: size,
-            total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `共 \${total} 条记录`,
-            onChange: (page, pageSize) => {
-              setCurrent(page);
-              setSize(pageSize || 10);
-            },
-          }}
-        />
-      </Card>
-
-      <Modal
-        title={editingRecord ? '编辑部门管理表' : '新增部门管理表'}
-        open={formVisible}
-        onCancel={() => {
-          setFormVisible(false);
-          setEditingRecord(null);
+      <DeptForm
+        visible={modalVisible}
+        editId={editId}
+        parentId={parentId}
+        onClose={() => {
+          setModalVisible(false);
+          setEditId(undefined);
+          setParentId(undefined);
         }}
-        footer={null}
-        width={800}
-        destroyOnClose
-        bodyStyle={{ 
-          maxHeight: 'calc(100vh - 300px)', 
-          overflowY: 'auto',
-          paddingRight: '8px' 
+        onSuccess={() => {
+          setModalVisible(false);
+          setEditId(undefined);
+          setParentId(undefined);
+          loadData();
         }}
-      >
-        <DeptForm
-          initialValues={editingRecord}
-          onSuccess={handleFormSuccess}
-          onCancel={() => {
-            setFormVisible(false);
-            setEditingRecord(null);
-          }}
-        />
-      </Modal>
-    </div>
+      />
+    </Card>
   );
 };
 

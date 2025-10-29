@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, TreeSelect, message } from 'antd';
-import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData } from '@/services/${moduleName}/${businessName}Api';
+import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData } from '@/services/${moduleName}/${businessName}/${businessName}Api';
 
 interface Props {
   visible: boolean;
   editId?: number;
+  parentId?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -12,10 +13,28 @@ interface Props {
 /**
  * ${classComment}表单（树表）
  */
-const ${className}Form: React.FC<Props> = ({ visible, editId, onClose, onSuccess }) => {
+const ${className}Form: React.FC<Props> = ({ visible, editId, parentId, onClose, onSuccess }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [treeData, setTreeData] = useState<any[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([]);
+
+  // 收集所有节点的 key
+  const collectAllKeys = (nodes: any[]): (string | number)[] => {
+    const keys: (string | number)[] = [];
+    const traverse = (items: any[]) => {
+      items.forEach(item => {
+        if (item.value !== undefined) {
+          keys.push(item.value);
+        }
+        if (item.children && item.children.length > 0) {
+          traverse(item.children);
+        }
+      });
+    };
+    traverse(nodes);
+    return keys;
+  };
 
   // 加载树形数据（用于父节点选择）
   const loadTreeData = async () => {
@@ -23,13 +42,16 @@ const ${className}Form: React.FC<Props> = ({ visible, editId, onClose, onSuccess
       const data = await ${classNameFirstLower}Api.getList({});
       // 构建树形选择器数据
       const tree = buildTreeSelectData(data);
-      setTreeData([
+      const treeWithRoot = [
         {
           title: '根节点',
           value: 0,
           children: tree,
         },
-      ]);
+      ];
+      setTreeData(treeWithRoot);
+      // 收集所有节点的 key 用于展开
+      setExpandedKeys(collectAllKeys(treeWithRoot));
     } catch (error) {
       // 错误消息已在 request.ts 中统一处理
     }
@@ -94,11 +116,11 @@ const ${className}Form: React.FC<Props> = ({ visible, editId, onClose, onSuccess
           });
       } else {
         form.resetFields();
-        // 设置默认父节点为根节点
-        form.setFieldsValue({ parentId: 0 });
+        // 设置父节点：如果传入了 parentId 则使用，否则默认为根节点(0)
+        form.setFieldsValue({ parentId: parentId !== undefined ? parentId : 0 });
       }
     }
-  }, [visible, editId, form]);
+  }, [visible, editId, parentId, form]);
 
   // 提交表单
   const handleSubmit = async () => {
@@ -154,7 +176,7 @@ const ${className}Form: React.FC<Props> = ({ visible, editId, onClose, onSuccess
           <TreeSelect
             placeholder="请选择父节点"
             treeData={treeData}
-            treeDefaultExpandAll
+            treeDefaultExpandedKeys={expandedKeys}
             allowClear
           />
         </Form.Item>

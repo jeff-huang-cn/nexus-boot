@@ -2,23 +2,20 @@ package com.nexus.backend.admin.controller.dept.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import com.nexus.framework.mybatis.entity.BasePageQuery;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 
 import static com.nexus.framework.utils.date.DateUtils.DATETIME_PATTERN;
 
 /**
- * 部门管理表 分页 Request VO
+ * 部门管理表 列表 Request VO
  *
  * @author beckend
- * @since 2025-10-27
+ * @since 2025-10-28
  */
-@Schema(description = "部门管理表 Page Request VO")
+@Schema(description = "部门管理表 List Request VO")
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class DeptPageReqVO extends BasePageQuery {
+public class DeptListReqVO {
 
     @Schema(description = "部门名称", example = "示例名称")
     private String name;

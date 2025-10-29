@@ -344,7 +344,7 @@ const MenuPage: React.FC = () => {
             <TreeSelect
               showSearch
               placeholder="请选择父级菜单（根节点请选择0）"
-              treeDefaultExpandAll
+              treeDefaultExpandAll={true}
               treeData={[
                 { title: '根目录', value: 0 },
                 ...buildParentTreeData(dataSource, editingRecord?.id),

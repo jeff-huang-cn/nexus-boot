@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, Table, Button, Space, message, Card } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData, type ${subClassName}Form } from '@/services/${moduleName}/${businessName}Api';
+import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData, type ${subClassName}Form } from '@/services/${moduleName}/${businessName}/${businessName}Api';
 
 interface Props {
   visible: boolean;

@@ -100,7 +100,7 @@ public interface ${className}Service {
      * @param listReqVO 查询条件
      * @return ${classComment}列表
      */
-    List<${className}RespVO> getList(${className}ListReqVO listReqVO);
+    List<${className}DO> getList(${className}ListReqVO listReqVO);
 #end
 #if($templateType == 3)
 

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * 部门管理表 新增/修改 Request VO
  *
  * @author beckend
- * @since 2025-10-27
+ * @since 2025-10-28
  */
 @Schema(description = "部门管理表 新增/修改 Request VO")
 @Data

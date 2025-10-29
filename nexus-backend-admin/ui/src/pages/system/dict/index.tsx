@@ -7,52 +7,103 @@ import {
   Form,
   Card,
   Modal,
+  App,
   Popconfirm,
+  Select,
+  Tag,
 } from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   SearchOutlined,
-  DownloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { ${classNameFirstLower}Api, type ${className} } from '@/services/${moduleName}/${businessName}/${businessName}Api';
-import ${className}Form from './Form';
-import { globalMessage } from '@/utils/globalMessage';
+import { dictApi, type Dict } from '@/services/system/dict/dictApi';
+import DictForm from './Form';
 
-const ${className}List: React.FC = () => {
+const DictList: React.FC = () => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
-  const [data, setData] = useState<${className}[]>([]);
+  const [data, setData] = useState<Dict[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
   const [formVisible, setFormVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<${className} | null>(null);
-#if($templateType == 1 || $templateType == 3)
+  const [editingRecord, setEditingRecord] = useState<Dict | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-#end
 
-  const columns: ColumnsType<${className}> = [
-#foreach($column in $columns)
-#if(${column.listOperationResult})
+  // 颜色标签映射
+  const colorMap: Record<string, string> = {
+    default: 'default',
+    primary: 'blue',
+    success: 'green',
+    info: 'cyan',
+    warning: 'orange',
+    danger: 'red',
+    blue: 'blue',
+    pink: 'pink',
+  };
+
+  const columns: ColumnsType<Dict> = [
     {
-      title: '${column.columnComment}',
-      dataIndex: '${column.javaField}',
-      key: '${column.javaField}',
-#if(${column.javaField} == "dateCreated" || ${column.javaField} == "lastUpdated")
-      render: (text: string) => text ? new Date(text).toLocaleString() : '-',
-#end
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 80,
     },
-#end
-#end
+    {
+      title: '字典类型',
+      dataIndex: 'dictType',
+      key: 'dictType',
+      width: 200,
+    },
+    {
+      title: '字典标签',
+      dataIndex: 'dictLabel',
+      key: 'dictLabel',
+      width: 150,
+      render: (text, record) => (
+        <Tag color={colorMap[record.colorType || 'default']}>{text}</Tag>
+      ),
+    },
+    {
+      title: '字典值',
+      dataIndex: 'dictValue',
+      key: 'dictValue',
+      width: 120,
+    },
+    {
+      title: '排序',
+      dataIndex: 'sort',
+      key: 'sort',
+      width: 80,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status) => (
+        <Tag color={status === 1 ? 'success' : 'default'}>
+          {status === 1 ? '启用' : '禁用'}
+        </Tag>
+      ),
+    },
+    {
+      title: '备注',
+      dataIndex: 'remark',
+      key: 'remark',
+      ellipsis: true,
+    },
     {
       title: '操作',
       key: 'action',
       width: 200,
+      fixed: 'right',
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small">
           <Button
             type="link"
             icon={<EditOutlined />}
@@ -85,14 +136,14 @@ const ${className}List: React.FC = () => {
         ...form.getFieldsValue(),
         ...params,
       };
-      
-      const result = await ${classNameFirstLower}Api.getPage(searchParams);
+
+      const result = await dictApi.getPage(searchParams);
       setData(result.list);
       setTotal(result.total);
       setCurrent(searchParams.pageNum);
       setSize(searchParams.pageSize);
     } catch (error) {
-      globalMessage.error('加载数据失败');
+      message.error('加载数据失败');
     } finally {
       setLoading(false);
     }
@@ -122,7 +173,7 @@ const ${className}List: React.FC = () => {
   };
 
   // 编辑
-  const handleEdit = (record: ${className}) => {
+  const handleEdit = (record: Dict) => {
     setEditingRecord(record);
     setFormVisible(true);
   };
@@ -130,57 +181,30 @@ const ${className}List: React.FC = () => {
   // 删除
   const handleDelete = async (id: number) => {
     try {
-      await ${classNameFirstLower}Api.delete(id);
-      globalMessage.success('删除成功');
+      await dictApi.delete(id);
+      message.success('删除成功');
       loadData();
     } catch (error) {
-      globalMessage.error('删除失败');
+      message.error('删除失败');
     }
   };
-#if($templateType == 1 || $templateType == 3)
 
   // 批量删除
   const handleBatchDelete = async () => {
     if (selectedRowKeys.length === 0) {
-      globalMessage.warning('请选择要删除的数据');
+      message.warning('请选择要删除的数据');
       return;
     }
-    
+
     try {
-      await ${classNameFirstLower}Api.deleteBatch(selectedRowKeys as number[]);
-      globalMessage.success(`成功删除 \${selectedRowKeys.length} 条数据`);
+      await dictApi.deleteBatch(selectedRowKeys as number[]);
+      message.success(`成功删除 ${selectedRowKeys.length} 条数据`);
       setSelectedRowKeys([]);
       loadData();
     } catch (error) {
-      globalMessage.error('批量删除失败');
+      message.error('批量删除失败');
     }
   };
-
-#if($templateType == 1)
-
-  // 导出
-  const handleExport = async () => {
-    try {
-      const searchParams = {
-        ...form.getFieldsValue(),
-      };
-      
-      const blob = await ${classNameFirstLower}Api.exportData(searchParams);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = '${classComment}_' + new Date().getTime() + '.xlsx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      globalMessage.success('导出成功');
-    } catch (error) {
-      globalMessage.error('导出失败');
-    }
-  };
-#end
 
   // 行选择配置
   const rowSelection = {
@@ -189,7 +213,6 @@ const ${className}List: React.FC = () => {
       setSelectedRowKeys(newSelectedRowKeys);
     },
   };
-#end
 
   // 表单保存成功
   const handleFormSuccess = () => {
@@ -207,24 +230,24 @@ const ${className}List: React.FC = () => {
           onFinish={handleSearch}
           style={{ marginBottom: 16 }}
         >
-#foreach($column in $columns)
-#if(${column.listOperation})
-          <Form.Item
-            label="${column.columnComment}"
-            name="${column.javaField}"
-          >
-            <Input placeholder="请输入${column.columnComment}" style={{ width: 200 }} />
+          <Form.Item label="字典类型" name="dictType">
+            <Input placeholder="请输入字典类型" style={{ width: 200 }} />
           </Form.Item>
-#end
-#end
+          <Form.Item label="字典标签" name="dictLabel">
+            <Input placeholder="请输入字典标签" style={{ width: 200 }} />
+          </Form.Item>
+          <Form.Item label="状态" name="status">
+            <Select placeholder="请选择状态" style={{ width: 120 }} allowClear>
+              <Select.Option value={1}>启用</Select.Option>
+              <Select.Option value={0}>禁用</Select.Option>
+            </Select>
+          </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
                 查询
               </Button>
-              <Button onClick={handleReset}>
-                重置
-              </Button>
+              <Button onClick={handleReset}>重置</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -234,33 +257,19 @@ const ${className}List: React.FC = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               新增
             </Button>
-#if($templateType == 1 || $templateType == 3)
             <Popconfirm
               title="确定要删除选中的数据吗？"
               onConfirm={handleBatchDelete}
               disabled={selectedRowKeys.length === 0}
             >
-              <Button 
-                danger 
+              <Button
+                danger
                 icon={<DeleteOutlined />}
                 disabled={selectedRowKeys.length === 0}
               >
                 批量删除
               </Button>
             </Popconfirm>
-#end
-#if($templateType == 1)
-            <Button 
-              icon={<DownloadOutlined />} 
-              onClick={handleExport}
-              style={{ 
-                borderColor: '#52c41a', 
-                color: '#52c41a',
-              }}
-            >
-              导出
-            </Button>
-#end
           </Space>
         </div>
 
@@ -269,16 +278,15 @@ const ${className}List: React.FC = () => {
           dataSource={data}
           loading={loading}
           rowKey="id"
-#if($templateType == 1 || $templateType == 3)
           rowSelection={rowSelection}
-#end
+          scroll={{ x: 1200 }}
           pagination={{
             current,
             pageSize: size,
             total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 \${total} 条记录`,
+            showTotal: (total) => `共 ${total} 条记录`,
             onChange: (page, pageSize) => {
               setCurrent(page);
               setSize(pageSize || 10);
@@ -288,22 +296,17 @@ const ${className}List: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingRecord ? '编辑${classComment}' : '新增${classComment}'}
+        title={editingRecord ? '编辑字典' : '新增字典'}
         open={formVisible}
         onCancel={() => {
           setFormVisible(false);
           setEditingRecord(null);
         }}
         footer={null}
-        width={800}
+        width={600}
         destroyOnClose
-        bodyStyle={{ 
-          maxHeight: 'calc(100vh - 300px)', 
-          overflowY: 'auto',
-          paddingRight: '8px' 
-        }}
       >
-        <${className}Form
+        <DictForm
           initialValues={editingRecord}
           onSuccess={handleFormSuccess}
           onCancel={() => {
@@ -316,4 +319,4 @@ const ${className}List: React.FC = () => {
   );
 };
 
-export default ${className}List;
+export default DictList;

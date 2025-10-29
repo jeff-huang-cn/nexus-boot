@@ -11,7 +11,7 @@ import java.util.List;
  * 部门管理表 Mapper 接口
  *
  * @author beckend
- * @since 2025-10-27
+ * @since 2025-10-28
  */
 @Mapper
 public interface DeptMapper extends BaseMapper<DeptDO> {

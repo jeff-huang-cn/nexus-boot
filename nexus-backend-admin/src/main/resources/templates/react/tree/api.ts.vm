@@ -57,7 +57,7 @@ export const getList = (params: ${className}Query) => {
  * 获取${classComment}详情
  */
 export const getById = (id: number) => {
-  return request.get<${className}>(`/${moduleName}/${businessName}/${"$"}{id}`);
+  return request.get<${className}>(`/${moduleName}/${businessName}/\${id}`);
 };
 
 /**
@@ -71,14 +71,14 @@ export const create = (data: ${className}Form) => {
  * 更新${classComment}
  */
 export const update = (data: ${className}Form) => {
-  return request.put<void>(`/${moduleName}/${businessName}/${"$"}{data.id}`, data);
+  return request.put<void>(`/${moduleName}/${businessName}/\${data.id}`, data);
 };
 
 /**
  * 删除${classComment}
  */
 export const delete${className} = (id: number) => {
-  return request.delete<void>(`/${moduleName}/${businessName}/${"$"}{id}`);
+  return request.delete<void>(`/${moduleName}/${businessName}/\${id}`);
 };
 
 export const ${classNameFirstLower}Api = {

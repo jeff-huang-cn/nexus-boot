@@ -1,145 +1,238 @@
-import React, { useEffect } from 'react';
-import {
-  Form,
-  Input,
-  Button,
-  Space,
-  message,
-  InputNumber,
-  Select,
-  Radio,
-  DatePicker,
-} from 'antd';
-import dayjs from 'dayjs';
-import { deptApi, type Dept } from '../../../services/system/dept/deptApi';
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, InputNumber, Select, TreeSelect, message } from 'antd';
+import { deptApi, type Dept, type DeptForm as FormData } from '@/services/system/dept/deptApi';
 
-interface DeptFormProps {
-  initialValues?: Dept | null;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+interface Props {
+  visible: boolean;
+  editId?: number;
+  parentId?: number;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
-const DeptForm: React.FC<DeptFormProps> = ({
-  initialValues,
-  onSuccess,
-  onCancel,
-}) => {
+/**
+ * 部门管理表表单（树表）
+ */
+const DeptForm: React.FC<Props> = ({ visible, editId, parentId, onClose, onSuccess }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
+  const [treeData, setTreeData] = useState<any[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([]);
 
-  useEffect(() => {
-    if (initialValues) {
-      // 转换日期字符串为 dayjs 对象
-      const formValues = { ...initialValues };
-      form.setFieldsValue(formValues);
-    } else {
-      form.resetFields();
-    }
-  }, [initialValues, form]);
+  // 收集所有节点的 key
+  const collectAllKeys = (nodes: any[]): (string | number)[] => {
+    const keys: (string | number)[] = [];
+    const traverse = (items: any[]) => {
+      items.forEach(item => {
+        if (item.value !== undefined) {
+          keys.push(item.value);
+        }
+        if (item.children && item.children.length > 0) {
+          traverse(item.children);
+        }
+      });
+    };
+    traverse(nodes);
+    return keys;
+  };
 
-  const handleSubmit = async (values: any) => {
-    setLoading(true);
+  // 加载树形数据（用于父节点选择）
+  const loadTreeData = async () => {
     try {
-      // 转换 dayjs 对象为字符串
-      const submitValues = { ...values };
+      const data = await deptApi.getList({});
+      // 构建树形选择器数据
+      const tree = buildTreeSelectData(data);
+      const treeWithRoot = [
+        {
+          title: '根节点',
+          value: 0,
+          children: tree,
+        },
+      ];
+      setTreeData(treeWithRoot);
+      // 收集所有节点的 key 用于展开
+      setExpandedKeys(collectAllKeys(treeWithRoot));
+    } catch (error) {
+      // 错误消息已在 request.ts 中统一处理
+    }
+  };
 
-      if (initialValues?.id) {
-        // 编辑
-        await deptApi.update(initialValues.id, submitValues);
-        message.success('修改成功');
+  // 构建树形选择器数据
+  const buildTreeSelectData = (flatData: Dept[]): any[] => {
+    const map = new Map<number, any>();
+    const tree: any[] = [];
+
+    flatData.forEach((item) => {
+      // 排除当前编辑的节点（防止选择自己为父节点）
+      if (editId && item.id === editId) {
+        return;
+      }
+
+      map.set(item.id!, {
+        title: item.name,
+        value: item.id,
+        children: [],
+      });
+    });
+
+    flatData.forEach((item) => {
+      if (editId && item.id === editId) {
+        return;
+      }
+
+      const node = map.get(item.id!);
+      if (!item.parentId || item.parentId === 0) {
+        tree.push(node);
       } else {
-        // 新增
-        await deptApi.create(submitValues);
+        const parent = map.get(item.parentId);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          tree.push(node);
+        }
+      }
+    });
+
+    return tree;
+  };
+
+  // 加载编辑数据
+  useEffect(() => {
+    if (visible) {
+      loadTreeData();
+
+      if (editId) {
+        setLoading(true);
+        deptApi
+          .getById(editId)
+          .then((data) => {
+            form.setFieldsValue(data);
+          })
+          .catch(() => {
+            // 错误消息已在 request.ts 中统一处理
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        form.resetFields();
+        // 设置父节点：如果传入了 parentId 则使用，否则默认为根节点(0)
+        form.setFieldsValue({ parentId: parentId !== undefined ? parentId : 0 });
+      }
+    }
+  }, [visible, editId, parentId, form]);
+
+  // 提交表单
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      if (editId) {
+        await deptApi.update({ ...values, id: editId });
+        message.success('更新成功');
+      } else {
+        await deptApi.create(values);
         message.success('创建成功');
       }
-      onSuccess?.();
-    } catch (error) {
-      message.error(initialValues?.id ? '修改失败' : '创建失败');
-      console.error('保存失败:', error);
+
+      onSuccess();
+    } catch (error: any) {
+      if (error.errorFields) {
+        // 表单校验失败
+        return;
+      }
+      // 其他错误消息已在 request.ts 中统一处理
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={handleSubmit}
-      initialValues={initialValues || {}}
+    <Modal
+      title={editId ? '编辑部门管理表' : '新增部门管理表'}
+      open={visible}
+      onOk={handleSubmit}
+      onCancel={onClose}
+      confirmLoading={loading}
+      width={600}
+      destroyOnClose
     >
-      <Form.Item
-        label="部门名称"
-        name="name"
-        rules={[{ required: true, message: '请输入部门名称' }]}
+      <Form
+        form={form}
+        labelCol={{ span: 6 }}
+        wrapperCol={{ span: 16 }}
+        autoComplete="off"
       >
-        <Input placeholder="请输入部门名称" />
-      </Form.Item>
-      <Form.Item
-        label="部门编码"
-        name="code"
-      >
-        <Input placeholder="请输入部门编码" />
-      </Form.Item>
-      <Form.Item
-        label="父部门ID（0表示根部门）"
-        name="parentId"
-      >
-        <InputNumber
-          style={{ width: '100%' }}
-          placeholder="请输入父部门ID（0表示根部门）"
-        />
-      </Form.Item>
-      <Form.Item
-        label="显示顺序"
-        name="sort"
-      >
-        <InputNumber
-          style={{ width: '100%' }}
-          placeholder="请输入显示顺序"
-        />
-      </Form.Item>
-      <Form.Item
-        label="负责人ID"
-        name="leaderUserId"
-      >
-        <InputNumber
-          style={{ width: '100%' }}
-          placeholder="请输入负责人ID"
-        />
-      </Form.Item>
-      <Form.Item
-        label="联系电话"
-        name="phone"
-      >
-        <Input placeholder="请输入联系电话" />
-      </Form.Item>
-      <Form.Item
-        label="邮箱"
-        name="email"
-      >
-        <Input placeholder="请输入邮箱" />
-      </Form.Item>
-      <Form.Item
-        label="状态：0-禁用 1-启用"
-        name="status"
-      >
-        <Select placeholder="请选择状态：0-禁用 1-启用">
-          {/* TODO: 添加选项 */}
-        </Select>
-      </Form.Item>
+        <Form.Item name="id" hidden>
+          <Input />
+        </Form.Item>
 
-      <Form.Item>
-        <Space>
-          <Button type="primary" htmlType="submit" loading={loading}>
-            {initialValues?.id ? '更新' : '创建'}
-          </Button>
-          <Button onClick={onCancel}>
-            取消
-          </Button>
-        </Space>
-      </Form.Item>
-    </Form>
+        <Form.Item
+          name="parentId"
+          label="父节点"
+          rules={[{ required: true, message: '请选择父节点' }]}
+        >
+          <TreeSelect
+            placeholder="请选择父节点"
+            treeData={treeData}
+            treeDefaultExpandedKeys={expandedKeys}
+            allowClear
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="name"
+          label="部门名称"
+          rules={[{ required: true, message: '请输入部门名称' }]}
+        >
+          <Input placeholder="请输入部门名称" />
+        </Form.Item>
+
+        <Form.Item
+          name="code"
+          label="部门编码"
+        >
+          <Input placeholder="请输入部门编码" />
+        </Form.Item>
+
+        <Form.Item
+          name="sort"
+          label="显示顺序"
+        >
+          <InputNumber placeholder="请输入显示顺序" style={{ width: '100%' }} />
+        </Form.Item>
+
+        <Form.Item
+          name="leaderUserId"
+          label="负责人ID"
+        >
+          <InputNumber placeholder="请输入负责人ID" style={{ width: '100%' }} />
+        </Form.Item>
+
+        <Form.Item
+          name="phone"
+          label="联系电话"
+        >
+          <Input placeholder="请输入联系电话" />
+        </Form.Item>
+
+        <Form.Item
+          name="email"
+          label="邮箱"
+        >
+          <Input placeholder="请输入邮箱" />
+        </Form.Item>
+
+        <Form.Item
+          name="status"
+          label="状态：0-禁用 1-启用"
+        >
+          <InputNumber placeholder="请输入状态：0-禁用 1-启用" style={{ width: '100%' }} />
+        </Form.Item>
+
+      </Form>
+    </Modal>
   );
 };
 

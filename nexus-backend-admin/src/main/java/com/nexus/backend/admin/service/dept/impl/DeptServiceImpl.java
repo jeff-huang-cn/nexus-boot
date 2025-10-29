@@ -1,29 +1,25 @@
 package com.nexus.backend.admin.service.dept.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nexus.framework.web.result.PageResult;
 import com.nexus.framework.web.exception.BusinessException;
 import com.nexus.backend.admin.controller.dept.vo.*;
 import com.nexus.backend.admin.convert.DeptConvert;
 import com.nexus.backend.admin.dal.dataobject.dept.DeptDO;
 import com.nexus.backend.admin.dal.mapper.dept.DeptMapper;
 import com.nexus.backend.admin.service.dept.DeptService;
-import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 部门管理表 Service 实现类
+ * （树表）
  *
  * @author beckend
- * @since 2025-10-27
+ * @since 2025-10-28
  */
 @Slf4j
 @Service
@@ -34,6 +30,8 @@ public class DeptServiceImpl implements DeptService {
 
     @Override
     public Long create(DeptSaveReqVO createReqVO) {
+        // 校验父节点和名称唯一性
+        validateParentAndNameUnique(null, createReqVO.getParentId(), createReqVO.getName());
         // 转换为 DO 并插入
         DeptDO dept = DeptConvert.INSTANCE.toDO(createReqVO);
         deptMapper.insert(dept);
@@ -44,6 +42,8 @@ public class DeptServiceImpl implements DeptService {
     public void update(DeptSaveReqVO updateReqVO) {
         // 校验存在
         validateExists(updateReqVO.getId());
+        // 校验父节点和名称唯一性
+        validateParentAndNameUnique(updateReqVO.getId(), updateReqVO.getParentId(), updateReqVO.getName());
         // 更新主表
         DeptDO updateDept = DeptConvert.INSTANCE.toDO(updateReqVO);
         deptMapper.updateById(updateDept);
@@ -53,59 +53,15 @@ public class DeptServiceImpl implements DeptService {
     public void delete(Long id) {
         // 校验存在
         validateExists(id);
+        // 校验是否有子节点
+        Long childCount = deptMapper.selectCount(
+                new LambdaQueryWrapper<DeptDO>()
+                        .eq(DeptDO::getParentId, id));
+        if (childCount > 0) {
+            throw new BusinessException(400, "存在子节点，无法删除");
+        }
         // 删除主表
         deptMapper.deleteById(id);
-    }
-
-    @Override
-    public void batchCreate(List<DeptSaveReqVO> createReqVOs) {
-        if (createReqVOs == null || createReqVOs.isEmpty()) {
-            return;
-        }
-        
-        // 转换为 DO 列表
-        List<DeptDO> doList = createReqVOs.stream()
-                .map(DeptConvert.INSTANCE::toDO)
-                .collect(Collectors.toList());
-        // 分批插入，每批100条，避免锁表时间过长
-        List<List<DeptDO>> partitions = Lists.partition(doList, 100);
-        for (List<DeptDO> partition : partitions) {
-            deptMapper.insertBatch(partition);
-        }
-
-    }
-
-    @Override
-    public void batchUpdate(List<DeptSaveReqVO> updateReqVOs) {
-        if (updateReqVOs == null || updateReqVOs.isEmpty()) {
-            return;
-        }
-
-        // 转换为 DO 列表
-        List<DeptDO> doList = updateReqVOs.stream()
-                .map(DeptConvert.INSTANCE::toDO)
-                .collect(Collectors.toList());
-
-        // 分批更新，每批100条，避免锁表时间过长
-        List<List<DeptDO>> partitions = Lists.partition(doList, 100);
-        for (List<DeptDO> partition : partitions) {
-            deptMapper.updateBatch(partition);
-        }
-
-    }
-
-    @Override
-    public void batchDelete(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return;
-        }
-
-        // 分批删除，每批1000个ID，避免锁表时间过长
-        List<List<Long>> partitions = Lists.partition(ids, 1000);
-        for (List<Long> partition : partitions) {
-            deptMapper.deleteByIds(partition);
-        }
-
     }
 
     @Override
@@ -118,34 +74,18 @@ public class DeptServiceImpl implements DeptService {
     }
 
     @Override
-    public PageResult<DeptRespVO> getPage(DeptPageReqVO pageReqVO) {
+    public List<DeptDO> getList(DeptListReqVO listReqVO) {
         // 构建查询条件
-        LambdaQueryWrapper<DeptDO> wrapper = buildQueryWrapper(pageReqVO);
+        LambdaQueryWrapper<DeptDO> wrapper = buildQueryWrapper(listReqVO);
 
-        // 分页查询
-        IPage<DeptDO> page = new Page<>(pageReqVO.getPageNum(), pageReqVO.getPageSize());
-        IPage<DeptDO> result = deptMapper.selectPage(page, wrapper);
-
-        // 转换为 VO
-        List<DeptRespVO> list = DeptConvert.INSTANCE.toRespVOList(result.getRecords());
-
-        return new PageResult<>(list, result.getTotal());
-    }
-
-    @Override
-    public List<DeptDO> getList(DeptPageReqVO pageReqVO) {
-        // 构建查询条件
-        LambdaQueryWrapper<DeptDO> wrapper = buildQueryWrapper(pageReqVO);
-
-        // 查询列表
+        // 查询列表并返回 DO
         return deptMapper.selectList(wrapper);
     }
-
 
     /**
      * 构建查询条件
      */
-    private LambdaQueryWrapper<DeptDO> buildQueryWrapper(DeptPageReqVO reqVO) {
+    private LambdaQueryWrapper<DeptDO> buildQueryWrapper(DeptListReqVO reqVO) {
         LambdaQueryWrapper<DeptDO> wrapper = new LambdaQueryWrapper<>();
 
         // 部门名称 - 模糊查询
@@ -161,8 +101,8 @@ public class DeptServiceImpl implements DeptService {
             wrapper.eq(DeptDO::getStatus, reqVO.getStatus());
         }
 
-        // 默认按创建时间倒序
-        wrapper.orderByDesc(DeptDO::getDateCreated);
+        // 默认按排序号排序
+        wrapper.orderByAsc(DeptDO::getSort);
 
         return wrapper;
     }
@@ -173,6 +113,31 @@ public class DeptServiceImpl implements DeptService {
     private void validateExists(Long id) {
         if (deptMapper.selectById(id) == null) {
             throw new BusinessException(404, "部门管理表不存在");
+        }
+    }
+
+    /**
+     * 校验父节点和名称唯一性
+     */
+    private void validateParentAndNameUnique(Long id, Long parentId, String name) {
+        // 1. 校验父节点
+        if (parentId != null && parentId != 0L) {
+            DeptDO parent = deptMapper.selectById(parentId);
+            if (parent == null) {
+                throw new BusinessException(400, "父节点不存在");
+            }
+        }
+
+        // 2. 校验名称唯一性
+        LambdaQueryWrapper<DeptDO> wrapper = new LambdaQueryWrapper<DeptDO>()
+                .eq(DeptDO::getParentId, parentId)
+                .eq(DeptDO::getName, name);
+        if (id != null) {
+            wrapper.ne(DeptDO::getId, id);
+        }
+        Long count = deptMapper.selectCount(wrapper);
+        if (count > 0) {
+            throw new BusinessException(400, "同级目录下已存在相同名称的部门管理表");
         }
     }
 }
