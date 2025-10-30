@@ -138,7 +138,7 @@ public class RoleServiceImpl implements RoleService {
         }
 
         // 校验系统角色
-        List<RoleDO> roles = roleMapper.selectBatchIds(ids);
+        List<RoleDO> roles = roleMapper.selectByIds(ids);
         boolean hasSystemRole = roles.stream().anyMatch(role -> role.getType().equals(1));
         if (hasSystemRole) {
             throw new BusinessException(400, "系统内置角色，无法删除");

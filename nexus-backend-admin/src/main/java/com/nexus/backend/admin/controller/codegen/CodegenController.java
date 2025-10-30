@@ -2,7 +2,7 @@ package com.nexus.backend.admin.controller.codegen;
 
 import com.nexus.backend.admin.controller.codegen.vo.ImportTableVO;
 import com.nexus.backend.admin.controller.codegen.vo.CodegenTableVO;
-import com.nexus.backend.admin.controller.codegen.vo.UpdateTableConfigVo;
+import com.nexus.backend.admin.controller.codegen.vo.UpdateTableConfigVO;
 import com.nexus.backend.admin.dal.dataobject.codegen.CodegenColumnDO;
 import com.nexus.backend.admin.dal.dataobject.codegen.CodegenTableDO;
 import com.nexus.backend.admin.service.codegen.CodegenService;
@@ -104,7 +104,7 @@ public class CodegenController {
     @PutMapping("/tables/{id}")
     @PreAuthorize("hasAuthority('codegen:table:update')")
     public Result<Void> updateTableConfig(@PathVariable @NotNull Long id,
-            @Valid @RequestBody UpdateTableConfigVo dto) {
+            @Valid @RequestBody UpdateTableConfigVO dto) {
         // 确保ID一致
         dto.getTable().setId(id);
 

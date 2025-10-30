@@ -15,7 +15,7 @@ import java.util.List;
  * @since 2024-01-01
  */
 @Data
-public class UpdateTableConfigVo {
+public class UpdateTableConfigVO {
 
     /**
      * 表配置

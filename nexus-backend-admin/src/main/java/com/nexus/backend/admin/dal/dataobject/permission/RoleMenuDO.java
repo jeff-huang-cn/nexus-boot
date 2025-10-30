@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.nexus.framework.mybatis.entity.BaseCreateDO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 角色菜单关联 DO
@@ -12,6 +13,7 @@ import lombok.Data;
  * @author nexus
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("system_role_menu")
 public class RoleMenuDO extends BaseCreateDO {
 

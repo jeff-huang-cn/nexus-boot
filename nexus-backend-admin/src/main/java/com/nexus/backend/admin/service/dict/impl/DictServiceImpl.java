@@ -133,7 +133,7 @@ public class DictServiceImpl implements DictService {
                 .collect(Collectors.toList());
 
         if (!deleteIds.isEmpty()) {
-            dictMapper.deleteBatchIds(deleteIds);
+            dictMapper.deleteByIds(deleteIds);
         }
     }
 
@@ -155,7 +155,7 @@ public class DictServiceImpl implements DictService {
                 .map(DictDO::getId)
                 .collect(Collectors.toList());
 
-        dictMapper.deleteBatchIds(ids);
+        dictMapper.deleteByIds(ids);
     }
 
 }
