@@ -6,6 +6,8 @@ import com.nexus.framework.web.result.PageResult;
 #end
 #if($templateType == 1)
 import com.nexus.framework.excel.ExcelUtils;
+#end
+#if($templateType == 1 || $templateType == 2)
 import ${packageName}.convert.${className}Convert;
 #end
 import ${packageName}.controller.${businessName}.vo.*;
@@ -124,6 +126,22 @@ public class ${className}Controller {
         return Result.success();
     }
 #end
+#if($templateType == 2)
+
+    /**
+     * 获得${classComment}列表（树表不分页）
+     *
+     * @param listReqVO 查询参数
+     * @return ${classComment}列表
+     */
+    @GetMapping("/list")
+    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:query')")
+    public Result<List<${className}RespVO>> getList(@Valid ${className}ListReqVO listReqVO) {
+        List<${className}DO> list = ${classNameFirstLower}Service.getList(listReqVO);
+        List<${className}RespVO> voList = ${className}Convert.INSTANCE.toRespVOList(list);
+        return Result.success(voList);
+    }
+#end
 
     /**
      * 获得${classComment}详情
@@ -176,21 +194,6 @@ public class ${className}Controller {
 
         // 使用 ExcelUtils 导出
         ExcelUtils.export(response, voList, ${className}RespVO.class, "${classComment}数据", "${classComment}数据");
-    }
-#end
-#if($templateType == 2)
-
-    /**
-     * 获得${classComment}列表（树形结构）
-     *
-     * @param listReqVO 查询参数
-     * @return 列表结果
-     */
-    @GetMapping("/list")
-    @PreAuthorize("hasAuthority('${moduleName}:${businessName}:query')")
-    public Result<List<${className}RespVO>> getList(@Valid ${className}ListReqVO listReqVO) {
-        List<${className}RespVO} list = ${classNameFirstLower}Service.getList(listReqVO);
-        return Result.success(list);
     }
 #end
 #if($templateType == 3)

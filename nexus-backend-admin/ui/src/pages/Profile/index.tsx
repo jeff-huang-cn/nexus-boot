@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, Radio, message, Avatar, Spin } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { profileApi, ProfileVO, ProfileUpdateDTO } from '../../services/user/profileApi';
+import { profileApi, ProfileVO, ProfileUpdateDTO } from '../../services/system/user/profileApi';
 
 const Profile: React.FC = () => {
   const [form] = Form.useForm();

@@ -11,7 +11,7 @@ import {
   DatePicker,
 } from 'antd';
 import dayjs from 'dayjs';
-import { ${classNameFirstLower}Api, type ${className} } from '../../../services/${moduleName}/${businessName}Api';
+import { ${classNameFirstLower}Api, type ${className} } from '@/services/${moduleName}/${businessName}/${businessName}Api';
 
 interface ${className}FormProps {
   initialValues?: ${className} | null;

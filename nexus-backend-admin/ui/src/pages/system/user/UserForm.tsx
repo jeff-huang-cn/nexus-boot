@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Form, Input, Select, Button, Space, message } from 'antd';
-import { userApi, User, UserForm as UserFormData } from '../../../services/user/userApi';
+import { userApi, User, UserForm as UserFormData } from '../../../services/system/user/userApi';
 
 const { Option } = Select;
 

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Button,
-  Table,
-  Space,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  Popconfirm,
-  Tag,
+    Button,
+    Table,
+    Space,
+    Modal,
+    Form,
+    Input,
+    InputNumber,
+    Select,
+    Popconfirm,
+    Tag, Card,
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -19,8 +19,8 @@ import {
   SearchOutlined,
   DownloadOutlined,
 } from '@ant-design/icons';
-import { roleApi } from '../../../services/role/roleApi';
-import type { Role, RoleForm } from '../../../services/role/roleApi';
+import { roleApi } from '../../../services/system/role/roleApi';
+import type { Role, RoleForm } from '../../../services/system/role/roleApi';
 import AssignMenuModal from './AssignMenuModal';
 import { useMenu } from '../../../contexts/MenuContext';
 import { globalMessage } from '../../../utils/globalMessage';
@@ -283,7 +283,7 @@ const RolePage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <Card>
       {/* 搜索表单 */}
       <Form
         form={searchForm}
@@ -417,7 +417,7 @@ const RolePage: React.FC = () => {
           }}
         />
       )}
-    </div>
+    </Card>
   );
 };
 

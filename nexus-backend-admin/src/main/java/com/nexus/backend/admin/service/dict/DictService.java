@@ -1,6 +1,6 @@
 package com.nexus.backend.admin.service.dict;
 
-import com.nexus.backend.admin.controller.dict.vo.DictRespVO;
+import com.nexus.backend.admin.controller.dict.vo.*;
 
 import java.util.List;
 
@@ -20,10 +20,24 @@ public interface DictService {
     List<DictRespVO> getListByType(String dictType);
 
     /**
-     * 获取所有字典数据（用于前端缓存）
+     * 获取字典类型分组列表
      *
-     * @return 所有字典数据
+     * @return 字典类型分组列表
      */
-    List<DictRespVO> getAllDict();
+    List<DictTypeGroupRespVO> getDictTypeGroups();
+
+    /**
+     * 批量保存某个字典类型下的所有字典项
+     *
+     * @param batchSaveReqVO 批量保存参数
+     */
+    void batchSaveDictType(DictTypeBatchSaveReqVO batchSaveReqVO);
+
+    /**
+     * 删除字典类型及其所有字典项
+     *
+     * @param dictType 字典类型
+     */
+    void deleteDictType(String dictType);
 
 }

@@ -81,7 +81,7 @@ export const getPage = (params: ${className}Query) => {
  * 获取${classComment}详情
  */
 export const getById = (id: number) => {
-  return request.get<${className}>(`/${moduleName}/${businessName}/${"$"}{id}`);
+  return request.get<${className}>(`/${moduleName}/${businessName}/\${id}`);
 };
 
 /**
@@ -95,14 +95,14 @@ export const create = (data: ${className}Form) => {
  * 更新${classComment}（含子表）
  */
 export const update = (data: ${className}Form) => {
-  return request.put<void>(`/${moduleName}/${businessName}/${"$"}{data.id}`, data);
+  return request.put<void>(`/${moduleName}/${businessName}/\${data.id}`, data);
 };
 
 /**
  * 删除${classComment}
  */
 export const delete${className} = (id: number) => {
-  return request.delete<void>(`/${moduleName}/${businessName}/${"$"}{id}`);
+  return request.delete<void>(`/${moduleName}/${businessName}/\${id}`);
 };
 
 /**
@@ -116,7 +116,7 @@ export const deleteBatch = (ids: number[]) => {
  * 获取子表列表
  */
 export const getSubList = (${mainIdField}: number) => {
-  return request.get<${subClassName}[]>(`/${moduleName}/${businessName}/${"$"}{${mainIdField}}/sub-list`);
+  return request.get<${subClassName}[]>(`/${moduleName}/${businessName}/\${${mainIdField}}/sub-list`);
 };
 
 export const ${classNameFirstLower}Api = {

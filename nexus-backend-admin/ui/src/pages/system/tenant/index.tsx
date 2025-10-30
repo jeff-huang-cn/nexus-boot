@@ -18,7 +18,7 @@ import {
   KeyOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { tenantApi, type Tenant } from '../../../services/tenant/tenantApi';
+import { tenantApi, type Tenant } from '../../../services/system/tenant/tenantApi';
 import TenantForm from './TenantForm';
 import AssignMenuModal from './AssignMenuModal';
 import { globalMessage } from '../../../utils/globalMessage';

@@ -20,6 +20,7 @@ CREATE TABLE `system_dict` (
   `date_created` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updater` VARCHAR(64) DEFAULT NULL COMMENT '更新者',
   `last_updated` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标志：0-未删除 1-已删除',
   PRIMARY KEY (`id`),
   KEY `idx_dict_type` (`dict_type`),
   KEY `idx_status` (`status`)

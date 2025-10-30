@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import request from '../utils/request';
 import { getPermissions } from '../utils/auth';
-import type { Menu } from '../services/menu/menuApi';
+import type { Menu } from '../services/system/menu/menuApi';
 
 interface MenuContextType {
   menus: Menu[];

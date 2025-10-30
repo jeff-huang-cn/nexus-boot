@@ -20,7 +20,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate, useParams } from 'react-router-dom';
 import { codegenApi, CodegenTable, CodegenColumn } from '../../../services/codegen/codegenApi';
-import { menuApi, type Menu } from '../../../services/menu/menuApi';
+import { menuApi, type Menu } from '../../../services/system/menu/menuApi';
 import { globalMessage } from '../../../utils/globalMessage';
 
 const { Option } = Select;

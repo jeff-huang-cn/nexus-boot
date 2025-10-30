@@ -7,7 +7,7 @@ import {
   Button,
   Modal,
   Form,
-  message,
+  App,
   Tag,
   Popconfirm,
   Divider,
@@ -30,6 +30,7 @@ import { datasourceApi, DataSourceConfig, DataSourceConfigCreateReq, DataSourceC
  * 数据源管理页面
  */
 const DatasourceManage: React.FC = () => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [modalForm] = Form.useForm();
   const [data, setData] = useState<DataSourceConfig[]>([]);

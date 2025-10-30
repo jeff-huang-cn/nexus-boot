@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nexus.backend.admin.dal.mapper.dept.DeptMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.nexus.backend.admin.dal.dataobject.dept.DeptDO">
+        <result column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="code" property="code" />
+        <result column="parent_id" property="parentId" />
+        <result column="sort" property="sort" />
+        <result column="leader_user_id" property="leaderUserId" />
+        <result column="phone" property="phone" />
+        <result column="email" property="email" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <!-- 批量插入 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO system_dept (
+            name,
+            code,
+            parent_id,
+            sort,
+            leader_user_id,
+            phone,
+            email,
+            status,
+            tenant_id,
+            creator,
+            date_created,
+            updater,
+            last_updated,
+            deleted
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.name},
+                #{item.code},
+                #{item.parentId},
+                #{item.sort},
+                #{item.leaderUserId},
+                #{item.phone},
+                #{item.email},
+                #{item.status},
+                #{item.tenantId},
+                #{item.creator},
+                #{item.dateCreated},
+                #{item.updater},
+                #{item.lastUpdated},
+                #{item.deleted}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量更新 -->
+    <update id="updateBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE system_dept
+            <set>
+                name = #{item.name},
+                code = #{item.code},
+                parent_id = #{item.parentId},
+                sort = #{item.sort},
+                leader_user_id = #{item.leaderUserId},
+                phone = #{item.phone},
+                email = #{item.email},
+                status = #{item.status},
+                tenant_id = #{item.tenantId},
+                creator = #{item.creator},
+                date_created = #{item.dateCreated},
+                updater = #{item.updater},
+                last_updated = #{item.lastUpdated},
+                deleted = #{item.deleted}
+            </set>
+            WHERE id = #{item.id} AND deleted = 0
+        </foreach>
+    </update>
+
+</mapper>
+

@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Button,
-  Table,
-  Space,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  message,
-  Popconfirm,
-  Tag,
-  TreeSelect,
+    Button,
+    Table,
+    Space,
+    Modal,
+    Form,
+    Input,
+    InputNumber,
+    Select,
+    message,
+    Popconfirm,
+    Tag,
+    TreeSelect, Card,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
-import { menuApi } from '../../../services/menu/menuApi';
-import type { Menu, MenuForm } from '../../../services/menu/menuApi';
+import { menuApi } from '../../../services/system/menu/menuApi';
+import type { Menu, MenuForm } from '../../../services/system/menu/menuApi';
 import { useMenu as useMenuContext } from '../../../contexts/MenuContext';
 
 const MenuPage: React.FC = () => {
@@ -277,7 +277,7 @@ const MenuPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 24 }}>
+    <Card>
       {/* 搜索表单 */}
       <Form
         form={searchForm}
@@ -311,6 +311,7 @@ const MenuPage: React.FC = () => {
 
       {/* 数据表格 */}
       <Table
+        key={filteredData.length}
         columns={columns}
         dataSource={filteredData}
         loading={loading}
@@ -344,7 +345,7 @@ const MenuPage: React.FC = () => {
             <TreeSelect
               showSearch
               placeholder="请选择父级菜单（根节点请选择0）"
-              treeDefaultExpandAll
+              treeDefaultExpandAll={true}
               treeData={[
                 { title: '根目录', value: 0 },
                 ...buildParentTreeData(dataSource, editingRecord?.id),
@@ -413,7 +414,7 @@ const MenuPage: React.FC = () => {
           )}
         </Form>
       </Modal>
-    </div>
+    </Card>
   );
 };
 
