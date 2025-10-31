@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, message, Form, Input, Popconfirm, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import DeptForm from './Form';
 import { deptApi, type Dept } from '@/services/system/dept/deptApi';
@@ -18,31 +18,13 @@ const DeptList: React.FC = () => {
   const [parentId, setParentId] = useState<number | undefined>();
   const [searchForm] = Form.useForm();
   const { permissions } = useMenuContext();
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+  const [isAllExpanded, setIsAllExpanded] = useState(true);
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
     return permissions.includes(permission);
   };
-
-  // 加载数据
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const data = await deptApi.getList({});
-      // 构建树形结构
-      const treeData = buildTree(data);
-      setDataSource(treeData);
-      setFilteredData(treeData);
-    } catch (error) {
-      // 错误消息已在 request.ts 中统一处理
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   // 构建树形数据
   const buildTree = (flatData: Dept[]): Dept[] => {
@@ -87,10 +69,101 @@ const DeptList: React.FC = () => {
     return tree;
   };
 
+  // 获取所有节点的ID（递归）
+  const getAllNodeKeys = (data: Dept[]): React.Key[] => {
+    const keys: React.Key[] = [];
+    const traverse = (nodes: Dept[]) => {
+      nodes.forEach((node) => {
+        if (node.id !== undefined) {
+          keys.push(node.id);
+        }
+        if (node.children && node.children.length > 0) {
+          traverse(node.children);
+        }
+      });
+    };
+    traverse(data);
+    return keys;
+  };
+
+  // 加载数据
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const data = await deptApi.getList({});
+      // 构建树形结构
+      const treeData = buildTree(data);
+      setDataSource(treeData);
+      setFilteredData(treeData);
+      // 默认展开所有节点
+      const allKeys = getAllNodeKeys(treeData);
+      setExpandedRowKeys(allKeys);
+    } catch (error) {
+      // 错误消息已在 request.ts 中统一处理
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // 切换展开/收起
+  const handleToggleExpand = () => {
+    if (isAllExpanded) {
+      // 当前是展开状态，则收起
+      setExpandedRowKeys([]);
+      setIsAllExpanded(false);
+    } else {
+      // 当前是收起状态，则展开
+      const allKeys = getAllNodeKeys(filteredData);
+      setExpandedRowKeys(allKeys);
+      setIsAllExpanded(true);
+    }
+  };
+
   // 搜索
   const handleSearch = () => {
     const values = searchForm.getFieldsValue();
-    setFilteredData(dataSource);
+
+    // 如果没有查询值，显示全部数据
+    const hasSearchValue = Object.values(values).some(v => v !== undefined && v !== '');
+    if (!hasSearchValue) {
+      setFilteredData(dataSource);
+      return;
+    }
+
+    // 递归过滤树形数据
+    const filterTree = (items: Dept[]): Dept[] => {
+      return items.reduce((acc: Dept[], item) => {
+        let matches = true;
+
+        // 根据查询条件过滤
+        if (values.name && item.name) {
+          matches = matches && item.name.toString().toLowerCase().includes(values.name.toLowerCase());
+        }
+        if (values.code && item.code) {
+          matches = matches && item.code.toString().toLowerCase().includes(values.code.toLowerCase());
+        }
+        if (values.status && item.status) {
+          matches = matches && item.status.toString().toLowerCase().includes(values.status.toLowerCase());
+        }
+
+        const children = item.children ? filterTree(item.children) : [];
+
+        // 如果当前节点匹配或子节点有匹配，则保留
+        if (matches || children.length > 0) {
+          acc.push({
+            ...item,
+            children: children.length > 0 ? children : item.children,
+          });
+        }
+        return acc;
+      }, []);
+    };
+
+    setFilteredData(filterTree(dataSource));
   };
 
   // 重置
@@ -234,14 +307,50 @@ const DeptList: React.FC = () => {
   return (
     <div>
       <Card>
-        {/* 新增按钮 */}
-        {hasPermission('system:dept:create') && (
-          <div style={{ marginBottom: 16 }}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
-              新增
+        {/* 搜索表单 */}
+        <Form
+          form={searchForm}
+          layout="inline"
+          onFinish={handleSearch}
+          style={{ marginBottom: 16 }}
+        >
+          <Form.Item label="部门名称" name="name">
+            <Input placeholder="请输入部门名称" style={{ width: 200 }} />
+          </Form.Item>
+          <Form.Item label="部门编码" name="code">
+            <Input placeholder="请输入部门编码" style={{ width: 200 }} />
+          </Form.Item>
+          <Form.Item label="状态：0-禁用 1-启用" name="status">
+            <Input placeholder="请输入状态：0-禁用 1-启用" style={{ width: 200 }} />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                查询
+              </Button>
+              <Button onClick={handleReset}>
+                重置
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+
+        {/* 操作按钮 */}
+        <div style={{ marginBottom: 16 }}>
+          <Space>
+            <Button
+              icon={isAllExpanded ? <ShrinkOutlined /> : <ExpandOutlined />}
+              onClick={handleToggleExpand}
+            >
+              {isAllExpanded ? '全部收起' : '全部展开'}
             </Button>
-          </div>
-        )}
+            {hasPermission('system:dept:create') && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+                新增
+              </Button>
+            )}
+          </Space>
+        </div>
 
         {/* 数据表格 */}
         <Table
@@ -253,7 +362,8 @@ const DeptList: React.FC = () => {
           pagination={false}
           scroll={{ x: 'max-content' }}
           expandable={{
-            defaultExpandAllRows: true,
+            expandedRowKeys: expandedRowKeys,
+            onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),
           }}
         />
       </Card>

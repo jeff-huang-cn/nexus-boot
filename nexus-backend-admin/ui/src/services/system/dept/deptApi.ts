@@ -21,6 +21,7 @@ export interface Dept {
   phone?: string;
   email?: string;
   status?: number;
+  children?: Dept[];
 }
 
 export interface DeptQuery {

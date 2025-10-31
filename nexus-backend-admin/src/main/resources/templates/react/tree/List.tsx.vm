@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, message, Form, Input, Popconfirm, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import ${className}Form from './Form';
 import { ${classNameFirstLower}Api, type ${className} } from '@/services/${moduleName}/${businessName}/${businessName}Api';
@@ -18,31 +18,13 @@ const ${className}List: React.FC = () => {
   const [parentId, setParentId] = useState<number | undefined>();
   const [searchForm] = Form.useForm();
   const { permissions } = useMenuContext();
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+  const [isAllExpanded, setIsAllExpanded] = useState(true);
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
     return permissions.includes(permission);
   };
-
-  // 加载数据
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const data = await ${classNameFirstLower}Api.getList({});
-      // 构建树形结构
-      const treeData = buildTree(data);
-      setDataSource(treeData);
-      setFilteredData(treeData);
-    } catch (error) {
-      // 错误消息已在 request.ts 中统一处理
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   // 构建树形数据
   const buildTree = (flatData: ${className}[]): ${className}[] => {
@@ -85,6 +67,60 @@ const ${className}List: React.FC = () => {
     removeEmptyChildren(tree);
 
     return tree;
+  };
+
+  // 获取所有节点的ID（递归）
+  const getAllNodeKeys = (data: ${className}[]): React.Key[] => {
+    const keys: React.Key[] = [];
+    const traverse = (nodes: ${className}[]) => {
+      nodes.forEach((node) => {
+        if (node.id !== undefined) {
+          keys.push(node.id);
+        }
+        if (node.children && node.children.length > 0) {
+          traverse(node.children);
+        }
+      });
+    };
+    traverse(data);
+    return keys;
+  };
+
+  // 加载数据
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const data = await ${classNameFirstLower}Api.getList({});
+      // 构建树形结构
+      const treeData = buildTree(data);
+      setDataSource(treeData);
+      setFilteredData(treeData);
+      // 默认展开所有节点
+      const allKeys = getAllNodeKeys(treeData);
+      setExpandedRowKeys(allKeys);
+    } catch (error) {
+      // 错误消息已在 request.ts 中统一处理
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // 切换展开/收起
+  const handleToggleExpand = () => {
+    if (isAllExpanded) {
+      // 当前是展开状态，则收起
+      setExpandedRowKeys([]);
+      setIsAllExpanded(false);
+    } else {
+      // 当前是收起状态，则展开
+      const allKeys = getAllNodeKeys(filteredData);
+      setExpandedRowKeys(allKeys);
+      setIsAllExpanded(true);
+    }
   };
 
   // 搜索
@@ -286,14 +322,22 @@ const ${className}List: React.FC = () => {
         </Form>
 
 #end
-        {/* 新增按钮 */}
-        {hasPermission('${moduleName}:${businessName}:create') && (
-          <div style={{ marginBottom: 16 }}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
-              新增
+        {/* 操作按钮 */}
+        <div style={{ marginBottom: 16 }}>
+          <Space>
+            <Button
+              icon={isAllExpanded ? <ShrinkOutlined /> : <ExpandOutlined />}
+              onClick={handleToggleExpand}
+            >
+              {isAllExpanded ? '全部收起' : '全部展开'}
             </Button>
-          </div>
-        )}
+            {hasPermission('${moduleName}:${businessName}:create') && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+                新增
+              </Button>
+            )}
+          </Space>
+        </div>
 
         {/* 数据表格 */}
         <Table
@@ -305,7 +349,8 @@ const ${className}List: React.FC = () => {
           pagination={false}
           scroll={{ x: 'max-content' }}
           expandable={{
-            defaultExpandAllRows: true,
+            expandedRowKeys: expandedRowKeys,
+            onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),
           }}
         />
       </Card>

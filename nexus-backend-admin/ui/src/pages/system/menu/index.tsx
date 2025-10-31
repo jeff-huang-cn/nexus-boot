@@ -13,7 +13,7 @@ import {
     Tag,
     TreeSelect, Card,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
 import { menuApi } from '../../../services/system/menu/menuApi';
 import type { Menu, MenuForm } from '../../../services/system/menu/menuApi';
 import { useMenu as useMenuContext } from '../../../contexts/MenuContext';
@@ -27,6 +27,8 @@ const MenuPage: React.FC = () => {
   const [searchForm] = Form.useForm();
   const [form] = Form.useForm();
   const { permissions } = useMenuContext();
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+  const [isAllExpanded, setIsAllExpanded] = useState(true);
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
@@ -156,6 +158,23 @@ const MenuPage: React.FC = () => {
     },
   ];
 
+  // 获取所有节点的ID（递归）
+  const getAllNodeKeys = (data: Menu[]): React.Key[] => {
+    const keys: React.Key[] = [];
+    const traverse = (nodes: Menu[]) => {
+      nodes.forEach((node) => {
+        if (node.id !== undefined) {
+          keys.push(node.id);
+        }
+        if (node.children && node.children.length > 0) {
+          traverse(node.children);
+        }
+      });
+    };
+    traverse(data);
+    return keys;
+  };
+
   // 加载数据
   const loadData = async () => {
     setLoading(true);
@@ -164,6 +183,9 @@ const MenuPage: React.FC = () => {
       const result = await menuApi.getFullMenuTree() as Menu[];
       setDataSource(result);
       setFilteredData(result);
+      // 默认展开所有节点
+      const allKeys = getAllNodeKeys(result);
+      setExpandedRowKeys(allKeys);
     } catch (error: any) {
       // 错误已在 request.ts 中统一显示
       console.error('加载数据失败:', error);
@@ -175,6 +197,20 @@ const MenuPage: React.FC = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // 切换展开/收起
+  const handleToggleExpand = () => {
+    if (isAllExpanded) {
+      // 当前是展开状态，则收起
+      setExpandedRowKeys([]);
+      setIsAllExpanded(false);
+    } else {
+      // 当前是收起状态，则展开
+      const allKeys = getAllNodeKeys(filteredData);
+      setExpandedRowKeys(allKeys);
+      setIsAllExpanded(true);
+    }
+  };
 
   // 搜索
   const handleSearch = () => {
@@ -300,14 +336,22 @@ const MenuPage: React.FC = () => {
         </Form.Item>
       </Form>
 
-      {/* 新增按钮 */}
-      {hasPermission('system:menu:create') && (
-        <div style={{ marginBottom: 16 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
-            新增菜单
+      {/* 操作按钮 */}
+      <div style={{ marginBottom: 16 }}>
+        <Space>
+          <Button
+            icon={isAllExpanded ? <ShrinkOutlined /> : <ExpandOutlined />}
+            onClick={handleToggleExpand}
+          >
+            {isAllExpanded ? '全部收起' : '全部展开'}
           </Button>
-        </div>
-      )}
+          {hasPermission('system:menu:create') && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+              新增菜单
+            </Button>
+          )}
+        </Space>
+      </div>
 
       {/* 数据表格 */}
       <Table
@@ -319,7 +363,8 @@ const MenuPage: React.FC = () => {
         pagination={false}
         scroll={{ x: 1400 }}
         expandable={{
-          defaultExpandAllRows: true,
+          expandedRowKeys: expandedRowKeys,
+          onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),
         }}
       />
 
