@@ -55,7 +55,7 @@ export const getList = (params: DeptQuery) => {
  * 获取部门管理表详情
  */
 export const getById = (id: number) => {
-  return request.get<Dept>(`/system/dept/\${id}`);
+  return request.get<Dept>(`/system/dept/${id}`);
 };
 
 /**
@@ -69,14 +69,14 @@ export const create = (data: DeptForm) => {
  * 更新部门管理表
  */
 export const update = (data: DeptForm) => {
-  return request.put<void>(`/system/dept/\${data.id}`, data);
+  return request.put<void>(`/system/dept/${data.id}`, data);
 };
 
 /**
  * 删除部门管理表
  */
 export const deleteDept = (id: number) => {
-  return request.delete<void>(`/system/dept/\${id}`);
+  return request.delete<void>(`/system/dept/${id}`);
 };
 
 export const deptApi = {

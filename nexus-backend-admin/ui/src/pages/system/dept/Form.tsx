@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, TreeSelect, message } from 'antd';
 import { deptApi, type Dept, type DeptForm as FormData } from '@/services/system/dept/deptApi';
+import DictSelect from '@/components/DictSelect';
+import { DictType } from '@/types/dict';
 
 interface Props {
   visible: boolean;
@@ -117,7 +119,11 @@ const DeptForm: React.FC<Props> = ({ visible, editId, parentId, onClose, onSucce
       } else {
         form.resetFields();
         // 设置父节点：如果传入了 parentId 则使用，否则默认为根节点(0)
-        form.setFieldsValue({ parentId: parentId !== undefined ? parentId : 0 });
+        // 设置默认状态为启用
+        form.setFieldsValue({
+          parentId: parentId !== undefined ? parentId : 0,
+          status: 1
+        });
       }
     }
   }, [visible, editId, parentId, form]);
@@ -226,9 +232,9 @@ const DeptForm: React.FC<Props> = ({ visible, editId, parentId, onClose, onSucce
 
         <Form.Item
           name="status"
-          label="状态：0-禁用 1-启用"
+          label="状态"
         >
-          <InputNumber placeholder="请输入状态：0-禁用 1-启用" style={{ width: '100%' }} />
+          <DictSelect dictType={DictType.COMMON_STATUS} valueType="number" placeholder="请选择状态" />
         </Form.Item>
 
       </Form>

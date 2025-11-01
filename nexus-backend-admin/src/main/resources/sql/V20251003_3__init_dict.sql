@@ -36,11 +36,6 @@ INSERT INTO `system_dict` (`dict_type`, `dict_label`, `dict_value`, `sort`, `col
 ('sys_user_sex', '男', '1', 2, 'blue', '性别男', 'system'),
 ('sys_user_sex', '女', '2', 3, 'pink', '性别女', 'system');
 
--- 2. 用户状态
-INSERT INTO `system_dict` (`dict_type`, `dict_label`, `dict_value`, `sort`, `color_type`, `remark`, `creator`) VALUES
-('sys_user_status', '正常', '0', 1, 'success', '用户状态正常', 'system'),
-('sys_user_status', '停用', '1', 2, 'danger', '用户状态停用', 'system');
-
 -- 3. 菜单类型
 INSERT INTO `system_dict` (`dict_type`, `dict_label`, `dict_value`, `sort`, `color_type`, `remark`, `creator`) VALUES
 ('sys_menu_type', '目录', '1', 1, 'primary', '菜单目录', 'system'),
