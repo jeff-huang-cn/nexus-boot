@@ -9,10 +9,10 @@ import {
   Popconfirm,
   Modal,
 } from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   SearchOutlined,
   DownloadOutlined,
   UploadOutlined,
@@ -23,6 +23,9 @@ import UserForm from './UserForm';
 import ImportModal from '../../../components/ImportModal';
 import { useMenu } from '../../../contexts/MenuContext';
 import { globalMessage } from '../../../utils/globalMessage';
+import { getDictData } from '../../../utils/dictCache';
+import { DictType } from '../../../types/dict';
+import type { Dict } from '../../../services/system/dict/dictApi';
 
 interface User {
   id?: number;
@@ -50,7 +53,21 @@ const UserList: React.FC = () => {
   const [importVisible, setImportVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<User | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [statusDictList, setStatusDictList] = useState<Dict[]>([]);
   const { permissions } = useMenu();
+
+  // 加载字典数据
+  useEffect(() => {
+    getDictData(DictType.COMMON_STATUS).then(data => {
+      setStatusDictList(data);
+    });
+  }, []);
+
+  // 获取状态标签
+  const getStatusLabel = (value: number): string => {
+    const dict = statusDictList.find(d => Number(d.dictValue) === value);
+    return dict?.dictLabel || String(value);
+  };
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
@@ -87,7 +104,7 @@ const UserList: React.FC = () => {
       title: '帐号状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: number) => (status === 0 ? '正常' : '停用'),
+      render: (value: number) => getStatusLabel(value),
     },
     {
       title: '创建时间',

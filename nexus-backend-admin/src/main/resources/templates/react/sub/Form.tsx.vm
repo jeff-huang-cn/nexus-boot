@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, Table, Button, Space, message, Card } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+#set($hasDictColumn = false)
+#foreach($column in $columns)
+#if((${column.createOperation} || ${column.updateOperation}) && ${column.dictType} && ${column.dictType} != "")
+#set($hasDictColumn = true)
+#end
+#end
+#if($hasDictColumn)
+import DictSelect from '@/components/DictSelect';
+#end
 import { ${classNameFirstLower}Api, type ${className}, type ${className}Form as FormData, type ${subClassName}Form } from '@/services/${moduleName}/${businessName}/${businessName}Api';
 
 interface Props {
@@ -251,18 +260,26 @@ const ${className}Form: React.FC<Props> = ({ visible, editId, onClose, onSuccess
             rules={[{ required: true, message: '请输入${column.columnComment}' }]}
 #end
           >
+#if(${column.htmlType} == "textarea")
+            <Input.TextArea placeholder="请输入${column.columnComment}" rows={4} />
+#elseif(${column.htmlType} == "select")
+#if(${column.dictType} && ${column.dictType} != "")
+            <DictSelect
+              dictType="${column.dictType}"
+              placeholder="请选择${column.columnComment}"
 #if(${column.javaType} == "Integer" || ${column.javaType} == "Long")
+              valueType="number"
+#end
+            />
+#else
+            <Select placeholder="请选择${column.columnComment}">
+              <Select.Option value="">请配置选项</Select.Option>
+            </Select>
+#end
+#elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long")
             <InputNumber placeholder="请输入${column.columnComment}" style={{ width: '100%' }} />
 #elseif(${column.javaType} == "BigDecimal")
             <InputNumber placeholder="请输入${column.columnComment}" precision={2} style={{ width: '100%' }} />
-#elseif(${column.htmlType} == "textarea")
-            <Input.TextArea placeholder="请输入${column.columnComment}" rows={4} />
-#elseif(${column.htmlType} == "select")
-            <Select placeholder="请选择${column.columnComment}">
-              {/* TODO: 根据实际情况添加选项 */}
-              <Select.Option value={1}>选项1</Select.Option>
-              <Select.Option value={0}>选项2</Select.Option>
-            </Select>
 #else
             <Input placeholder="请输入${column.columnComment}" />
 #end

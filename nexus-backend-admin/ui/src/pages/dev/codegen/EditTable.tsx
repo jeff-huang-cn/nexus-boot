@@ -21,6 +21,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useNavigate, useParams } from 'react-router-dom';
 import { codegenApi, CodegenTable, CodegenColumn } from '../../../services/codegen/codegenApi';
 import { menuApi, type Menu } from '../../../services/system/menu/menuApi';
+import { dictApi, type DictTypeGroup } from '../../../services/system/dict/dictApi';
 import { globalMessage } from '../../../utils/globalMessage';
 
 const { Option } = Select;
@@ -38,6 +39,7 @@ const EditTable: React.FC = () => {
   const [tableData, setTableData] = useState<CodegenTable | null>(null);
   const [columns, setColumns] = useState<CodegenColumn[]>([]);
   const [menuList, setMenuList] = useState<Menu[]>([]);
+  const [dictTypeList, setDictTypeList] = useState<DictTypeGroup[]>([]);
 
   // 字段表格列配置
   const columnTableColumns: ColumnsType<CodegenColumn> = [
@@ -138,6 +140,39 @@ const EditTable: React.FC = () => {
           <Option value="number">数字</Option>
         </Select>
       ),
+    },
+    {
+      title: '字典类型',
+      dataIndex: 'dictType',
+      key: 'dictType',
+      width: 200,
+      render: (text: string, record: CodegenColumn, index: number) => {
+        // 只有 select、radio、checkbox 类型才显示字典选择
+        if (!['select', 'radio', 'checkbox'].includes(record.htmlType || '')) {
+          return <span style={{ color: '#999' }}>-</span>;
+        }
+
+        return (
+          <Select
+            value={text}
+            onChange={(value) => updateColumn(index, 'dictType', value)}
+            placeholder="选择字典"
+            allowClear
+            showSearch
+            size="small"
+            style={{ width: '100%' }}
+            filterOption={(input, option) =>
+              String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {dictTypeList.map(item => (
+              <Option key={item.dictType} value={item.dictType} label={item.dictType}>
+                {item.dictType}
+              </Option>
+            ))}
+          </Select>
+        );
+      },
     },
     {
       title: '查询',
@@ -265,6 +300,16 @@ const EditTable: React.FC = () => {
     }
   }, []);
 
+  // 加载字典类型列表
+  const loadDictTypes = useCallback(async () => {
+    try {
+      const list = await dictApi.getDictTypeGroups();
+      setDictTypeList(list || []);
+    } catch (error) {
+      console.error('加载字典类型失败:', error);
+    }
+  }, []);
+
   // 扁平化菜单树（用于Select选项）
   const flattenMenuTree = (menus: Menu[], level = 0): Array<{ value: number; label: string; level: number }> => {
     const result: Array<{ value: number; label: string; level: number }> = [];
@@ -288,7 +333,8 @@ const EditTable: React.FC = () => {
   useEffect(() => {
     loadTableDetail();
     loadMenuList();
-  }, [params.id, loadTableDetail, loadMenuList]);
+    loadDictTypes();
+  }, [params.id, loadTableDetail, loadMenuList, loadDictTypes]);
 
   // 不再需要useEffect来设置表单值，initialValues会自动处理
 
@@ -297,7 +343,7 @@ const EditTable: React.FC = () => {
     try {
       const formValues = await tableForm.validateFields();
       setSaving(true);
-      
+
       const updateData = {
         table: {
           ...tableData,
@@ -306,6 +352,10 @@ const EditTable: React.FC = () => {
         },
         columns,
       };
+
+      // 调试：打印 status 字段的配置
+      const statusColumn = columns.find(c => c.columnName === 'status');
+      console.log('status 字段配置:', statusColumn);
 
       await codegenApi.updateTableConfig(Number(params.id), updateData);
       globalMessage.success('保存配置成功');

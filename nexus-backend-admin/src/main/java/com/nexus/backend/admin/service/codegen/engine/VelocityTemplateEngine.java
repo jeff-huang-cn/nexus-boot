@@ -33,6 +33,10 @@ public class VelocityTemplateEngine {
         properties.setProperty("resource.loader", "classpath");
         properties.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
 
+        // 禁用模板缓存，确保每次都加载最新模板
+        properties.setProperty("resource.loader.classpath.cache", "false");
+        properties.setProperty("resource.loader.classpath.modification_check_interval", "0");
+
         // 设置输入输出编码
         properties.setProperty("input.encoding", "UTF-8");
         properties.setProperty("output.encoding", "UTF-8");

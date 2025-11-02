@@ -366,13 +366,20 @@ public class CodegenUtils {
             codegenColumnDO.setListOperation(isCommonQueryField);
         }
 
-        // 列表显示字段：审计字段（创建人、创建时间、更新人、更新时间）默认不显示
+        // 列表显示字段：只默认显示核心字段（主键、name、code、status、title、no等）
         if ("password".equals(columnName) || "deleted".equals(columnName) || "tenant_id".equals(columnName) ||
                 "date_created".equals(columnName) || "last_updated".equals(columnName) ||
-                "creator".equals(columnName) || "updater".equals(columnName)) {
+                "creator".equals(columnName) || "updater".equals(columnName) ||
+                columnName.contains("secret") || columnName.contains("token")) {
+            // 敏感字段和审计字段不显示
             codegenColumnDO.setListOperationResult(false);
-        } else {
+        } else if (codegenColumnDO.getPrimaryKey() || columnName.contains("name") || columnName.contains("code") ||
+                columnName.contains("status") || columnName.contains("title") || columnName.contains("no")) {
+            // 主键和核心业务字段默认显示
             codegenColumnDO.setListOperationResult(true);
+        } else {
+            // 其他字段默认不显示
+            codegenColumnDO.setListOperationResult(false);
         }
 
         // 查询条件

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { Form, Input, Select, Button, Space, message } from 'antd';
+import { Form, Input, Button, Space, message } from 'antd';
 import { userApi, User, UserForm as UserFormData } from '../../../services/system/user/userApi';
-
-const { Option } = Select;
+import DictSelect from '../../../components/DictSelect';
+import { DictType } from '../../../types/dict';
 
 interface UserFormProps {
   initialValues?: User | null;
@@ -97,21 +97,24 @@ const UserForm: React.FC<UserFormProps> = ({ initialValues, onSuccess, onCancel 
         label="性别"
         name="sex"
       >
-        <Select placeholder="请选择性别" allowClear>
-          <Option value={1}>男</Option>
-          <Option value={2}>女</Option>
-        </Select>
+        <DictSelect
+          dictType={DictType.USER_SEX}
+          placeholder="请选择性别"
+          allowClear
+          valueType="number"
+        />
       </Form.Item>
 
       <Form.Item
         label="帐号状态"
         name="status"
-        initialValue={0}
+        initialValue={1}
       >
-        <Select placeholder="请选择帐号状态">
-          <Option value={0}>正常</Option>
-          <Option value={1}>停用</Option>
-        </Select>
+        <DictSelect
+          dictType={DictType.COMMON_STATUS}
+          placeholder="请选择帐号状态"
+          valueType="number"
+        />
       </Form.Item>
 
       <Form.Item

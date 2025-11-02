@@ -11,6 +11,15 @@ import {
   DatePicker,
 } from 'antd';
 import dayjs from 'dayjs';
+#set($hasDictColumn = false)
+#foreach($column in $columns)
+#if(${column.createOperation} && !${column.primaryKey} && ${column.dictType} && ${column.dictType} != "")
+#set($hasDictColumn = true)
+#end
+#end
+#if($hasDictColumn)
+import DictSelect from '@/components/DictSelect';
+#end
 import { ${classNameFirstLower}Api, type ${className} } from '@/services/${moduleName}/${businessName}/${businessName}Api';
 
 interface ${className}FormProps {
@@ -33,7 +42,7 @@ const ${className}Form: React.FC<${className}FormProps> = ({
       const formValues = { ...initialValues };
 #foreach($column in $columns)
 #if(${column.createOperation} && !${column.primaryKey} && ${column.htmlType} == "datetime")
-      if (formValues.${column.javaField}) {
+      if (formValues.${column.javaField} && !dayjs.isDayjs(formValues.${column.javaField})) {
         formValues.${column.javaField} = dayjs(formValues.${column.javaField});
       }
 #end
@@ -97,20 +106,42 @@ const ${className}Form: React.FC<${className}FormProps> = ({
           rows={4}
         />
 #elseif(${column.htmlType} == "select")
+#if(${column.dictType} && ${column.dictType} != "")
+        <DictSelect
+          dictType="${column.dictType}"
+          placeholder="请选择${column.columnComment}"
+#if(${column.javaType} == "Integer" || ${column.javaType} == "Long")
+          valueType="number"
+#end
+        />
+#else
         <Select placeholder="请选择${column.columnComment}">
-          {/* TODO: 添加选项 */}
+          <Select.Option value="">请配置选项</Select.Option>
         </Select>
+#end
 #elseif(${column.htmlType} == "radio")
+#if(${column.dictType} && ${column.dictType} != "")
+        <DictSelect
+          dictType="${column.dictType}"
+          placeholder="请选择${column.columnComment}"
+#if(${column.javaType} == "Integer" || ${column.javaType} == "Long")
+          valueType="number"
+#end
+        />
+#else
         <Radio.Group>
-          <Radio value={1}>启用</Radio>
-          <Radio value={0}>禁用</Radio>
+          <Radio value={1}>是</Radio>
+          <Radio value={0}>否</Radio>
         </Radio.Group>
+#end
 #elseif(${column.htmlType} == "datetime")
         <DatePicker
           style={{ width: '100%' }}
           placeholder="请选择${column.columnComment}"
           showTime
         />
+#elseif(${column.htmlType} == "password")
+        <Input.Password placeholder="请输入${column.columnComment}" />
 #elseif(${column.javaType} == "Integer" || ${column.javaType} == "Long" || ${column.javaType} == "BigDecimal")
         <InputNumber
           style={{ width: '100%' }}
@@ -119,8 +150,6 @@ const ${className}Form: React.FC<${className}FormProps> = ({
           precision={2}
 #end
         />
-#elseif(${column.htmlType} == "password")
-        <Input.Password placeholder="请输入${column.columnComment}" />
 #else
         <Input placeholder="请输入${column.columnComment}" />
 #end

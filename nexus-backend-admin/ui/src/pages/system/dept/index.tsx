@@ -5,6 +5,10 @@ import type { ColumnsType } from 'antd/es/table';
 import DeptForm from './Form';
 import { deptApi, type Dept } from '@/services/system/dept/deptApi';
 import { useMenu as useMenuContext } from '@/contexts/MenuContext';
+import DictSelect from '@/components/DictSelect';
+import { DictType } from '@/types/dict';
+import { getDictData } from '@/utils/dictCache';
+import type { Dict } from '@/services/system/dict/dictApi';
 
 /**
  * 部门管理表管理（树表）
@@ -20,6 +24,20 @@ const DeptList: React.FC = () => {
   const { permissions } = useMenuContext();
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [isAllExpanded, setIsAllExpanded] = useState(true);
+  const [statusDictList, setStatusDictList] = useState<Dict[]>([]);
+
+  // 加载字典数据
+  useEffect(() => {
+    getDictData(DictType.COMMON_STATUS).then(data => {
+      setStatusDictList(data);
+    });
+  }, []);
+
+  // 获取状态标签
+  const getStatusLabel = (value: number): string => {
+    const dict = statusDictList.find(d => Number(d.dictValue) === value);
+    return dict?.dictLabel || String(value);
+  };
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
@@ -146,8 +164,8 @@ const DeptList: React.FC = () => {
         if (values.code && item.code) {
           matches = matches && item.code.toString().toLowerCase().includes(values.code.toLowerCase());
         }
-        if (values.status && item.status) {
-          matches = matches && item.status.toString().toLowerCase().includes(values.status.toLowerCase());
+        if (values.status !== undefined && values.status !== null && item.status !== undefined) {
+          matches = matches && item.status === values.status;
         }
 
         const children = item.children ? filterTree(item.children) : [];
@@ -255,10 +273,11 @@ const DeptList: React.FC = () => {
       width: 150,
     },
     {
-      title: '状态：0-禁用 1-启用',
+      title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 100,
+      render: (value: number) => getStatusLabel(value),
     },
     {
       title: '操作',
@@ -320,8 +339,14 @@ const DeptList: React.FC = () => {
           <Form.Item label="部门编码" name="code">
             <Input placeholder="请输入部门编码" style={{ width: 200 }} />
           </Form.Item>
-          <Form.Item label="状态：0-禁用 1-启用" name="status">
-            <Input placeholder="请输入状态：0-禁用 1-启用" style={{ width: 200 }} />
+          <Form.Item label="状态" name="status">
+            <DictSelect
+              dictType={DictType.COMMON_STATUS}
+              placeholder="请选择状态"
+              style={{ width: 200 }}
+              allowClear
+              valueType="number"
+            />
           </Form.Item>
           <Form.Item>
             <Space>

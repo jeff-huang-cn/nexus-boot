@@ -145,6 +145,12 @@ public class CodegenServiceImpl implements CodegenService {
         // 更新字段配置
         if (!CollectionUtils.isEmpty(columns)) {
             for (CodegenColumnDO column : columns) {
+                // 调试日志：查看 status 字段的配置
+                if ("status".equals(column.getColumnName())) {
+                    log.info("更新 status 字段配置 - htmlType: {}, dictType: {}",
+                             column.getHtmlType(), column.getDictType());
+                }
+
                 column.setLastUpdated(LocalDateTime.now());
                 column.setUpdater("admin"); // TODO: 从上下文获取当前用户
                 codegenColumnMapper.updateById(column);
