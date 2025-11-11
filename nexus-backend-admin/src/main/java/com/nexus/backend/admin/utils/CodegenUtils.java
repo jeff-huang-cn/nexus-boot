@@ -311,6 +311,37 @@ public class CodegenUtils {
     }
 
     /**
+     * 清理字段描述，去掉括号、冒号等说明性内容
+     *
+     * @param comment 原始字段描述
+     * @return 清理后的字段描述
+     */
+    public static String cleanColumnComment(String comment) {
+        if (!StringUtils.hasText(comment)) {
+            return comment;
+        }
+
+        String result = comment;
+
+        // 去掉圆括号及其中的内容：如 "字典类型（如：sys_user_sex、sy" -> "字典类型"
+        result = result.replaceAll("[（(].*?[）)]", "");
+        result = result.replaceAll("[（(].*$", ""); // 处理没有右括号的情况
+
+        // 去掉冒号及其后的内容：如 "状态：0-禁用 1-启用" -> "状态"
+        int colonIndex = result.indexOf("：");
+        if (colonIndex > 0) {
+            result = result.substring(0, colonIndex);
+        }
+        colonIndex = result.indexOf(":");
+        if (colonIndex > 0) {
+            result = result.substring(0, colonIndex);
+        }
+
+        // 去掉前后空白
+        return result.trim();
+    }
+
+    /**
      * 初始化代码生成字段信息
      *
      * @param column  数据库字段信息
@@ -324,8 +355,11 @@ public class CodegenUtils {
         codegenColumnDO.setTableId(tableId);
         codegenColumnDO.setColumnName(column.getColumnName());
         codegenColumnDO.setDataType(column.getDataType());
+
+        // 清理字段描述，去掉括号、冒号等说明性内容
+        String cleanComment = cleanColumnComment(column.getColumnComment());
         codegenColumnDO.setColumnComment(
-                StringUtils.hasText(column.getColumnComment()) ? column.getColumnComment() : column.getColumnName());
+                StringUtils.hasText(cleanComment) ? cleanComment : column.getColumnName());
 
         // 字段属性
         codegenColumnDO.setNullable(!"NO".equals(column.getIsNullable()));

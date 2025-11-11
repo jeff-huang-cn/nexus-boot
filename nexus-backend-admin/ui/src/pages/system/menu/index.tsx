@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     Button,
     Table,
@@ -14,9 +14,10 @@ import {
     TreeSelect, Card,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
-import { menuApi } from '../../../services/system/menu/menuApi';
-import type { Menu, MenuForm } from '../../../services/system/menu/menuApi';
-import { useMenu as useMenuContext } from '../../../contexts/MenuContext';
+import { menuApi } from '@/services/system/menu/menuApi';
+import type { Menu, MenuForm } from '@/services/system/menu/menuApi';
+import { useMenu as useMenuContext } from '@/contexts/MenuContext';
+import { useTableHeight } from '@/hooks/useTableHeight';
 
 const MenuPage: React.FC = () => {
   const [dataSource, setDataSource] = useState<Menu[]>([]);
@@ -29,6 +30,11 @@ const MenuPage: React.FC = () => {
   const { permissions } = useMenuContext();
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [isAllExpanded, setIsAllExpanded] = useState(true);
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，减去搜索栏(约70px)和按钮栏(约60px)
+  const tableHeight = useTableHeight(tableContainerRef, 130);
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
@@ -313,7 +319,7 @@ const MenuPage: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 搜索表单 */}
       <Form
         form={searchForm}
@@ -354,19 +360,21 @@ const MenuPage: React.FC = () => {
       </div>
 
       {/* 数据表格 */}
-      <Table
-        key={filteredData.length}
-        columns={columns}
-        dataSource={filteredData}
-        loading={loading}
-        rowKey="id"
-        pagination={false}
-        scroll={{ x: 1400 }}
-        expandable={{
-          expandedRowKeys: expandedRowKeys,
-          onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),
-        }}
-      />
+      <div ref={tableContainerRef} style={{ flex: 1, overflow: 'hidden' }}>
+        <Table
+          key={filteredData.length}
+          columns={columns}
+          dataSource={filteredData}
+          loading={loading}
+          rowKey="id"
+          pagination={false}
+          scroll={{ x: 1400, y: tableHeight }}
+          expandable={{
+            expandedRowKeys: expandedRowKeys,
+            onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),
+          }}
+        />
+      </div>
 
       <Modal
         title={editingRecord ? '编辑菜单' : '新增菜单'}

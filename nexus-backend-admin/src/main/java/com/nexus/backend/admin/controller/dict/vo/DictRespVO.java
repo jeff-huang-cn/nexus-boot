@@ -41,16 +41,6 @@ public class DictRespVO {
     private Integer status;
 
     /**
-     * 颜色类型
-     */
-    private String colorType;
-
-    /**
-     * CSS类名
-     */
-    private String cssClass;
-
-    /**
      * 备注
      */
     private String remark;

@@ -12,8 +12,6 @@ export interface Dict {
   dictValue: string;
   sort?: number;
   status?: number;
-  colorType?: string;
-  cssClass?: string;
   remark?: string;
   dateCreated?: string;
   lastUpdated?: string;
@@ -38,8 +36,6 @@ export interface DictItemSave {
   dictValue: string;
   sort?: number;
   status?: number;
-  colorType?: string;
-  cssClass?: string;
   remark?: string;
 }
 

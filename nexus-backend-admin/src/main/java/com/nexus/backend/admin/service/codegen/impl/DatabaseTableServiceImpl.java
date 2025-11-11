@@ -1,6 +1,7 @@
 package com.nexus.backend.admin.service.codegen.impl;
 
 import com.nexus.framework.web.exception.BusinessException;
+import com.nexus.backend.admin.config.CodegenProperties;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseColumnVO;
 import com.nexus.backend.admin.controller.codegen.vo.DatabaseTableDVO;
 import com.nexus.backend.admin.dal.dataobject.codegen.DataSourceConfigDO;
@@ -28,6 +29,9 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
     @Resource
     private DataSourceConfigMapper dataSourceConfigMapper;
 
+    @Resource
+    private CodegenProperties codegenProperties;
+
     @Override
     public List<DatabaseTableDVO> selectTableList(Long datasourceConfigId, String tableName) {
         DataSourceConfigDO config = getDataSourceConfig(datasourceConfigId);
@@ -45,6 +49,14 @@ public class DatabaseTableServiceImpl implements DatabaseTableService {
         sql.append("FROM information_schema.tables ");
         sql.append("WHERE table_schema = DATABASE() ");
         sql.append("  AND table_type = 'BASE TABLE' ");
+
+        // 根据配置排除指定前缀的表
+        List<String> excludePrefixes = codegenProperties.getExcludeTablePrefixes();
+        if (excludePrefixes != null && !excludePrefixes.isEmpty()) {
+            for (String prefix : excludePrefixes) {
+                sql.append("  AND table_name NOT LIKE '").append(prefix).append("%' ");
+            }
+        }
 
         if (StringUtils.hasText(tableName)) {
             sql.append("  AND table_name LIKE ? ");

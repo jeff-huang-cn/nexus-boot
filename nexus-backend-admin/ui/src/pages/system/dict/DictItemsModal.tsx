@@ -26,29 +26,6 @@ const DictItemsModal: React.FC<DictItemsModalProps> = ({ visible, dictType, onCl
     { label: '禁用', value: 0 },
   ];
 
-  // 颜色类型选项
-  const colorTypeOptions = [
-    { label: '默认', value: 'default' },
-    { label: '主色(蓝)', value: 'primary' },
-    { label: '成功(绿)', value: 'success' },
-    { label: '警告(橙)', value: 'warning' },
-    { label: '危险(红)', value: 'danger' },
-    { label: '信息(青)', value: 'info' },
-    { label: '蓝色', value: 'blue' },
-    { label: '绿色', value: 'green' },
-    { label: '红色', value: 'red' },
-    { label: '橙色', value: 'orange' },
-    { label: '粉色', value: 'pink' },
-    { label: '紫色', value: 'purple' },
-    { label: '青色', value: 'cyan' },
-    { label: '洋红', value: 'magenta' },
-    { label: '黄色', value: 'yellow' },
-    { label: '火山', value: 'volcano' },
-    { label: '极客蓝', value: 'geekblue' },
-    { label: '柠檬', value: 'lime' },
-    { label: '金色', value: 'gold' },
-  ];
-
   // 表格列定义
   const columns: ColumnsType<DictItemSave> = [
     {
@@ -107,22 +84,6 @@ const DictItemsModal: React.FC<DictItemsModalProps> = ({ visible, dictType, onCl
       ),
     },
     {
-      title: '颜色类型',
-      dataIndex: 'colorType',
-      key: 'colorType',
-      width: 150,
-      render: (_: any, record: DictItemSave, index: number) => (
-        <Select
-          value={record.colorType}
-          options={colorTypeOptions}
-          placeholder="选择颜色"
-          style={{ width: '100%' }}
-          allowClear
-          onChange={(value) => handleFieldChange(index, 'colorType', value)}
-        />
-      ),
-    },
-    {
       title: '操作',
       key: 'action',
       width: 80,
@@ -150,8 +111,6 @@ const DictItemsModal: React.FC<DictItemsModalProps> = ({ visible, dictType, onCl
         dictValue: dict.dictValue,
         sort: dict.sort || 0,
         status: dict.status || 1,
-        colorType: dict.colorType || '',
-        cssClass: dict.cssClass || '',
         remark: dict.remark || '',
       }));
       setItems(itemList);
@@ -183,8 +142,6 @@ const DictItemsModal: React.FC<DictItemsModalProps> = ({ visible, dictType, onCl
         dictValue: '',
         sort: items.length,
         status: 1,
-        colorType: '',
-        cssClass: '',
         remark: '',
       },
     ]);
@@ -283,7 +240,6 @@ const DictItemsModal: React.FC<DictItemsModalProps> = ({ visible, dictType, onCl
           <li>字典标签：用于前端显示的文本</li>
           <li>字典值：实际存储的值</li>
           <li>排序：数字越小越靠前</li>
-          <li>颜色类型：从下拉列表选择，用于前端标签的颜色展示</li>
         </ul>
       </div>
     </Modal>

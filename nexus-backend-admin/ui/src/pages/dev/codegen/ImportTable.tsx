@@ -106,11 +106,14 @@ const ImportTable: React.FC = () => {
       try {
         const response = await databaseApi.getDataSourceList();
         setDataSources(response || []);
-        
-        // 不自动设置默认数据源，让用户手动选择
-        // if (response && response.length > 0) {
-        //   setCurrentDataSourceId(response[0].id);
-        // }
+
+        // 默认选中第一个数据源
+        if (response && response.length > 0) {
+          const firstDataSourceId = response[0].id;
+          setCurrentDataSourceId(firstDataSourceId);
+          // 同步更新 Form 字段值
+          form.setFieldsValue({ dataSourceId: firstDataSourceId });
+        }
       } catch (error) {
         console.error('加载数据源失败:', error);
         globalMessage.error('加载数据源失败');
@@ -118,7 +121,7 @@ const ImportTable: React.FC = () => {
     };
 
     initDataSources();
-  }, []);
+  }, [form]);
 
   // 当数据源改变时，重新加载数据
   useEffect(() => {
@@ -207,8 +210,10 @@ const ImportTable: React.FC = () => {
             <Select
               placeholder="请选择数据源"
               style={{ width: 200 }}
-              value={currentDataSourceId}
-              onChange={(value) => setCurrentDataSourceId(value)}
+              onChange={(value) => {
+                setCurrentDataSourceId(value);
+                form.setFieldsValue({ dataSourceId: value });
+              }}
               options={dataSources.map(ds => ({
                 label: ds.name,
                 value: ds.id,

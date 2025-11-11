@@ -65,3 +65,14 @@ nexus:
       rotation-advance-days: 7
       cache-expire-hours: 24
       auto-rotation-enabled: true
+
+  # 代码生成器配置
+  codegen:
+    # 排除的表名前缀列表（不会出现在导入数据库表的列表中）
+    exclude-table-prefixes:
+      - codegen_      # 代码生成器元数据表
+      - oauth2_       # OAuth2认证表
+    default-author: backend
+    default-template-type: 1  # 1-单表CRUD 2-树表 3-主子表
+    default-front-type: 30    # 30-React
+    default-scene: 1          # 1-管理后台

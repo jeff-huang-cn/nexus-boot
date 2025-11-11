@@ -105,8 +105,6 @@ public class DictServiceImpl implements DictService {
                 updateDO.setDictValue(item.getDictValue());
                 updateDO.setSort(item.getSort());
                 updateDO.setStatus(item.getStatus());
-                updateDO.setColorType(item.getColorType());
-                updateDO.setCssClass(item.getCssClass());
                 updateDO.setRemark(item.getRemark());
 
                 dictMapper.updateById(updateDO);
@@ -119,8 +117,6 @@ public class DictServiceImpl implements DictService {
                 insertDO.setDictValue(item.getDictValue());
                 insertDO.setSort(item.getSort());
                 insertDO.setStatus(item.getStatus() != null ? item.getStatus() : 1);
-                insertDO.setColorType(item.getColorType());
-                insertDO.setCssClass(item.getCssClass());
                 insertDO.setRemark(item.getRemark());
 
                 dictMapper.insert(insertDO);

@@ -33,7 +33,6 @@ interface DictSelectProps extends Omit<SelectProps, 'options'> {
 interface DictOption {
   label: string;
   value: string | number;
-  colorType?: string;
   disabled?: boolean;
 }
 
@@ -76,7 +75,6 @@ const DictSelect: React.FC<DictSelectProps> = ({
     return filteredList.map(d => ({
       label: d.dictLabel,
       value: valueType === 'number' ? Number(d.dictValue) : d.dictValue,
-      colorType: d.colorType,
       disabled: d.status === 0,
     }));
   }, [dictList, includeDisabled, valueType]);

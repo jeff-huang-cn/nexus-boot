@@ -36,16 +36,6 @@ public class DictItemSaveVO {
     private Integer status;
 
     /**
-     * 颜色类型（用于前端标签展示）
-     */
-    private String colorType;
-
-    /**
-     * CSS类名
-     */
-    private String cssClass;
-
-    /**
      * 备注
      */
     private String remark;

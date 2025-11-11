@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Tree, Spin, message } from 'antd';
+import { Modal, Tree, Spin, message, Button } from 'antd';
+import { ShrinkOutlined, ExpandOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import { menuApi } from '../../../services/system/menu/menuApi';
 import { roleApi } from '../../../services/system/role/roleApi';
@@ -175,14 +176,31 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
     setCheckedKeys({ checked: Array.from(finalCheckedKeys), halfChecked: [] } as any);
   };
 
+  // 切换展开/折叠
+  const handleToggleExpand = () => {
+    const allKeys = getAllExpandedKeys(menuTree);
+    // 如果当前已全部展开，则折叠；否则展开
+    if (expandedKeys.length === allKeys.length && allKeys.length > 0) {
+      setExpandedKeys([]);
+    } else {
+      setExpandedKeys(allKeys);
+    }
+  };
+
+  // 判断是否全部展开
+  const isAllExpanded = () => {
+    const allKeys = getAllExpandedKeys(menuTree);
+    return expandedKeys.length === allKeys.length && allKeys.length > 0;
+  };
+
   // 保存
   const handleSave = async () => {
     setLoading(true);
     try {
-      const menuIds = Array.isArray(checkedKeys) 
-        ? checkedKeys 
+      const menuIds = Array.isArray(checkedKeys)
+        ? checkedKeys
         : (checkedKeys as any).checked || [];
-      
+
       await roleApi.assignMenu({
         roleId,
         menuIds: menuIds as number[],
@@ -199,7 +217,19 @@ const AssignMenuModal: React.FC<AssignMenuModalProps> = ({
 
   return (
     <Modal
-      title="分配菜单权限"
+      title={
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginRight: 40 }}>
+          <span>分配菜单权限</span>
+          <Button
+            size="small"
+            icon={isAllExpanded() ? <ShrinkOutlined /> : <ExpandOutlined />}
+            onClick={handleToggleExpand}
+            style={{ fontSize: '12px', color: '#666' }}
+          >
+            {isAllExpanded() ? '全部折叠' : '全部展开'}
+          </Button>
+        </div>
+      }
       open={visible}
       onOk={handleSave}
       onCancel={onCancel}

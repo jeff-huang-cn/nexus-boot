@@ -15,7 +15,6 @@ import type { Dict } from '../services/system/dict/dictApi';
 export interface DictOption {
   label: string;
   value: string | number;
-  colorType?: string;
   disabled?: boolean;
 }
 
@@ -49,7 +48,6 @@ export function useDictData(dictType: string) {
       .map(d => ({
         label: d.dictLabel,
         value: d.dictValue,
-        colorType: d.colorType,
         disabled: false,
       }));
   }, [dictList]);
@@ -59,7 +57,6 @@ export function useDictData(dictType: string) {
     return dictList.map(d => ({
       label: d.dictLabel,
       value: d.dictValue,
-      colorType: d.colorType,
       disabled: d.status === 0,
     }));
   }, [dictList]);
