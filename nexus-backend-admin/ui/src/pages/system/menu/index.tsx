@@ -360,7 +360,7 @@ const MenuPage: React.FC = () => {
       </div>
 
       {/* 数据表格 */}
-      <div ref={tableContainerRef} style={{ flex: 1, overflow: 'hidden' }}>
+      <div ref={tableContainerRef} style={{ flex: 1 }}>
         <Table
           key={filteredData.length}
           columns={columns}
@@ -368,7 +368,7 @@ const MenuPage: React.FC = () => {
           loading={loading}
           rowKey="id"
           pagination={false}
-          scroll={{ x: 1400, y: tableHeight }}
+          scroll={{ y: tableHeight }}
           expandable={{
             expandedRowKeys: expandedRowKeys,
             onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),

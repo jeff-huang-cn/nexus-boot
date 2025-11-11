@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Button,
     Table,
@@ -11,19 +11,20 @@ import {
     Popconfirm,
     Tag, Card,
 } from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
-  SafetyOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SafetyOutlined,
   SearchOutlined,
   DownloadOutlined,
 } from '@ant-design/icons';
-import { roleApi } from '../../../services/system/role/roleApi';
-import type { Role, RoleForm } from '../../../services/system/role/roleApi';
+import { roleApi } from '@/services/system/role/roleApi';
+import type { Role, RoleForm } from '@/services/system/role/roleApi';
 import AssignMenuModal from './AssignMenuModal';
-import { useMenu } from '../../../contexts/MenuContext';
-import { globalMessage } from '../../../utils/globalMessage';
+import { useMenu } from '@/contexts/MenuContext';
+import { globalMessage } from '@/utils/globalMessage';
+import { useTableHeight } from '@/hooks/useTableHeight';
 
 const RolePage: React.FC = () => {
   const [dataSource, setDataSource] = useState<Role[]>([]);
@@ -37,6 +38,11 @@ const RolePage: React.FC = () => {
   const [searchForm] = Form.useForm();
   const [form] = Form.useForm();
   const { permissions } = useMenu();
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，有搜索栏+按钮栏+分页器：190px
+  const tableHeight = useTableHeight(tableContainerRef, 190);
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
@@ -348,19 +354,21 @@ const RolePage: React.FC = () => {
       </div>
 
       {/* 数据表格 */}
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        loading={loading}
-        rowKey="id"
-        rowSelection={rowSelection}
-        pagination={{
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total) => `共 ${total} 条`,
-        }}
-        scroll={{ x: 1200 }}
-      />
+      <div ref={tableContainerRef}>
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          loading={loading}
+          rowKey="id"
+          rowSelection={rowSelection}
+          pagination={{
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条`,
+          }}
+          scroll={{ y: tableHeight }}
+        />
+      </div>
 
       <Modal
         title={editingRecord ? '编辑角色' : '新增角色'}

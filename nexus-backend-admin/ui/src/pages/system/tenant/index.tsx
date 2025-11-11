@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Table,
   Button,
@@ -9,19 +9,20 @@ import {
   Modal,
   Popconfirm,
 } from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   SearchOutlined,
   DownloadOutlined,
   KeyOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { tenantApi, type Tenant } from '../../../services/system/tenant/tenantApi';
+import { tenantApi, type Tenant } from '@/services/system/tenant/tenantApi';
 import TenantForm from './TenantForm';
 import AssignMenuModal from './AssignMenuModal';
-import { globalMessage } from '../../../utils/globalMessage';
+import { globalMessage } from '@/utils/globalMessage';
+import { useTableHeight } from '@/hooks/useTableHeight';
 
 const Index: React.FC = () => {
   const [form] = Form.useForm();
@@ -35,6 +36,11 @@ const Index: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [assignMenuVisible, setAssignMenuVisible] = useState(false);
   const [assigningTenantId, setAssigningTenantId] = useState<number>(0);
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，有搜索栏+按钮栏+分页器：190px
+  const tableHeight = useTableHeight(tableContainerRef, 190);
 
   const columns: ColumnsType<Tenant> = [
     {
@@ -86,11 +92,12 @@ const Index: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 280,
+      width: 250,
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small">
           <Button
             type="link"
+            size="small"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           >
@@ -98,6 +105,7 @@ const Index: React.FC = () => {
           </Button>
           <Button
             type="link"
+            size="small"
             icon={<KeyOutlined />}
             onClick={() => handleAssignMenu(record)}
           >
@@ -109,7 +117,7 @@ const Index: React.FC = () => {
             okText="确定"
             cancelText="取消"
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
               删除
             </Button>
           </Popconfirm>
@@ -307,13 +315,15 @@ const Index: React.FC = () => {
           </Space>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          rowKey="id"
-          rowSelection={rowSelection}
-          pagination={{
+        <div ref={tableContainerRef}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            rowKey="id"
+            rowSelection={rowSelection}
+            scroll={{ y: tableHeight }}
+            pagination={{
             current,
             pageSize: size,
             total,
@@ -325,7 +335,8 @@ const Index: React.FC = () => {
               setSize(pageSize || 10);
             },
           }}
-        />
+          />
+        </div>
       </Card>
 
       <Modal

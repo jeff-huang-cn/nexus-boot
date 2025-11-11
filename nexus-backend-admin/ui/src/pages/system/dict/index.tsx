@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table, Button, Space, Card, Popconfirm, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { dictApi, type DictTypeGroup } from '@/services/system/dict/dictApi';
 import { useMenu } from '@/contexts/MenuContext';
 import { globalMessage } from '@/utils/globalMessage';
+import { useTableHeight } from '@/hooks/useTableHeight';
 import DictItemsModal from './DictItemsModal';
 
 /**
@@ -16,6 +17,11 @@ const DictList: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDictType, setEditingDictType] = useState<string | null>(null);
   const { permissions } = useMenu();
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，减去按钮栏(约60px)
+  const tableHeight = useTableHeight(tableContainerRef, 60);
 
   // 权限检查函数
   const hasPermission = (permission: string) => {
@@ -57,10 +63,11 @@ const DictList: React.FC = () => {
       width: 200,
       fixed: 'right' as const,
       render: (_: any, record: DictTypeGroup) => (
-        <Space size="middle">
+        <Space size="small">
           {hasPermission('system:dict:update') && (
             <Button
               type="link"
+              size="small"
               icon={<EditOutlined />}
               onClick={() => handleConfig(record.dictType)}
             >
@@ -74,7 +81,7 @@ const DictList: React.FC = () => {
               okText="确定"
               cancelText="取消"
             >
-              <Button type="link" danger icon={<DeleteOutlined />}>
+              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
                 删除
               </Button>
             </Popconfirm>
@@ -144,13 +151,16 @@ const DictList: React.FC = () => {
           </Space>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          rowKey="dictType"
-          pagination={false}
-        />
+        <div ref={tableContainerRef}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            rowKey="dictType"
+            pagination={false}
+            scroll={{ y: tableHeight }}
+          />
+        </div>
       </Card>
 
       <DictItemsModal

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Table,
   Button,
@@ -18,14 +18,15 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { userApi } from '../../../services/system/user/userApi';
+import { userApi } from '@/services/system/user/userApi';
 import UserForm from './UserForm';
-import ImportModal from '../../../components/ImportModal';
-import { useMenu } from '../../../contexts/MenuContext';
-import { globalMessage } from '../../../utils/globalMessage';
-import { getDictData } from '../../../utils/dictCache';
-import { DictType } from '../../../types/dict';
-import type { Dict } from '../../../services/system/dict/dictApi';
+import ImportModal from '@/components/ImportModal';
+import { useMenu } from '@/contexts/MenuContext';
+import { globalMessage } from '@/utils/globalMessage';
+import { getDictData } from '@/utils/dictCache';
+import { DictType } from '@/types/dict';
+import type { Dict } from '@/services/system/dict/dictApi';
+import { useTableHeight } from '@/hooks/useTableHeight';
 
 interface User {
   id?: number;
@@ -55,6 +56,11 @@ const UserList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [statusDictList, setStatusDictList] = useState<Dict[]>([]);
   const { permissions } = useMenu();
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，有搜索栏+按钮栏+分页器：190px
+  const tableHeight = useTableHeight(tableContainerRef, 190);
 
   // 加载字典数据
   useEffect(() => {
@@ -117,10 +123,11 @@ const UserList: React.FC = () => {
       key: 'action',
       width: 200,
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small">
           {hasPermission('system:user:update') && (
             <Button
               type="link"
+              size="small"
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
             >
@@ -134,7 +141,7 @@ const UserList: React.FC = () => {
               okText="确定"
               cancelText="取消"
             >
-              <Button type="link" danger icon={<DeleteOutlined />}>
+              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
                 删除
               </Button>
             </Popconfirm>
@@ -337,13 +344,15 @@ const UserList: React.FC = () => {
           </Space>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          rowKey="id"
-          rowSelection={rowSelection}
-          pagination={{
+        <div ref={tableContainerRef}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            rowKey="id"
+            rowSelection={rowSelection}
+            scroll={{ y: tableHeight }}
+            pagination={{
             current,
             pageSize: size,
             total,
@@ -355,7 +364,8 @@ const UserList: React.FC = () => {
               setSize(pageSize || 10);
             },
           }}
-        />
+          />
+        </div>
       </Card>
 
       <Modal

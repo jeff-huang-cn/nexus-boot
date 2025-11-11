@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Table, Button, Space, Modal, message, Form, Input, Popconfirm, Card } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ExpandOutlined, ShrinkOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -9,6 +9,7 @@ import DictSelect from '@/components/DictSelect';
 import { DictType } from '@/types/dict';
 import { getDictData } from '@/utils/dictCache';
 import type { Dict } from '@/services/system/dict/dictApi';
+import { useTableHeight } from '@/hooks/useTableHeight';
 
 /**
  * 部门管理表管理（树表）
@@ -25,6 +26,11 @@ const DeptList: React.FC = () => {
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [isAllExpanded, setIsAllExpanded] = useState(true);
   const [statusDictList, setStatusDictList] = useState<Dict[]>([]);
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，有搜索栏+按钮栏+无分页器：130px
+  const tableHeight = useTableHeight(tableContainerRef, 130);
 
   // 加载字典数据
   useEffect(() => {
@@ -378,19 +384,21 @@ const DeptList: React.FC = () => {
         </div>
 
         {/* 数据表格 */}
-        <Table
-          key={filteredData.length}
-          columns={columns}
-          dataSource={filteredData}
-          loading={loading}
-          rowKey="id"
-          pagination={false}
-          scroll={{ x: 'max-content' }}
-          expandable={{
-            expandedRowKeys: expandedRowKeys,
-            onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),
-          }}
-        />
+        <div ref={tableContainerRef}>
+          <Table
+            key={filteredData.length}
+            columns={columns}
+            dataSource={filteredData}
+            loading={loading}
+            rowKey="id"
+            pagination={false}
+            scroll={{ y: tableHeight }}
+            expandable={{
+              expandedRowKeys: expandedRowKeys,
+              onExpandedRowsChange: (expandedKeys) => setExpandedRowKeys([...expandedKeys]),
+            }}
+          />
+        </div>
       </Card>
 
       <DeptForm

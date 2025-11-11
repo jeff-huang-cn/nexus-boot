@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   Table,
@@ -24,7 +24,8 @@ import {
   EyeInvisibleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { datasourceApi, DataSourceConfig, DataSourceConfigCreateReq, DataSourceConfigUpdateReq } from '../../../services/codegen/datasourceApi';
+import { datasourceApi, DataSourceConfig, DataSourceConfigCreateReq, DataSourceConfigUpdateReq } from '@/services/codegen/datasourceApi';
+import { useTableHeight } from '@/hooks/useTableHeight';
 
 /**
  * 数据源管理页面
@@ -43,6 +44,11 @@ const DatasourceManage: React.FC = () => {
   const [testLoading, setTestLoading] = useState<number | undefined>();
   const [passwordVisible, setPasswordVisible] = useState<{ [key: number]: boolean }>({});
   const [passwordData, setPasswordData] = useState<{ [key: number]: string }>({});
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，有搜索栏+按钮栏+分页器：190px
+  const tableHeight = useTableHeight(tableContainerRef, 190);
 
   // 表格列配置
   const columns: ColumnsType<DataSourceConfig> = [
@@ -363,25 +369,27 @@ const DatasourceManage: React.FC = () => {
           </Space>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          rowKey="id"
-          scroll={{ x: 1200 }}
-          pagination={{
-            current,
-            pageSize: size,
-            total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
-            onChange: (page, pageSize) => {
-              setCurrent(page);
-              setSize(pageSize || 10);
-            },
-          }}
-        />
+        <div ref={tableContainerRef}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            rowKey="id"
+            scroll={{ y: tableHeight }}
+            pagination={{
+              current,
+              pageSize: size,
+              total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total) => `共 ${total} 条记录`,
+              onChange: (page, pageSize) => {
+                setCurrent(page);
+                setSize(pageSize || 10);
+              },
+            }}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}

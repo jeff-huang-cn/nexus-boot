@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   Table,
@@ -23,8 +23,9 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
-import { codegenApi, CodegenTable, PageResult } from '../../../services/codegen/codegenApi';
-import { globalMessage } from '../../../utils/globalMessage';
+import { codegenApi, CodegenTable, PageResult } from '@/services/codegen/codegenApi';
+import { globalMessage } from '@/utils/globalMessage';
+import { useTableHeight } from '@/hooks/useTableHeight';
 
 /**
  * 代码生成表列表页面
@@ -37,6 +38,11 @@ const CodegenTableList: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [size, setSize] = useState(10);
+
+  // 创建表格容器的 ref
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  // 计算表格高度，有搜索栏+按钮栏+分页器：190px
+  const tableHeight = useTableHeight(tableContainerRef, 190);
 
   // 表格列配置
   const columns: ColumnsType<CodegenTable> = [
@@ -312,13 +318,14 @@ const CodegenTableList: React.FC = () => {
           </Space>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={data}
-          loading={loading}
-          rowKey="id"
-          scroll={{ x: 1200 }}
-          pagination={{
+        <div ref={tableContainerRef}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            rowKey="id"
+            scroll={{ y: tableHeight }}
+            pagination={{
             current,
             pageSize: size,
             total,
@@ -330,7 +337,8 @@ const CodegenTableList: React.FC = () => {
               setSize(pageSize || 10);
             },
           }}
-        />
+          />
+        </div>
       </Card>
     </div>
   );
